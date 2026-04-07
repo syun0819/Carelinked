@@ -32,3 +32,27 @@ class FacilitySearchResponse(BaseModel):
 
     total: int
     results: List[FacilityCard]
+
+
+class FacilityMapMarker(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    service_name: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    care_type: Optional[str] = None
+    residential_places: Optional[int] = None
+    availability_group: str
+    data_source: str
+    provider_name: Optional[str] = None
+    physical_suburb: Optional[str] = None
+    physical_post_code: Optional[str] = None
+
+
+class FacilityMapResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    total: int
+    results: List[FacilityMapMarker]
+    message: Optional[str] = None
