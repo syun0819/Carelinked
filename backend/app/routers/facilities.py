@@ -4,8 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.schemas.aged_care import FacilityCard, FacilityDetail, FacilitySearchResponse
-from app.services.facility_service import search_facilities, get_facility_by_id
+from app.schemas.aged_care import FacilityCard, FacilityDetail, FacilityMapResponse, FacilitySearchResponse
+from app.services.facility_service import get_facilities_for_map, search_facilities, get_facility_by_id
+from app.services import location_service
 
 router = APIRouter(prefix="/api/v1/facilities", tags=["facilities"])
 
@@ -48,6 +49,53 @@ async def search(
         total=total,
         results=[FacilityCard.model_validate(r) for r in results],
     )
+
+
+@router.get("/map", response_model=FacilityMapResponse)
+async def get_map(
+    suburb: Optional[str] = Query(None),
+    postcode: Optional[str] = Query(None),
+    region: Optional[str] = Query(None),
+    care_type: Optional[str] = Query(None),
+    max_distance_km: Optional[float] = Query(None),
+    db: AsyncSession = Depends(get_db),
+):
+    if not suburb and not postcode and not region:
+        raise HTTPException(
+            status_code=400,
+            detail="At least one of suburb, postcode, or region is required.",
+        )
+
+    center_lat, center_lng = None, None
+    if max_distance_km is not None:
+        center_lat, center_lng = await location_service.get_location_center(
+            db=db, suburb=suburb, postcode=postcode
+        )
+        if center_lat is None or center_lng is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Could not find location coordinates for the given suburb/postcode",
+            )
+
+    results, total = await get_facilities_for_map(
+        db=db,
+        suburb=suburb,
+        postcode=postcode,
+        region=region,
+        care_type=care_type,
+        max_distance_km=max_distance_km,
+        center_lat=center_lat,
+        center_lng=center_lng,
+    )
+
+    message = None
+    if total == 0:
+        message = (
+            "No facilities found for your selected filters. "
+            "Try broadening your search area or changing the care type."
+        )
+
+    return FacilityMapResponse(total=total, results=results, message=message)
 
 
 @router.get("/{facility_id}", response_model=FacilityDetail)
