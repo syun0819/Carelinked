@@ -68,7 +68,7 @@ import Header from '../components/Header.vue'
 import HeroSection from '../components/HeroSection.vue'
 import ExploreSection from '../components/ExploreSection.vue'
 import SearchSection from '../components/SearchSection.vue'
-import mockFacilities from '../mock_data/mockFacilities'
+import mockFacilities from '../mock_data/mockFacilities.js'
 
 const currentMode = ref('explore')
 </script>
@@ -91,17 +91,17 @@ const currentMode = ref('explore')
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
+  gap: 40px;
 }
 
 .stats-card {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 20px;
   background: white;
   border: 1px solid #ddd8cf;
   border-radius: 6px;
-  padding: 2px 14px;
+  padding: 6px 14px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
 }
 
@@ -120,12 +120,17 @@ const currentMode = ref('explore')
   font-size: 18px;
   font-weight: 700;
   color: #1f2d2a;
+  margin: 0; 
+  line-height: 1.5;    
   font-family: 'Inter', sans-serif;
 }
 
 .stats-text {
   font-size: 12px;
   color: #61706a;
+  margin: 0;    
+  line-height: 1.2;  
+  
   font-family: 'Inter', sans-serif;
 }
 
@@ -170,41 +175,6 @@ const currentMode = ref('explore')
 
 .mode-switch button:not(.active):hover {
   background: #f3f4f2;
-}
-
-.results-section {
-  padding: 20px 80px 60px;
-}
-
-.results-toolbar {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 24px;
-}
-
-.results-toolbar input {
-  width: 100%;
-  max-width: 700px;
-  padding: 12px 14px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-}
-
-.results-content {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 24px;
-  align-items: start;
-}
-
-.filter-panel {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-}
-
-.results-main {
-  min-height: 500px;
 }
 
 .wait-time-section,

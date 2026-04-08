@@ -15,7 +15,7 @@
 
         <div class="care-tags">
             <span>Residential Care</span>
-            <span>New Care Places</span>
+            <span>Home Care Package</span>
             <span>Memory Care</span>
             <span>Respite Care</span>
             <span>High-Level Care</span>
@@ -45,12 +45,12 @@
 }
 
 .hero-left h1 {
-  font-size: 42px;
-  font-weight: 700;
-  line-height: 1.15;
+  font-size: 50px;
+  font-weight: 900;
+  line-height: 1.5;
   color: #1a1a1a;
   margin: 16px 0;
-  max-width: 320px;
+  max-width: 420px;
   margin-bottom: 40px;
 }
 
@@ -60,9 +60,10 @@
 
 .hero-description {
   max-width: 500px;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.7;
   color: #5f6d67;
+  max-width: 450px;
   margin-bottom: 20px;
 }
 
@@ -73,7 +74,8 @@
   border-radius: 8px;
   font-size: 10px;
   color: #5f6d67;
-  margin-bottom: 20px;
+  margin-top: 20px;
+  margin-bottom: 15px;
 }
 
 .primary-btn {
@@ -90,7 +92,8 @@
 .care-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 25px;
+  max-width: 550px;
 }
 
 .care-tags span {
