@@ -2,58 +2,45 @@
   <div class="home-page">
     <Header />
 
-    <section class="hero-section">
-      <div class="hero-left">
-        <p class="hero-badge">Aged Care Bed Finder - Victoria</p>
-        <h1>
-          Find the right
-          care place, <span>near you right now</span>          
-        </h1>
-        <p class="hero-description">
-          Search available beds across residential aged care and home care services in 
-          Victoria, with real wait times and funding options explained clearly.
-        </p>
+    <HeroSection />
 
-        <button class="primary-btn">Search Care Places</button>
-
-        <div class="care-tags">
-          <span>Residential Care</span>
-          <span>New Care Places</span>
-          <span>Memory Care</span>
-          <span>Respite Care</span>
-          <span>High-Level Care</span>
+    <section class="mode-switch-section">
+      <div class="stats-card">
+        <div class="stats-icon">🏢</div>
+        <div class="stats-content">
+          <div class="stats-number">400+</div>
+          <div class="stats-text">Facilities across Victoria</div>
         </div>
       </div>
 
-      <div class="hero-right">
-        <div class="hero-image-card">
-          Main Visual / Carousel
-        </div>
+      <div class="mode-switch">
+        <button
+          :class="{ active: currentMode === 'explore' }"
+          @click="currentMode = 'explore'"
+        >
+          <span class="icon">⌖</span>
+          <span>Explore</span>
+        </button>
+
+        <button
+          :class="{ active: currentMode === 'search' }"
+          @click="currentMode = 'search'"
+        >
+          <span class="icon">⌕</span>
+          <span>Search</span>
+        </button>
       </div>
     </section>
 
-    <section class="search-toggle-section">
-      <div class="toggle-bar">
-        <button>Explore</button>
-        <button>Search</button>
-      </div>
-    </section>
+    <ExploreSection
+      v-if="currentMode === 'explore'"
+      :facilities="mockFacilities"
+    />
 
-    <section class="results-section">
-      <div class="results-toolbar">
-        <input type="text" placeholder="Search by facility name, suburb or postcode" />
-      </div>
-
-      <div class="results-content">
-        <aside class="filter-panel">
-          <FilterPanel />
-        </aside>
-
-        <main class="results-main">
-          <FacilityList />
-        </main>
-      </div>
-    </section>
+    <SearchSection
+      v-else
+      :facilities="mockFacilities"
+    />
 
     <section class="wait-time-section">
       <h2>Wait Time Estimator</h2>
@@ -76,114 +63,113 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import Header from '../components/Header.vue'
-import FilterPanel from '../components/FilterPanel.vue'
-import FacilityList from '../components/FacilityList.vue'
+import HeroSection from '../components/HeroSection.vue'
+import ExploreSection from '../components/ExploreSection.vue'
+import SearchSection from '../components/SearchSection.vue'
+import mockFacilities from '../mock_data/mockFacilities'
+
+const currentMode = ref('explore')
 </script>
 
 <style scoped>
 .home-page {
+  width: 100%;
   background: #f7f4ee;
   color: #1f2d2a;
   min-height: 100vh;
+  font-family: 'Playfair Display', sans-serif;
 }
 
-.hero-section {
-  display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 40px;
-  padding: 60px 80px;
-  background: #dfe8e3;
+.mode-switch-section {
+  position: relative;
+  z-index: 10;
+  margin-top: -35px;
+  padding: 0 24px 20px;
+  background:transparent;
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 18px;
 }
 
-.hero-left h1 {
-  font-size: 52px;
-  line-height: 1.15;
-  color: #1a1a1a;
-  margin: 16px 0;
-  max-width: 520px;
-}
-
-.hero-left h1 span {
-  color: #5d8b72;
-}
-
-.hero-description {
-  max-width: 500px;
-  font-size: 16px;
-  line-height: 1.7;
-  color: #5f6d67;
-  margin-bottom: 20px;
-}
-
-.hero-badge {
-  display: inline-block;
-  padding: 6px 12px;
+.stats-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   background: white;
-  border-radius: 20px;
-  font-size: 13px;
-  color: #5f6d67;
+  border: 1px solid #ddd8cf;
+  border-radius: 6px;
+  padding: 2px 14px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
 }
 
-.primary-btn {
+.stats-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.stats-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.stats-number {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2d2a;
+  font-family: 'Inter', sans-serif;
+}
+
+.stats-text {
+  font-size: 12px;
+  color: #61706a;
+  font-family: 'Inter', sans-serif;
+}
+
+.mode-switch {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: white;
+  border-radius: 999px;
+  padding: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.mode-switch button {
+  border: none;
+  background: transparent;
+  color: #557067;
+  border-radius: 999px;
+  padding: 6px 22px;
+  min-width: 128px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s ease;
+}
+
+.mode-switch button.active {
   background: #5d8b72;
   color: white;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-bottom: 20px;
+  border-color: #5d8b72;
 }
 
-.care-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+.mode-switch button .icon {
+  font-size: 15px;
+  line-height: 1;
 }
 
-.care-tags span {
-  padding: 6px 10px;
-  border: 1px solid #d4d4d4;
-  background: white;
-  border-radius: 8px;
-  font-size: 13px;
-}
-
-.hero-right {
-  display: flex;
-  justify-content: center;
-}
-
-.hero-image-card {
-  width: 100%;
-  max-width: 520px;
-  height: 320px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.search-toggle-section {
-  padding: 20px 80px;
-  background: #f7f4ee;
-}
-
-.toggle-bar {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-}
-
-.toggle-bar button {
-  border: 1px solid #cfd7d2;
-  background: white;
-  padding: 10px 18px;
-  border-radius: 20px;
-  cursor: pointer;
+.mode-switch button:not(.active):hover {
+  background: #f3f4f2;
 }
 
 .results-section {
