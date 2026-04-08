@@ -10,9 +10,12 @@ from app.routers import facilities
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    # startup
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # startup: attempt to create any missing tables; skip silently if no permission
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception:
+        pass
     yield
     # shutdown
     await engine.dispose()

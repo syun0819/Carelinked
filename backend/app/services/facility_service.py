@@ -5,6 +5,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.aged_care import AgedCareService
+from app.models.availability import AvailabilityGroup, FacilityAvailability
 from app.schemas.aged_care import FacilityMapMarker
 
 _DATA_SOURCE = "Based on residential bed capacity data (aged_care_services)"
@@ -84,6 +85,22 @@ async def search_facilities(
     return rows, total
 
 
+async def _load_ml_predictions(db: AsyncSession) -> dict:
+    """返回 {facility_id: display_name}，表不存在或无数据时返回空 dict。"""
+    try:
+        ml_query = (
+            select(FacilityAvailability.facility_id, AvailabilityGroup.availability_group_display_name)
+            .join(
+                AvailabilityGroup,
+                FacilityAvailability.availability_group_id == AvailabilityGroup.availability_group_id,
+            )
+        )
+        result = await db.execute(ml_query)
+        return {row.facility_id: row.availability_group_display_name for row in result}
+    except Exception:
+        return {}
+
+
 async def get_facilities_for_map(
     db: AsyncSession,
     suburb: Optional[str],
@@ -93,6 +110,7 @@ async def get_facilities_for_map(
     max_distance_km: Optional[float],
     center_lat: Optional[float],
     center_lng: Optional[float],
+    use_ml_prediction: bool = False,
 ) -> Tuple[List[FacilityMapMarker], int]:
     query = select(AgedCareService).where(AgedCareService.physical_state == "VIC")
 
@@ -107,6 +125,11 @@ async def get_facilities_for_map(
 
     result = await db.execute(query)
     rows = result.scalars().all()
+
+    # Load ML predictions if requested; falls back to empty dict on any error
+    ml_predictions: dict = {}
+    if use_ml_prediction:
+        ml_predictions = await _load_ml_predictions(db)
 
     apply_distance = (
         max_distance_km is not None
@@ -123,6 +146,11 @@ async def get_facilities_for_map(
             if dist > max_distance_km:
                 continue
 
+        availability_group = (
+            ml_predictions.get(row.id)
+            or calculate_availability(row.residential_places)
+        )
+
         markers.append(
             FacilityMapMarker(
                 id=row.id,
@@ -131,7 +159,7 @@ async def get_facilities_for_map(
                 longitude=row.longitude,
                 care_type=row.care_type,
                 residential_places=row.residential_places,
-                availability_group=calculate_availability(row.residential_places),
+                availability_group=availability_group,
                 data_source=_DATA_SOURCE,
                 provider_name=row.provider_name,
                 physical_suburb=row.physical_suburb,
