@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.aged_care import AgedCareService
 from app.models.availability import AvailabilityGroup, FacilityAvailability
-from app.schemas.aged_care import FacilityMapMarker
+from app.schemas.aged_care import FacilityCard, FacilityMapMarker
 
 _DATA_SOURCE = "Based on residential bed capacity data (aged_care_services)"
 
@@ -181,3 +181,60 @@ async def get_facility_by_id(
     )
     result = await db.execute(query)
     return result.scalar_one_or_none()
+
+
+_CARE_TYPE_SORT_FIELD = {
+    "Residential": AgedCareService.residential_places,
+    "Home Care": AgedCareService.home_care_places,
+    "Short-Term Restorative Care (STRC)": AgedCareService.restorative_care_places,
+    "Transition Care": AgedCareService.restorative_care_places,
+    "Multi-Purpose Service": AgedCareService.residential_places,
+    "National Aboriginal and Torres Strait Islander Aged Care Program": AgedCareService.home_care_places,
+}
+
+
+async def get_recommended_facilities(db: AsyncSession) -> List[FacilityCard]:
+    results: List[FacilityCard] = []
+    for care_type, sort_field in _CARE_TYPE_SORT_FIELD.items():
+        query = (
+            select(AgedCareService)
+            .where(AgedCareService.physical_state == "VIC")
+            .where(AgedCareService.care_type == care_type)
+            .order_by(sort_field.desc().nulls_last())
+            .limit(1)
+        )
+        row = (await db.execute(query)).scalar_one_or_none()
+        if row:
+            results.append(FacilityCard.model_validate(row))
+    return results
+
+
+async def get_similar_facilities(
+    db: AsyncSession,
+    facility_id: str,
+    limit: int = 4,
+) -> List[FacilityCard]:
+    target = await get_facility_by_id(db, facility_id)
+    if target is None:
+        return []
+
+    query = (
+        select(AgedCareService)
+        .where(AgedCareService.physical_state == "VIC")
+        .where(AgedCareService.care_type == target.care_type)
+        .where(AgedCareService.id != target.id)
+    )
+    result = await db.execute(query)
+    candidates = result.scalars().all()
+
+    if target.latitude is None or target.longitude is None:
+        return [FacilityCard.model_validate(r) for r in candidates[:limit]]
+
+    with_distance = [
+        (haversine_distance(target.latitude, target.longitude, r.latitude, r.longitude), r)
+        for r in candidates
+        if r.latitude is not None and r.longitude is not None
+    ]
+    with_distance.sort(key=lambda x: x[0])
+
+    return [FacilityCard.model_validate(r) for _, r in with_distance[:limit]]
