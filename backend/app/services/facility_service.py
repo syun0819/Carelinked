@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.aged_care import AgedCareService
 from app.models.availability import AvailabilityGroup, FacilityAvailability
-from app.schemas.aged_care import FacilityCard, FacilityMapMarker
+from app.schemas.aged_care import FacilityCard, FacilityDetail, FacilityMapMarker
 
 _DATA_SOURCE = "Based on residential bed capacity data (aged_care_services)"
 
@@ -173,14 +173,20 @@ async def get_facilities_for_map(
 async def get_facility_by_id(
     db: AsyncSession,
     facility_id: str,
-) -> Optional[AgedCareService]:
+) -> Optional[FacilityDetail]:
     query = (
         select(AgedCareService)
         .where(AgedCareService.id == facility_id)
         .where(AgedCareService.physical_state == "VIC")
     )
     result = await db.execute(query)
-    return result.scalar_one_or_none()
+    row = result.scalar_one_or_none()
+    if row is None:
+        return None
+    detail = FacilityDetail.model_validate(row)
+    detail.availability_group = calculate_availability(row.residential_places)
+    detail.data_source = _DATA_SOURCE
+    return detail
 
 
 _CARE_TYPE_SORT_FIELD = {

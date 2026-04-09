@@ -25,6 +25,8 @@ class FacilityDetail(FacilityCard):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     australian_government_funding: Optional[float] = None
+    availability_group: Optional[str] = None
+    data_source: Optional[str] = None
 
 
 class FacilitySearchResponse(BaseModel):
