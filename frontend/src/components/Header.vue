@@ -1,0 +1,78 @@
+<template>
+  <header class="header">
+    <router-link to="/" class="logo">
+      <div class="logo-icon">🏢</div>
+      <div class="logo-text">
+        <div class="brand">CareLink</div>
+        <div class="sub">VICTORIA</div>
+      </div>
+    </router-link>
+
+    <nav class="nav">
+      <a class="active">Find a Bed</a>
+      <a>Wait Time Estimator</a>
+      <a>How it Works</a>
+    </nav>
+  </header>
+</template>
+
+<style scoped>
+.header {
+  width: 100%;
+  padding: 16px 80px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: scale(1.35);
+  text-decoration: none;
+  color: inherit;
+}
+
+.logo-icon {
+  font-size: 20px;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.brand {
+  font-weight: 600;
+  font-size: 16px;
+  color: #1f2d2a;
+}
+
+.sub {
+  font-size: 8px;
+  color: #6f7f78;
+  letter-spacing: 1px;
+}
+
+.nav {
+  display: flex;
+  gap: 32px;
+}
+
+.nav a {
+  font-size: 14px;
+  color: #6f7f78;
+  text-decoration: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+
+.nav a.active {
+  color: #1f2d2a;
+  font-weight: 500;
+}
+</style>
