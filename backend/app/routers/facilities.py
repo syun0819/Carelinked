@@ -5,7 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.schemas.aged_care import FacilityCard, FacilityDetail, FacilityMapResponse, FacilitySearchResponse
-from app.services.facility_service import get_facilities_for_map, search_facilities, get_facility_by_id
+from app.services.facility_service import (
+    get_facilities_for_map,
+    get_facility_by_id,
+    get_recommended_facilities,
+    get_similar_facilities,
+    search_facilities,
+)
 from app.services import location_service
 
 router = APIRouter(prefix="/api/v1/facilities", tags=["facilities"])
@@ -49,6 +55,12 @@ async def search(
         total=total,
         results=[FacilityCard.model_validate(r) for r in results],
     )
+
+
+@router.get("/recommended", response_model=FacilitySearchResponse)
+async def recommended(db: AsyncSession = Depends(get_db)):
+    results = await get_recommended_facilities(db)
+    return FacilitySearchResponse(total=len(results), results=results)
 
 
 @router.get("/map", response_model=FacilityMapResponse)
@@ -96,6 +108,19 @@ async def get_map(
         )
 
     return FacilityMapResponse(total=total, results=results, message=message)
+
+
+@router.get("/{facility_id}/similar", response_model=FacilitySearchResponse)
+async def similar(
+    facility_id: str,
+    limit: int = Query(4, ge=1, le=20),
+    db: AsyncSession = Depends(get_db),
+):
+    target = await get_facility_by_id(db, facility_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="Facility not found.")
+    results = await get_similar_facilities(db, facility_id, limit=limit)
+    return FacilitySearchResponse(total=len(results), results=results)
 
 
 @router.get("/{facility_id}", response_model=FacilityDetail)

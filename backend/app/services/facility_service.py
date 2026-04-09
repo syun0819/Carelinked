@@ -5,7 +5,8 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.aged_care import AgedCareService
-from app.schemas.aged_care import FacilityMapMarker
+from app.models.availability import AvailabilityGroup, FacilityAvailability
+from app.schemas.aged_care import FacilityCard, FacilityDetail, FacilityMapMarker
 
 _DATA_SOURCE = "Based on residential bed capacity data (aged_care_services)"
 
@@ -84,6 +85,22 @@ async def search_facilities(
     return rows, total
 
 
+async def _load_ml_predictions(db: AsyncSession) -> dict:
+    """返回 {facility_id: display_name}，表不存在或无数据时返回空 dict。"""
+    try:
+        ml_query = (
+            select(FacilityAvailability.facility_id, AvailabilityGroup.availability_group_display_name)
+            .join(
+                AvailabilityGroup,
+                FacilityAvailability.availability_group_id == AvailabilityGroup.availability_group_id,
+            )
+        )
+        result = await db.execute(ml_query)
+        return {row.facility_id: row.availability_group_display_name for row in result}
+    except Exception:
+        return {}
+
+
 async def get_facilities_for_map(
     db: AsyncSession,
     suburb: Optional[str],
@@ -93,6 +110,7 @@ async def get_facilities_for_map(
     max_distance_km: Optional[float],
     center_lat: Optional[float],
     center_lng: Optional[float],
+    use_ml_prediction: bool = False,
 ) -> Tuple[List[FacilityMapMarker], int]:
     query = select(AgedCareService).where(AgedCareService.physical_state == "VIC")
 
@@ -107,6 +125,11 @@ async def get_facilities_for_map(
 
     result = await db.execute(query)
     rows = result.scalars().all()
+
+    # Load ML predictions if requested; falls back to empty dict on any error
+    ml_predictions: dict = {}
+    if use_ml_prediction:
+        ml_predictions = await _load_ml_predictions(db)
 
     apply_distance = (
         max_distance_km is not None
@@ -123,6 +146,11 @@ async def get_facilities_for_map(
             if dist > max_distance_km:
                 continue
 
+        availability_group = (
+            ml_predictions.get(row.id)
+            or calculate_availability(row.residential_places)
+        )
+
         markers.append(
             FacilityMapMarker(
                 id=row.id,
@@ -131,7 +159,7 @@ async def get_facilities_for_map(
                 longitude=row.longitude,
                 care_type=row.care_type,
                 residential_places=row.residential_places,
-                availability_group=calculate_availability(row.residential_places),
+                availability_group=availability_group,
                 data_source=_DATA_SOURCE,
                 provider_name=row.provider_name,
                 physical_suburb=row.physical_suburb,
@@ -145,11 +173,74 @@ async def get_facilities_for_map(
 async def get_facility_by_id(
     db: AsyncSession,
     facility_id: str,
-) -> Optional[AgedCareService]:
+) -> Optional[FacilityDetail]:
     query = (
         select(AgedCareService)
         .where(AgedCareService.id == facility_id)
         .where(AgedCareService.physical_state == "VIC")
     )
     result = await db.execute(query)
-    return result.scalar_one_or_none()
+    row = result.scalar_one_or_none()
+    if row is None:
+        return None
+    detail = FacilityDetail.model_validate(row)
+    detail.availability_group = calculate_availability(row.residential_places)
+    detail.data_source = _DATA_SOURCE
+    return detail
+
+
+_CARE_TYPE_SORT_FIELD = {
+    "Residential": AgedCareService.residential_places,
+    "Home Care": AgedCareService.home_care_places,
+    "Short-Term Restorative Care (STRC)": AgedCareService.restorative_care_places,
+    "Transition Care": AgedCareService.restorative_care_places,
+    "Multi-Purpose Service": AgedCareService.residential_places,
+    "National Aboriginal and Torres Strait Islander Aged Care Program": AgedCareService.home_care_places,
+}
+
+
+async def get_recommended_facilities(db: AsyncSession) -> List[FacilityCard]:
+    results: List[FacilityCard] = []
+    for care_type, sort_field in _CARE_TYPE_SORT_FIELD.items():
+        query = (
+            select(AgedCareService)
+            .where(AgedCareService.physical_state == "VIC")
+            .where(AgedCareService.care_type == care_type)
+            .order_by(sort_field.desc().nulls_last())
+            .limit(1)
+        )
+        row = (await db.execute(query)).scalar_one_or_none()
+        if row:
+            results.append(FacilityCard.model_validate(row))
+    return results
+
+
+async def get_similar_facilities(
+    db: AsyncSession,
+    facility_id: str,
+    limit: int = 4,
+) -> List[FacilityCard]:
+    target = await get_facility_by_id(db, facility_id)
+    if target is None:
+        return []
+
+    query = (
+        select(AgedCareService)
+        .where(AgedCareService.physical_state == "VIC")
+        .where(AgedCareService.care_type == target.care_type)
+        .where(AgedCareService.id != target.id)
+    )
+    result = await db.execute(query)
+    candidates = result.scalars().all()
+
+    if target.latitude is None or target.longitude is None:
+        return [FacilityCard.model_validate(r) for r in candidates[:limit]]
+
+    with_distance = [
+        (haversine_distance(target.latitude, target.longitude, r.latitude, r.longitude), r)
+        for r in candidates
+        if r.latitude is not None and r.longitude is not None
+    ]
+    with_distance.sort(key=lambda x: x[0])
+
+    return [FacilityCard.model_validate(r) for _, r in with_distance[:limit]]
