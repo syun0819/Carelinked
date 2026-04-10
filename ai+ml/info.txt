@@ -1,0 +1,7 @@
+Facility Availability Clustering
+
+Goal
+Estimate facility availability using 3 features only:
+- facility_supply_places
+- regional_demand_people / regional_supply_places = regional_demand_pressure
+- facility_supply_places / regional_supply_places = facility_supply_share_lga
