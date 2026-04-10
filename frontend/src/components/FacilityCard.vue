@@ -1,5 +1,5 @@
 <template>
-  <div class="facility-card">
+  <article class="facility-card">
     <img
       :src="facility.image_url"
       :alt="facility.service_name"
@@ -7,39 +7,45 @@
     />
 
     <div class="facility-body">
-      <div class="card-top">
-        <h3 class="facility-name">{{ facility.service_name }}</h3>
-        <span class="availability-badge">{{ facility.availability_level }}</span>
-      </div>
-
-      <p class="facility-suburb">
-        {{ facility.physical_suburb }}, {{ facility.physical_state }}
-      </p>
-
-      <p class="facility-type">{{ facility.care_type }}</p>
-
-      <p class="facility-address">
-        {{ facility.physical_address }}, {{ facility.physical_post_code }}
-      </p>
-
-      <div class="facility-info-row">
-        <div class="info-block">
-          <span class="info-label">Wait Time</span>
-          <span class="info-value wait-time">{{ facility.estimated_wait_time }}</span>
+      <div class="facility-top-row">
+        <div>
+          <h3>{{ facility.service_name }}</h3>
+          <p class="facility-address">
+            📍 {{ facility.physical_address }}, {{ facility.physical_suburb }}
+            {{ facility.physical_state }} {{ facility.physical_post_code }}
+          </p>
         </div>
 
-        <div class="info-block">
-          <span class="info-label">Residential Places</span>
-          <span class="info-value">{{ facility.residential_places }}</span>
+        <span class="recommended-badge">Recommended</span>
+      </div>
+
+      <div class="tag-row">
+        <span class="tag-chip">{{ facility.care_type }}</span>
+        <span class="tag-chip">{{ facility.provider_name }}</span>
+      </div>
+
+      <div class="metrics-row">
+        <div class="metric-block availability">
+          <div class="metric-value">{{ facility.availability_level }}</div>
+          <div class="metric-caption">BEDS AVAILABLE</div>
+        </div>
+
+        <div class="metric-block wait-time">
+          <div class="metric-value">{{ facility.estimated_wait_time }}</div>
+          <div class="metric-caption">EST. WAIT</div>
         </div>
       </div>
 
-      <div class="card-footer">
-        <span class="provider-name">{{ facility.provider_name }}</span>
-        <button class="view-btn">View Details</button>
+      <div class="facility-footer">
+        <p class="places-line">
+          Residential places: {{ facility.residential_places }} ·
+          Home care places: {{ facility.home_care_places }}
+        </p>
+
+        <button class="details-btn">View Details</button>
       </div>
     </div>
-  </div>
+  </article>
 </template>
 
 <script setup>
@@ -54,117 +60,118 @@ defineProps({
 <style scoped>
 .facility-card {
   background: white;
-  border: 1px solid #e3dfd8;
-  border-radius: 14px;
+  border: 1px solid #ddd8cf;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
 }
 
 .facility-image {
   width: 100%;
-  height: 180px;
+  height: 160px;
   object-fit: cover;
   display: block;
 }
 
 .facility-body {
-  padding: 16px;
+  padding: 18px 20px;
 }
 
-.card-top {
+.facility-top-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 20px;
 }
 
-.facility-name {
+.facility-top-row h3 {
   margin: 0;
   font-size: 20px;
-  line-height: 1.3;
-  color: #1f2d2a;
-}
-
-.availability-badge {
-  background: #e6f1eb;
-  color: #5d8b72;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.facility-suburb {
-  margin: 0 0 6px;
-  font-size: 14px;
-  color: #5f6d67;
-}
-
-.facility-type {
-  margin: 0 0 6px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #5d8b72;
 }
 
 .facility-address {
-  margin: 0 0 16px;
-  font-size: 13px;
-  color: #8a8f8c;
+  margin: 8px 0 0;
+  color: #7b8d87;
+  font-size: 14px;
 }
 
-.facility-info-row {
-  display: flex;
-  gap: 28px;
-  margin-bottom: 16px;
-}
-
-.info-block {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.info-label {
+.recommended-badge {
+  background: #eaf4ec;
+  color: #7aa284;
+  padding: 6px 12px;
+  border-radius: 999px;
   font-size: 12px;
-  color: #8a8f8c;
-}
-
-.info-value {
-  font-size: 16px;
   font-weight: 600;
-  color: #1f2d2a;
 }
 
-.wait-time {
-  color: #c9793b;
+.tag-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
 }
 
-.card-footer {
+.tag-chip {
+  background: #eef5ef;
+  color: #678072;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.metrics-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 18px;
+  padding: 18px 0;
+  border-top: 1px solid #ece7dd;
+  border-bottom: 1px solid #ece7dd;
+}
+
+.metric-block {
+  text-align: center;
+}
+
+.metric-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.metric-caption {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #7b8d87;
+}
+
+.availability .metric-value {
+  color: #4f7a62;
+}
+
+.wait-time .metric-value {
+  color: #c98a3d;
+}
+
+.facility-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  margin-top: 16px;
 }
 
-.provider-name {
-  font-size: 13px;
-  color: #5f6d67;
+.places-line {
+  margin: 0;
+  color: #7b8d87;
+  font-size: 14px;
 }
 
-.view-btn {
-  background: #5d8b72;
-  color: white;
+.details-btn {
   border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-size: 13px;
+  background: #557067;
+  color: white;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 600;
   cursor: pointer;
-}
-
-.view-btn:hover {
-  background: #4c735d;
 }
 </style>

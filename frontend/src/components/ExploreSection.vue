@@ -1,19 +1,18 @@
 <template>
   <section class="explore-section">
-    
-    <div class="summary-row">
-      <p class="summary-text">
-        Showing {{ facilities.length }} care facilities within 10km
-      </p>
-      <div class="sort-box">
-        <label>Sort by:</label>
-        <select v-model="sortOption">
-            <option value="Closest to me">Closest to me</option>
-            <option value="Shortest wait time">Shortest wait time</option>
-        </select>
+    <div class="explore-header">
+        <h1 class="explore-title">Explore Aged Care</h1>
+        <p class="explore-subtitle">
+          Find the right aged care for you
+        </p>
       </div>
-    </div>
-
+    
+    <ResultsHeader
+      :count="facilities.length"
+      :sort-by="sortOption"
+      :distance="distance"
+      @update:sortBy="sortOption = $event"
+    />
     <div class="explore-grid">
       <FacilityCard
         v-for="facility in facilities"
@@ -25,11 +24,12 @@
 </template>
 
 <script setup>
-import FacilityCard from '../components/FacilityCard.vue'
+import FacilityCard from './FacilityCard.vue'
+import ResultsHeader from './search/ResultsHeader.vue'
 
 import { ref } from 'vue'
 
-const sortOption = ref('Closest to me')
+const sortOption = ref('closest')
 
 defineProps({
   facilities: {
@@ -43,6 +43,28 @@ defineProps({
 .explore-section {
   padding: 20px 80px 60px;
   background: #f7f4ee;
+}
+
+.explore-header {
+  text-align: center;
+  margin-bottom: 20px;
+  margin-top: 30px;
+}
+
+.explore-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2d2a;
+  margin: 0;
+
+  font-family: 'Georgia', serif;
+}
+
+.explore-subtitle {
+  font-size: 12px;
+  color: #6b736f;
+  margin-top: 10px;
+  font-family: 'Inter', sans-serif;
 }
 
 .stats-card {
