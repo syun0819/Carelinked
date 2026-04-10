@@ -1,0 +1,85 @@
+Goal
+Estimate facility availability using 3 features only:
+- facility_supply_places
+- regional_demand_pressure
+- facility_supply_share_lga
+
+Use separate runs or tables for:
+- Residential
+- Home Care
+- Restorative Care
+
+Join key
+- Join facility data to demand data by LGA code
+
+Source tables
+- Facility supply: aged_care_services.csv
+- Residential demand: residential_care_demand_by_service_lga.csv
+- Home care demand: home_care_demand_by_service_lga.csv
+- Restorative care demand: flex_care_demand_by_service_lga.csv where care_type = 'STRC'
+
+Supply definition by stream
+- Residential supply = residential_places
+- Home care supply = home_care_places
+- Restorative care supply = restorative_care_places
+
+Feature 1: facility_supply_places
+Formula:
+- facility_supply_places = places recorded for that facility
+
+By stream:
+- Residential: facility_supply_places = residential_places
+- Home Care: facility_supply_places = home_care_places
+- Restorative Care: facility_supply_places = restorative_care_places
+
+Meaning:
+- Measures the facility's own capacity
+- Higher = more likely to absorb demand
+
+Feature 2: regional_demand_pressure
+Formula:
+- regional_demand_pressure = regional_demand_people / regional_supply_places
+
+Where:
+- regional_demand_people = sum(people_count) in the same LGA for that stream
+- regional_supply_places = sum(service-specific places) in the same LGA
+
+By stream:
+- Residential:
+  regional_demand_people = sum(people_count) from residential_care_demand_by_service_lga.csv
+  regional_supply_places = sum(residential_places) from aged_care_services.csv
+- Home Care:
+  regional_demand_people = sum(people_count) from home_care_demand_by_service_lga.csv
+  regional_supply_places = sum(home_care_places) from aged_care_services.csv
+- Restorative Care:
+  regional_demand_people = sum(people_count) from flex_care_demand_by_service_lga.csv where care_type = 'STRC'
+  regional_supply_places = sum(restorative_care_places) from aged_care_services.csv
+
+Meaning:
+- Measures how crowded the local market is
+- Higher = harder to get access
+- Lower = better expected availability
+
+Feature 3: facility_supply_share_lga
+Formula:
+- facility_supply_share_lga = facility_supply_places / regional_supply_places
+
+Meaning:
+- Measures how much of the LGA supply belongs to this facility
+- Higher = more important local provider
+- Lower = smaller local player
+
+Availability interpretation
+- More available: high facility_supply_places, low regional_demand_pressure, high facility_supply_share_lga
+- Less available: low facility_supply_places, high regional_demand_pressure, low facility_supply_share_lga
+
+Suggested cluster labels
+- Likely Available
+- Potentially Available
+- Constrained by Market
+- Constrained by Size
+- Highly Constrained
+
+Notes
+- If regional_supply_places = 0, set ratio features to NULL
+- Standardize the 3 numeric features before clustering
