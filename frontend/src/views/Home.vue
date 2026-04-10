@@ -5,24 +5,16 @@
     <HeroSection />
 
     <section class="mode-switch-section">
-      <div class="stats-card">
-        <div class="stats-icon">🏢</div>
-        <div class="stats-content">
-          <div class="stats-number">400+</div>
-          <div class="stats-text">Facilities across Victoria</div>
+      <div class="stats-wrapper">
+        <div class="stats-bar">
+          <div class="stats-icon">🏥</div>
+          <div class="stats-content">
+            <div class="stats-number">400+</div>
+            <div class="stats-text">Facilities across Victoria</div>
+          </div>
         </div>
       </div>
     </section>
-
-    <ExploreSection
-      v-if="currentMode === 'explore'"
-      :facilities="mockFacilities"
-    />
-
-    <SearchSection
-      v-else
-      :facilities="mockFacilities"
-    />
 
     <ExploreSection :facilities="mockFacilities" />
 
@@ -49,50 +41,55 @@ import mockFacilities from '../mock_data/mockFacilities.js'
   min-height: 100vh;
 }
 
-.stats-section {
+.mode-switch-section {
   position: relative;
-  z-index: 10;
-  margin-top: -35px;
-  padding: 0 24px 24px;
-  display: flex;
-  justify-content: center;
-  background: transparent;
+  margin-top: -36px;
+  z-index: 2;
 }
 
-.stats-card {
+.stats-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  padding: 0 24px;
+}
+
+.stats-bar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  background: white;
-  border: 1px solid #ddd8cf;
+  gap: 18px;
+  background: #ffffff;
+  border: 2px solid #d8d1c8;
   border-radius: 8px;
-  padding: 8px 18px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  padding: 8px 12px;
+  min-width: 100px;
 }
 
 .stats-icon {
-  font-size: 20px;
+  font-size: 28px;
   line-height: 1;
 }
 
 .stats-content {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
 }
 
 .stats-number {
   font-size: 18px;
   font-weight: 700;
-  color: #1f2d2a;
-  line-height: 1.3;
-  font-family: 'Inter', sans-serif;
+  color: #223432;
+  line-height: 1.1;
 }
 
 .stats-text {
-  font-size: 12px;
-  color: #61706a;
-  line-height: 1.2;
-  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: #5f7f79;
+  line-height: 1.3;
+  margin-top: 4px;
+
 }
 </style>

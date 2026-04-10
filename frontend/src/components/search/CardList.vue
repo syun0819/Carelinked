@@ -9,7 +9,7 @@
 </template>
 
 <script setup>
-import FacilityCard from '../search/FacilityCard.vue'
+import FacilityCard from '../FacilityCard.vue'
 
 defineProps({
   facilities: {

@@ -45,6 +45,7 @@
       <div class="results-main">
         <ResultsHeader
           :count="filteredFacilities.length"
+          :distance="distance"
           :sort-by="sortBy"
           @update:sortBy="sortBy = $event"
         />
@@ -85,7 +86,7 @@ import FooterSection from '../components/FooterSection.vue'
 
 const searchQuery = ref('')
 const activeView = ref('list')
-const sortBy = ref('availability')
+const sortBy = ref('closest')
 
 const careTypeOptions = [
   { value: 'Residential Care', label: 'Residential Aged Care', icon: '🏠' },
@@ -168,7 +169,7 @@ const filteredFacilities = computed(() => {
 .search-page {
   background: #f7f4ee;
   min-height: 100vh;
-  padding: 24px 0 60px;
+  padding: 0px 0 60px;
   color: #1f2d2a;
 }
 

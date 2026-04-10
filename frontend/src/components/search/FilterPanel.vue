@@ -156,14 +156,15 @@ const rangeStyle = computed(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 26px;
+  margin-bottom: 10px;
 }
 
 .filters-header h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 800;
   color: #22332e;
+  margin-top: -10px;
 }
 
 .reset-btn {
@@ -260,6 +261,7 @@ const rangeStyle = computed(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-size: 16px;
 }
 
 .range-wrap {

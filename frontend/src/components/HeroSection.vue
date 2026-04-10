@@ -41,7 +41,8 @@
 }
 
 .hero-left{
-  text-align: left
+  text-align: left;
+  padding-left: 72px;
 }
 
 .hero-left h1 {
@@ -97,7 +98,7 @@
 }
 
 .care-tags span {
-  padding: 0px 10px;
+  padding: 0px 20px;
   border: 1px solid #d4d4d4;
   background: white;
   border-radius: 8px;
