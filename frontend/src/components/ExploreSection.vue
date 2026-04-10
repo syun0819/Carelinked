@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import FacilityCard from '../components/FacilityCard.vue'
+import FacilityCard from './search/FacilityCard.vue'
 
 import { ref } from 'vue'
 

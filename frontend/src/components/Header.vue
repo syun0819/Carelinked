@@ -9,7 +9,10 @@
     </router-link>
 
     <nav class="nav">
-      <a class="active">Find a Bed</a>
+      <router-link to="/" class="nav-item">Home</router-link>
+      <router-link to="/find-bed" class="nav-item" active-class="active">
+        Find a Bed
+      </router-link>
       <a>Wait Time Estimator</a>
       <a>How it Works</a>
     </nav>

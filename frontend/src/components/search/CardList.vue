@@ -1,5 +1,5 @@
 <template>
-  <div class="facility-list">
+  <div class="results-list">
     <FacilityCard
       v-for="facility in facilities"
       :key="facility.id"
@@ -9,20 +9,20 @@
 </template>
 
 <script setup>
-import FacilityCard from './FacilityCard.vue'
+import FacilityCard from '../search/FacilityCard.vue'
 
 defineProps({
   facilities: {
     type: Array,
-    required: true
+    default: () => []
   }
 })
 </script>
 
 <style scoped>
-.facility-list {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
+.results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 </style>
