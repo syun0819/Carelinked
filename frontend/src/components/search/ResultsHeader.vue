@@ -9,7 +9,6 @@
       <select :value="sortBy" @change="$emit('update:sortBy', $event.target.value)">
         <option value="closest">Closest to me</option>
         <option value="availability">Highest availability</option>
-        <option value="wait">Shortest wait</option>
         <option value="name">A to Z</option>
       </select>
     </label>

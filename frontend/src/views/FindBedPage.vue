@@ -115,11 +115,6 @@ function resetFilters() {
   distance.value = 10
 }
 
-function getWaitWeeks(wait) {
-  const match = wait.match(/\d+/)
-  return match ? Number(match[0]) : 999
-}
-
 function getAvailabilityRank(level) {
   if (level === 'High') return 3
   if (level === 'Medium') return 2
@@ -133,32 +128,34 @@ const filteredFacilities = computed(() => {
   let result = mockFacilities.filter((f) => {
     const matchesQuery =
       !q ||
-      f.service_name.toLowerCase().includes(q) ||
-      f.physical_suburb.toLowerCase().includes(q) ||
-      f.care_type.toLowerCase().includes(q)
+      f.name.toLowerCase().includes(q) ||
+      f.suburb.toLowerCase().includes(q) ||
+      f.careType.toLowerCase().includes(q)
 
     const matchesCareType =
       selectedCareTypes.value.length === 0 ||
-      selectedCareTypes.value.includes(f.care_type)
+      selectedCareTypes.value.includes(f.careType)
 
     const matchesFunding =
-      selectedFunding.value.length === 0 || true
+      selectedFunding.value.length === 0 ||
+      selectedFunding.value.includes(f.organisationType)
 
-    return matchesQuery && matchesCareType && matchesFunding
+    const matchesDistance =
+      f.distance <= distance.value
+
+    return matchesQuery && matchesCareType && matchesFunding && matchesDistance
   })
 
-  if (sortBy.value === 'wait') {
+  if (sortBy.value === 'name') {
+    result = [...result].sort((a, b) => a.name.localeCompare(b.name))
+  } 
+  else if (sortBy.value === 'availability') {
     result = [...result].sort(
-      (a, b) => getWaitWeeks(a.estimated_wait_time) - getWaitWeeks(b.estimated_wait_time)
+      (a, b) => getAvailabilityRank(b.bedAvailability) - getAvailabilityRank(a.bedAvailability)
     )
-  } else if (sortBy.value === 'name') {
-    result = [...result].sort((a, b) =>
-      a.service_name.localeCompare(b.service_name)
-    )
-  } else {
-    result = [...result].sort(
-      (a, b) => getAvailabilityRank(b.availability_level) - getAvailabilityRank(a.availability_level)
-    )
+  } 
+  else if (sortBy.value === 'closest') {
+    result = [...result].sort((a, b) => a.distance - b.distance)
   }
 
   return result

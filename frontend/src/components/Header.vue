@@ -9,7 +9,7 @@
     </router-link>
 
     <nav class="nav">
-      <router-link to="/" class="nav-item">Home</router-link>
+      <router-link to="/" class="nav-item" active-class="active">Home</router-link>
       <router-link to="/find-bed" class="nav-item" active-class="active">
         Find a Bed
       </router-link>

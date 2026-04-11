@@ -1,18 +1,17 @@
 <template>
   <article class="facility-card">
     <img
-      :src="facility.image_url"
-      :alt="facility.service_name"
+      :src="facility.image"
+      :alt="facility.name"
       class="facility-image"
     />
 
     <div class="facility-body">
       <div class="facility-top-row">
         <div>
-          <h3>{{ facility.service_name }}</h3>
+          <h3>{{ facility.name }}</h3>
           <p class="facility-address">
-            📍 {{ facility.physical_address }}, {{ facility.physical_suburb }}
-            {{ facility.physical_state }} {{ facility.physical_post_code }}
+            📍 {{ facility.address }}
           </p>
         </div>
 
@@ -20,41 +19,65 @@
       </div>
 
       <div class="tag-row">
-        <span class="tag-chip">{{ facility.care_type }}</span>
-        <span class="tag-chip">{{ facility.provider_name }}</span>
+        <span class="tag-chip">{{ facility.careType }}</span>
+        <span class="tag-chip">{{ facility.provider }}</span>
       </div>
 
       <div class="metrics-row">
         <div class="metric-block availability">
-          <div class="metric-value">{{ facility.availability_level }}</div>
-          <div class="metric-caption">BEDS AVAILABLE</div>
+        <div
+          class="metric-value"
+          :class="availabilityClass"
+        >
+          {{ facility.bedAvailability }}
         </div>
+        <div class="metric-caption">BEDS AVAILABLE</div>
+      </div>
 
         <div class="metric-block wait-time">
-          <div class="metric-value">{{ facility.estimated_wait_time }}</div>
-          <div class="metric-caption">EST. WAIT</div>
+          <div class="metric-value">{{ facility.distance }} km</div>
+          <div class="metric-caption">DISTANCE</div>
         </div>
       </div>
 
       <div class="facility-footer">
         <p class="places-line">
-          Residential places: {{ facility.residential_places }} ·
-          Home care places: {{ facility.home_care_places }}
+          Total beds: {{ facility.totalBeds }} · {{ facility.state }}
         </p>
 
-        <button class="details-btn">View Details</button>
+        <button class="details-btn" @click.stop="goToDetail">
+          View Details
+        </button>
       </div>
     </div>
   </article>
 </template>
 
 <script setup>
-defineProps({
+import { useRouter } from 'vue-router'
+import { computed } from 'vue'
+
+const availabilityClass = computed(() => {
+  const level = props.facility.bedAvailability
+
+  if (level === 'High') return 'availability-high'
+  if (level === 'Medium') return 'availability-medium'
+  if (level === 'Low') return 'availability-low'
+  return ''
+})
+
+const props = defineProps({
   facility: {
     type: Object,
     required: true
   }
 })
+
+const router = useRouter()
+
+const goToDetail = () => {
+  router.push(`/facility/${props.facility.id}`)
+}
 </script>
 
 <style scoped>
@@ -103,6 +126,18 @@ defineProps({
   font-weight: 600;
 }
 
+.availability-high {
+  color: #4f7a62;
+}
+
+.availability-medium {
+  color: #d9822b;
+}
+
+.availability-low {
+  color: #d64545;
+}
+
 .tag-row {
   display: flex;
   gap: 8px;
@@ -141,10 +176,6 @@ defineProps({
   margin-top: 4px;
   font-size: 11px;
   color: #7b8d87;
-}
-
-.availability .metric-value {
-  color: #4f7a62;
 }
 
 .wait-time .metric-value {
