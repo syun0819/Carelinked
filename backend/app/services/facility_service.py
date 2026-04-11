@@ -5,10 +5,14 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.aged_care import AgedCareService
-from app.models.availability import AvailabilityGroup, FacilityAvailability
+from app.models.availability import FacilityAvailabilityML
 from app.schemas.aged_care import FacilityCard, FacilityDetail, FacilityMapMarker
 
-_DATA_SOURCE = "Based on residential bed capacity data (aged_care_services)"
+_DATA_SOURCE_BEDS = "Based on residential bed capacity data (aged_care_services)"
+_DATA_SOURCE_ML = "Based on ML prediction model (aged_care_facility_availability)"
+
+# Keep backward compat alias
+_DATA_SOURCE = _DATA_SOURCE_BEDS
 
 
 def calculate_availability(residential_places: Optional[int]) -> str:
@@ -30,6 +34,47 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
+def get_ml_availability_group(
+    ml_record: Optional[FacilityAvailabilityML],
+    care_type: Optional[str],
+) -> Optional[str]:
+    if ml_record is None:
+        return None
+    if care_type == "Home Care":
+        label = ml_record.home_care_label_name
+    elif care_type in ("Short-Term Restorative Care (STRC)", "Transition Care"):
+        label = ml_record.restorative_care_label_name
+    else:
+        label = ml_record.residential_label_name
+    return label if label else None
+
+
+async def _fetch_ml_record(db: AsyncSession, facility_id: str) -> Optional[FacilityAvailabilityML]:
+    try:
+        result = await db.execute(
+            select(FacilityAvailabilityML)
+            .where(FacilityAvailabilityML.facility_id == facility_id)
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+    except Exception:
+        return None
+
+
+async def _fetch_ml_records_bulk(db: AsyncSession, facility_ids: List[str]) -> dict:
+    """Returns {facility_id: FacilityAvailabilityML}."""
+    if not facility_ids:
+        return {}
+    try:
+        result = await db.execute(
+            select(FacilityAvailabilityML)
+            .where(FacilityAvailabilityML.facility_id.in_(facility_ids))
+        )
+        return {row.facility_id: row for row in result.scalars().all()}
+    except Exception:
+        return {}
+
+
 async def search_facilities(
     db: AsyncSession,
     suburb: Optional[str],
@@ -46,7 +91,6 @@ async def search_facilities(
 ) -> Tuple[List[AgedCareService], int]:
     query = select(AgedCareService).where(AgedCareService.physical_state == "VIC")
 
-    # Search conditions
     if suburb:
         query = query.where(AgedCareService.physical_suburb.ilike(f"%{suburb}%"))
     if postcode:
@@ -56,7 +100,6 @@ async def search_facilities(
     if keyword:
         query = query.where(AgedCareService.service_name.ilike(f"%{keyword}%"))
 
-    # Filter conditions
     if care_type:
         query = query.where(AgedCareService.care_type == care_type)
     if abs_remoteness:
@@ -66,12 +109,10 @@ async def search_facilities(
     if max_beds is not None:
         query = query.where(AgedCareService.residential_places <= max_beds)
 
-    # Count total
     count_query = select(func.count()).select_from(query.subquery())
     total_result = await db.execute(count_query)
     total = total_result.scalar() or 0
 
-    # Sorting
     if sort_by == "beds_desc":
         query = query.order_by(AgedCareService.residential_places.desc())
     elif sort_by == "beds_asc":
@@ -79,29 +120,18 @@ async def search_facilities(
     else:
         query = query.order_by(AgedCareService.service_name.asc())
 
-    # Pagination
     query = query.limit(limit).offset(offset)
 
     result = await db.execute(query)
     rows = list(result.scalars().all())
 
+    ml_map = await _fetch_ml_records_bulk(db, [r.id for r in rows])
+    for row in rows:
+        ml_label = get_ml_availability_group(ml_map.get(row.id), row.care_type)
+        row._availability_group = ml_label or calculate_availability(row.residential_places)
+        row._data_source = _DATA_SOURCE_ML if ml_label else _DATA_SOURCE_BEDS
+
     return rows, total
-
-
-async def _load_ml_predictions(db: AsyncSession) -> dict:
-    """返回 {facility_id: display_name}，表不存在或无数据时返回空 dict。"""
-    try:
-        ml_query = (
-            select(FacilityAvailability.facility_id, AvailabilityGroup.availability_group_display_name)
-            .join(
-                AvailabilityGroup,
-                FacilityAvailability.availability_group_id == AvailabilityGroup.availability_group_id,
-            )
-        )
-        result = await db.execute(ml_query)
-        return {row.facility_id: row.availability_group_display_name for row in result}
-    except Exception:
-        return {}
 
 
 async def get_facilities_for_map(
@@ -113,7 +143,6 @@ async def get_facilities_for_map(
     max_distance_km: Optional[float],
     center_lat: Optional[float],
     center_lng: Optional[float],
-    use_ml_prediction: bool = False,
 ) -> Tuple[List[FacilityMapMarker], int]:
     query = select(AgedCareService).where(AgedCareService.physical_state == "VIC")
 
@@ -129,10 +158,7 @@ async def get_facilities_for_map(
     result = await db.execute(query)
     rows = result.scalars().all()
 
-    # Load ML predictions if requested; falls back to empty dict on any error
-    ml_predictions: dict = {}
-    if use_ml_prediction:
-        ml_predictions = await _load_ml_predictions(db)
+    ml_map = await _fetch_ml_records_bulk(db, [r.id for r in rows])
 
     apply_distance = (
         max_distance_km is not None
@@ -149,10 +175,9 @@ async def get_facilities_for_map(
             if dist > max_distance_km:
                 continue
 
-        availability_group = (
-            ml_predictions.get(row.id)
-            or calculate_availability(row.residential_places)
-        )
+        ml_label = get_ml_availability_group(ml_map.get(row.id), row.care_type)
+        availability_group = ml_label or calculate_availability(row.residential_places)
+        data_source = _DATA_SOURCE_ML if ml_label else _DATA_SOURCE_BEDS
 
         markers.append(
             FacilityMapMarker(
@@ -163,7 +188,7 @@ async def get_facilities_for_map(
                 care_type=row.care_type,
                 residential_places=row.residential_places,
                 availability_group=availability_group,
-                data_source=_DATA_SOURCE,
+                data_source=data_source,
                 provider_name=row.provider_name,
                 physical_suburb=row.physical_suburb,
                 physical_post_code=row.physical_post_code,
@@ -186,9 +211,17 @@ async def get_facility_by_id(
     row = result.scalar_one_or_none()
     if row is None:
         return None
+
+    ml_record = await _fetch_ml_record(db, facility_id)
+    ml_label = get_ml_availability_group(ml_record, row.care_type)
+
     detail = FacilityDetail.model_validate(row)
-    detail.availability_group = calculate_availability(row.residential_places)
-    detail.data_source = _DATA_SOURCE
+    if ml_label:
+        detail.availability_group = ml_label
+        detail.data_source = _DATA_SOURCE_ML
+    else:
+        detail.availability_group = calculate_availability(row.residential_places)
+        detail.data_source = _DATA_SOURCE_BEDS
     return detail
 
 

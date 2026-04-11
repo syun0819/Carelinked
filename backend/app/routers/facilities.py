@@ -47,10 +47,13 @@ async def search(
         offset=offset,
     )
 
-    return FacilitySearchResponse(
-        total=total,
-        results=[FacilityCard.model_validate(r) for r in results],
-    )
+    cards = []
+    for r in results:
+        card = FacilityCard.model_validate(r)
+        card.availability_group = getattr(r, "_availability_group", None)
+        card.data_source = getattr(r, "_data_source", None)
+        cards.append(card)
+    return FacilitySearchResponse(total=total, results=cards)
 
 
 @router.get("/recommended", response_model=FacilitySearchResponse)
