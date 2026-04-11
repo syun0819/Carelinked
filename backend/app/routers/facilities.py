@@ -32,12 +32,6 @@ async def search(
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
 ):
-    if not suburb and not postcode and not region and not keyword:
-        raise HTTPException(
-            status_code=400,
-            detail="At least one of suburb, postcode, region, or keyword is required.",
-        )
-
     results, total = await search_facilities(
         db=db,
         suburb=suburb,
