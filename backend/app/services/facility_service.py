@@ -35,6 +35,7 @@ async def search_facilities(
     suburb: Optional[str],
     postcode: Optional[str],
     region: Optional[str],
+    keyword: Optional[str],
     care_type: Optional[str],
     abs_remoteness: Optional[str],
     min_beds: Optional[int],
@@ -52,6 +53,8 @@ async def search_facilities(
         query = query.where(AgedCareService.physical_post_code == postcode)
     if region:
         query = query.where(AgedCareService.aged_care_planning_region.ilike(f"%{region}%"))
+    if keyword:
+        query = query.where(AgedCareService.service_name.ilike(f"%{keyword}%"))
 
     # Filter conditions
     if care_type:
