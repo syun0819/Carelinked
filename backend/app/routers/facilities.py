@@ -22,6 +22,7 @@ async def search(
     suburb: Optional[str] = Query(None),
     postcode: Optional[str] = Query(None),
     region: Optional[str] = Query(None),
+    keyword: Optional[str] = Query(None),
     care_type: Optional[str] = Query(None),
     abs_remoteness: Optional[str] = Query(None),
     min_beds: Optional[int] = Query(None),
@@ -31,17 +32,12 @@ async def search(
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
 ):
-    if not suburb and not postcode and not region:
-        raise HTTPException(
-            status_code=400,
-            detail="At least one of suburb, postcode, or region is required.",
-        )
-
     results, total = await search_facilities(
         db=db,
         suburb=suburb,
         postcode=postcode,
         region=region,
+        keyword=keyword,
         care_type=care_type,
         abs_remoteness=abs_remoteness,
         min_beds=min_beds,
@@ -51,10 +47,13 @@ async def search(
         offset=offset,
     )
 
-    return FacilitySearchResponse(
-        total=total,
-        results=[FacilityCard.model_validate(r) for r in results],
-    )
+    cards = []
+    for r in results:
+        card = FacilityCard.model_validate(r)
+        card.availability_group = getattr(r, "_availability_group", None)
+        card.data_source = getattr(r, "_data_source", None)
+        cards.append(card)
+    return FacilitySearchResponse(total=total, results=cards)
 
 
 @router.get("/recommended", response_model=FacilitySearchResponse)

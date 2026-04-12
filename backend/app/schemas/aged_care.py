@@ -16,6 +16,8 @@ class FacilityCard(BaseModel):
     residential_places: Optional[int] = None
     provider_name: Optional[str] = None
     abs_remoteness: Optional[str] = None
+    availability_group: Optional[str] = None
+    data_source: Optional[str] = None
 
 
 class FacilityDetail(FacilityCard):
@@ -25,8 +27,6 @@ class FacilityDetail(FacilityCard):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     australian_government_funding: Optional[float] = None
-    availability_group: Optional[str] = None
-    data_source: Optional[str] = None
 
 
 class FacilitySearchResponse(BaseModel):
