@@ -9,14 +9,14 @@
         <div class="stats-bar">
           <div class="stats-icon">🏥</div>
           <div class="stats-content">
-            <div class="stats-number">400+</div>
-            <div class="stats-text">Facilities across Victoria</div>
+            <div class="stats-number">{{ facilities.length }}</div>
+            <div class="stats-text">Recommended facilities</div>
           </div>
         </div>
       </div>
     </section>
 
-    <ExploreSection :facilities="mockFacilities" />
+    <ExploreSection :facilities="facilities" />
 
     <HowItWorksSection />
 
@@ -25,12 +25,32 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import Header from '../components/Header.vue'
 import HeroSection from '../components/HeroSection.vue'
 import ExploreSection from '../components/ExploreSection.vue'
 import HowItWorksSection from '../components/HowItWorksSection.vue'
 import FooterSection from '../components/FooterSection.vue'
-import mockFacilities from '../mock_data/mockFacilities.js'
+
+import { getRecommendedFacilities } from '../services/facilitiesApi'
+import { mapFacilityCard } from '../utils/facilityMappers'
+
+const facilities = ref([])
+
+async function fetchRecommendedFacilities() {
+  try {
+    const data = await getRecommendedFacilities()
+    console.log('recommended API response:', data)
+    facilities.value = (data.results || []).map(mapFacilityCard)
+    console.log('mapped facilities:', facilities.value)
+  } catch (error) {
+    console.error('Failed to load recommended facilities:', error)
+  }
+}
+
+onMounted(() => {
+  fetchRecommendedFacilities()
+})
 </script>
 
 <style scoped>
@@ -90,6 +110,5 @@ import mockFacilities from '../mock_data/mockFacilities.js'
   color: #5f7f79;
   line-height: 1.3;
   margin-top: 4px;
-
 }
 </style>

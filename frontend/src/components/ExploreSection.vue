@@ -27,7 +27,16 @@
 import FacilityCard from './FacilityCard.vue'
 import ResultsHeader from './search/ResultsHeader.vue'
 
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import { getRecommendedFacilities } from '../services/facilitiesApi'
+import { mapFacilityCard } from '../utils/facilityMappers'
+
+const recommendedFacilities = ref([])
+
+onMounted(async () => {
+  const data = await getRecommendedFacilities()
+  recommendedFacilities.value = (data.results || []).map(mapFacilityCard)
+})
 
 const sortOption = ref('closest')
 

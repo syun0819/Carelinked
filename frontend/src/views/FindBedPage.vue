@@ -30,14 +30,14 @@
     <section class="results-layout">
       <FilterPanel
         :selected-care-types="selectedCareTypes"
-        :selected-funding="selectedFunding"
+        :selectedAvailability="selectedAvailability"
         :distance="distance"
         :care-type-options="careTypeOptions"
-        :funding-options="fundingOptions"
+        :availabilityOptions="availabilityOptions"
         :min-distance="minDistance"
         :max-distance="maxDistance"
         @update:selectedCareTypes="selectedCareTypes = $event"
-        @update:selectedFunding="selectedFunding = $event"
+        @update:selectedAvailability="selectedAvailability = $event"
         @update:distance="distance = $event"
         @reset="resetFilters"
       />
@@ -57,7 +57,9 @@
 
         <MapSection
           v-else
-          :facilities="filteredFacilities"
+          :search-query="searchQuery"
+          :selected-care-types="selectedCareTypes"
+          :distance="distance"
         />
 
         <PaginationBar />
@@ -72,8 +74,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import mockFacilities from '../mock_data/mockFacilities'
+import { ref, computed, onMounted, watch } from 'vue'
+import { searchFacilities, getRecommendedFacilities } from '../services/facilitiesApi'
+import { mapFacilityCard } from '../utils/facilityMappers'
 
 import Header from '../components/Header.vue'
 import SearchBar from '../components/search/SearchBar.vue'
@@ -84,34 +87,91 @@ import MapSection from '../components/MapSection.vue'
 import PaginationBar from '../components/search/PaginationBar.vue'
 import FooterSection from '../components/FooterSection.vue'
 
+const facilities = ref([])
+const selectedAvailability = ref([])
+const loading = ref(false)
+const error = ref('')
+
 const searchQuery = ref('')
 const activeView = ref('list')
 const sortBy = ref('closest')
 
+async function fetchFacilities() {
+  loading.value = true
+  error.value = ''
+
+  try {
+    const q = searchQuery.value.trim()
+    let data
+
+    if (!q) {
+      data = await getRecommendedFacilities()
+      facilities.value = (data.results || []).map(mapFacilityCard)
+      return
+    }
+
+    const params = {
+      limit: 20,
+      offset: 0
+    }
+
+    if (/^\d+$/.test(q)) {
+      params.postcode = q
+    } else {
+      params.suburb = q
+    }
+
+    console.log('search params:', params)
+
+    data = await searchFacilities(params)
+    console.log('search response:', data)
+
+    facilities.value = (data.results || []).map(mapFacilityCard)
+  } catch (err) {
+    console.error('Failed to load facilities:', err)
+    error.value = 'Failed to load facilities.'
+    facilities.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchFacilities()
+})
+
 const careTypeOptions = [
-  { value: 'Residential Care', label: 'Residential Aged Care', icon: '🏠' },
-  { value: 'Home Care Package (HCP)', label: 'Home Care Package (HCP)', icon: '♡' },
-  { value: 'CHSP - Community Support', label: 'CHSP - Community Support', icon: '○' },
-  { value: 'Respite Care', label: 'Respite (Short Stay)', icon: '🛏️' },
-  { value: 'Memory Care', label: 'Dementia / Memory Care', icon: '🧠' }
+  { value: 'Residential', label: 'Residential', icon: '🏠' },
+  { value: 'Home Care', label: 'Home Care', icon: '♡' },
+  { value: 'Transition Care', label: 'Transition Care', icon: '🔄' },
+  { value: 'Short-Term Restorative Care (STRC)', label: 'Short-Term Restorative Care (STRC)', icon: '🛏️' },
+  { value: 'Multi-Purpose Service', label: 'Multi-Purpose Service', icon: '🏥' },
+  { value: 'National Aboriginal and Torres Strait Islander Aged Care Program', label: 'National Aboriginal and Torres Strait Islander Aged Care Program', icon: '🌿' }
 ]
 
-const fundingOptions = [
-  { value: 'Government Funded (CHSP/HCP)', label: 'Government Funded (CHSP/HCP)' },
-  { value: 'DVA (Veterans)', label: 'DVA (Veterans)' },
-  { value: 'Private / Self-funded', label: 'Private / Self-funded' }
+const availabilityOptions = [
+  { value: 'High', label: 'High' },
+  { value: 'Medium', label: 'Medium' },
+  { value: 'Low', label: 'Low' }
 ]
 
 const selectedCareTypes = ref([])
-const selectedFunding = ref([])
 
 const distance = ref(10)
 const minDistance = 1
 const maxDistance = 20
 
+watch(
+  [searchQuery, selectedCareTypes, sortBy],
+  () => {
+    fetchFacilities()
+  },
+  { deep: true }
+)
+
 function resetFilters() {
   selectedCareTypes.value = []
-  selectedFunding.value = []
+  selectedAvailability.value = []
   distance.value = 10
 }
 
@@ -122,40 +182,31 @@ function getAvailabilityRank(level) {
   return 0
 }
 
+function getAvailabilityLevel(facility) {
+  const beds = facility.totalBeds ?? facility.residential_places ?? 0
+
+  if (beds >= 80) return 'High'
+  if (beds <= 30) return 'Low'
+  return 'Medium'
+}
+
 const filteredFacilities = computed(() => {
-  const q = searchQuery.value.trim().toLowerCase()
+  let result = [...facilities.value]
 
-  let result = mockFacilities.filter((f) => {
-    const matchesQuery =
-      !q ||
-      f.name.toLowerCase().includes(q) ||
-      f.suburb.toLowerCase().includes(q) ||
-      f.careType.toLowerCase().includes(q)
-
-    const matchesCareType =
-      selectedCareTypes.value.length === 0 ||
+  if (selectedCareTypes.value.length > 0) {
+    result = result.filter(f =>
       selectedCareTypes.value.includes(f.careType)
+    )
+  }
 
-    const matchesFunding =
-      selectedFunding.value.length === 0 ||
-      selectedFunding.value.includes(f.organisationType)
-
-    const matchesDistance =
-      f.distance <= distance.value
-
-    return matchesQuery && matchesCareType && matchesFunding && matchesDistance
-  })
+  if (selectedAvailability.value.length > 0) {
+    result = result.filter(f =>
+      selectedAvailability.value.includes(getAvailabilityLevel(f))
+    )
+  }
 
   if (sortBy.value === 'name') {
-    result = [...result].sort((a, b) => a.name.localeCompare(b.name))
-  } 
-  else if (sortBy.value === 'availability') {
-    result = [...result].sort(
-      (a, b) => getAvailabilityRank(b.bedAvailability) - getAvailabilityRank(a.bedAvailability)
-    )
-  } 
-  else if (sortBy.value === 'closest') {
-    result = [...result].sort((a, b) => a.distance - b.distance)
+    result.sort((a, b) => a.name.localeCompare(b.name))
   }
 
   return result

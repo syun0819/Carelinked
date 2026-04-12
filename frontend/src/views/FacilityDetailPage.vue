@@ -134,25 +134,43 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Header from '../components/Header.vue'
 import FacilityCard from '../components/FacilityCard.vue'
-import mockFacilities from '../mock_data/mockFacilities.js'
+import { onMounted, ref } from 'vue'
+import { getFacilityDetail, getSimilarFacilities } from '../services/facilitiesApi'
+import { mapFacilityCard, mapFacilityDetail } from '../utils/facilityMappers'
 
 const route = useRoute()
 const router = useRouter()
 
-const facility = computed(() => {
-  const routeId = String(route.params.id)
-  return mockFacilities.find(item => String(item.id) === routeId)
-})
+const facility = ref(null)
+const similarFacilities = ref([])
+const loading = ref(false)
+const error = ref('')
 
-const similarFacilities = computed(() => {
-  if (!facility.value) return []
-  return mockFacilities
-    .filter(item => String(item.id) !== String(route.params.id))
-    .slice(0, 2)
+async function fetchFacilityDetail() {
+  loading.value = true
+  error.value = ''
+
+  try {
+    const id = route.params.id
+
+    const detailData = await getFacilityDetail(id)
+    facility.value = mapFacilityDetail(detailData)
+
+    const similarData = await getSimilarFacilities(id, 2)
+    similarFacilities.value = (similarData.results || []).map(mapFacilityCard)
+  } catch (err) {
+    console.error(err)
+    error.value = 'Failed to load facility details.'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchFacilityDetail()
 })
 
 const goBack = () => {
