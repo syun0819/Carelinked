@@ -151,7 +151,7 @@ async function fetchFacilities() {
     }
 
     if (selectedCareTypes.value.length > 0) {
-      params.care_type = selectedCareTypes.value.join(',')
+      params.care_type = selectedCareTypes.value
     }
 
     console.log('search params:', params)
