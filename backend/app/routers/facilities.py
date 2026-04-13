@@ -32,6 +32,8 @@ async def search(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     max_distance_km: Optional[float] = Query(None),
+    user_lat: Optional[float] = Query(None),
+    user_lng: Optional[float] = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
     results, total = await search_facilities(
@@ -48,6 +50,8 @@ async def search(
         limit=limit,
         offset=offset,
         max_distance_km=max_distance_km,
+        user_lat=user_lat,
+        user_lng=user_lng,
     )
 
     cards = []
