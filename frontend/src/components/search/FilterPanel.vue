@@ -53,23 +53,23 @@
     <hr class="filter-divider" />
 
     <div class="filter-section">
-      <p class="filter-title">FUNDING TYPE ACCEPTED</p>
+      <p class="filter-title">BED AVAILABILITY</p>
 
       <label
-        v-for="item in fundingOptions"
+        v-for="item in availabilityOptions"
         :key="item.value"
-        class="filter-option funding-option"
-        :class="{ selected: selectedFunding.includes(item.value) }"
+        class="filter-option"
+        :class="{ selected: selectedAvailability.includes(item.value) }"
       >
         <input
           type="checkbox"
-          :checked="selectedFunding.includes(item.value)"
-          @change="toggleFunding(item.value)"
+          :checked="selectedAvailability.includes(item.value)"
+          @change="toggleAvailability(item.value)"
         />
         <span class="custom-checkbox">
-          <span v-if="selectedFunding.includes(item.value)">✓</span>
+          <span v-if="selectedAvailability.includes(item.value)">✓</span>
         </span>
-        <span class="option-text funding-text">{{ item.label }}</span>
+        <span class="option-text">{{ item.label }}</span>
       </label>
     </div>
   </aside>
@@ -83,19 +83,11 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
-  selectedFunding: {
-    type: Array,
-    default: () => []
-  },
   distance: {
     type: Number,
     default: 10
   },
   careTypeOptions: {
-    type: Array,
-    default: () => []
-  },
-  fundingOptions: {
     type: Array,
     default: () => []
   },
@@ -106,13 +98,21 @@ const props = defineProps({
   maxDistance: {
     type: Number,
     default: 20
-  }
+  },
+  selectedAvailability: {
+    type: Array,
+    default: () => []
+  },
+  availabilityOptions: {
+    type: Array,
+    default: () => []
+  },
 })
 
 const emit = defineEmits([
   'update:selectedCareTypes',
-  'update:selectedFunding',
   'update:distance',
+  'update:selectedAvailability',
   'reset'
 ])
 
@@ -124,12 +124,12 @@ function toggleCareType(value) {
   emit('update:selectedCareTypes', next)
 }
 
-function toggleFunding(value) {
-  const next = props.selectedFunding.includes(value)
-    ? props.selectedFunding.filter(item => item !== value)
-    : [...props.selectedFunding, value]
+function toggleAvailability(value) {
+  const next = props.selectedAvailability.includes(value)
+    ? props.selectedAvailability.filter(item => item !== value)
+    : [...props.selectedAvailability, value]
 
-  emit('update:selectedFunding', next)
+  emit('update:selectedAvailability', next)
 }
 
 const rangeStyle = computed(() => {

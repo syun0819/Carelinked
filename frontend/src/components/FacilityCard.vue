@@ -1,112 +1,160 @@
 <template>
   <article class="facility-card">
     <img
-      :src="facility.image_url"
-      :alt="facility.service_name"
+      :src="facility.image"
+      :alt="facility.name"
       class="facility-image"
     />
 
     <div class="facility-body">
       <div class="facility-top-row">
-        <div>
-          <h3>{{ facility.service_name }}</h3>
-          <p class="facility-address">
-            📍 {{ facility.physical_address }}, {{ facility.physical_suburb }}
-            {{ facility.physical_state }} {{ facility.physical_post_code }}
-          </p>
+        <div class="facility-main-info">
+          <h3>{{ facility.name }}</h3>
+          <p class="facility-address">📍 {{ facility.address }}</p>
+
+          <div class="tag-row">
+            <span v-if="facility.careType" class="tag-chip">
+              {{ facility.careType }}
+            </span>
+          </div>
         </div>
 
         <span class="recommended-badge">Recommended</span>
       </div>
 
-      <div class="tag-row">
-        <span class="tag-chip">{{ facility.care_type }}</span>
-        <span class="tag-chip">{{ facility.provider_name }}</span>
-      </div>
-
       <div class="metrics-row">
         <div class="metric-block availability">
-          <div class="metric-value">{{ facility.availability_level }}</div>
-          <div class="metric-caption">BEDS AVAILABLE</div>
+          <div class="metric-value" :class="availabilityClass">
+            {{ availabilityLevel || 'N/A' }}
+          </div>
+          <div class="metric-caption">BED AVAILABILITY ESTIMATION</div>
         </div>
+      </div>
 
-        <div class="metric-block wait-time">
-          <div class="metric-value">{{ facility.estimated_wait_time }}</div>
-          <div class="metric-caption">EST. WAIT</div>
-        </div>
+      <div class="info-line">
+        <span>
+          {{ facility.funding || `Residential places: ${facility.totalBeds ?? 0}` }}
+        </span>
       </div>
 
       <div class="facility-footer">
-        <p class="places-line">
-          Residential places: {{ facility.residential_places }} ·
-          Home care places: {{ facility.home_care_places }}
+        <p class="distance-line">
+          📍
+          <span v-if="facility.distance !== null && facility.distance !== undefined">
+            {{ facility.distance }} km away
+          </span>
+          <span v-else>
+            {{ facility.suburb || facility.postcode || 'Location unavailable' }}
+          </span>
         </p>
 
-        <button class="details-btn">View Details</button>
+        <button class="details-btn" @click.stop="goToDetail">
+          View Details
+        </button>
       </div>
     </div>
   </article>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+
+const props = defineProps({
   facility: {
     type: Object,
     required: true
   }
 })
+
+const router = useRouter()
+
+const goToDetail = () => {
+  router.push(`/facility/${props.facility.id}`)
+}
+
+const availabilityLevel = computed(() => {
+  const beds = props.facility.totalBeds || props.facility.residential_places || 0
+
+  if (beds >= 80) return 'High'
+  if (beds <= 30) return 'Low'
+  return 'Medium'
+})
+
+const availabilityClass = computed(() => {
+  if (availabilityLevel.value === 'High') return 'availability-high'
+  if (availabilityLevel.value === 'Medium') return 'availability-medium'
+  if (availabilityLevel.value === 'Low') return 'availability-low'
+  return ''
+})
 </script>
 
 <style scoped>
 .facility-card {
-  background: white;
+  background: #ffffff;
   border: 1px solid #ddd8cf;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
 }
 
 .facility-image {
   width: 100%;
-  height: 160px;
+  height: 200px;
   object-fit: cover;
   display: block;
 }
 
 .facility-body {
-  padding: 18px 20px;
+  padding: 16px 26px 0;
 }
 
 .facility-top-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 20px;
+  gap: 18px;
+  height: 100px;
+}
+
+.facility-main-info {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
 }
 
 .facility-top-row h3 {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: #24332f;
+  font-family: Georgia, serif;
 }
 
 .facility-address {
-  margin: 8px 0 0;
+  margin: 10px 0 0;
   color: #7b8d87;
-  font-size: 14px;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .recommended-badge {
+  flex-shrink: 0;
   background: #eaf4ec;
   color: #7aa284;
-  padding: 6px 12px;
+  padding: 8px 14px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .tag-row {
   display: flex;
-  gap: 8px;
-  margin-top: 14px;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 2px;
   flex-wrap: wrap;
 }
 
@@ -114,16 +162,20 @@ defineProps({
   background: #eef5ef;
   color: #678072;
   border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 12px;
+  padding: 5px 12px;
+  font-size: 10px;
   font-weight: 600;
+  line-height: 1;
+}
+
+.provider-chip {
+  background: #f1f0fb;
+  color: #6c63b6;
 }
 
 .metrics-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  margin-top: 18px;
-  padding: 18px 0;
+  margin-top: 4px;
+  padding: 4px 0;
   border-top: 1px solid #ece7dd;
   border-bottom: 1px solid #ece7dd;
 }
@@ -133,22 +185,42 @@ defineProps({
 }
 
 .metric-value {
-  font-size: 20px;
+  font-size: 24px;
+  line-height: 1;
   font-weight: 700;
+  font-family: Georgia, serif;
 }
 
 .metric-caption {
-  margin-top: 4px;
-  font-size: 11px;
-  color: #7b8d87;
+  font-size: 10px;
+  color: #5f756d;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
-.availability .metric-value {
+.availability-high {
   color: #4f7a62;
 }
 
-.wait-time .metric-value {
-  color: #c98a3d;
+.availability-medium {
+  color: #d9822b;
+}
+
+.availability-low {
+  color: #c53b2c;
+}
+
+.availability-default {
+  color: #4f6a63;
+}
+
+.info-line {
+  padding: 10px 0 10px;
+  border-bottom: 1px solid #ece7dd;
+  color: #7b8d87;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .facility-footer {
@@ -156,13 +228,16 @@ defineProps({
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  margin-top: 16px;
+  padding: 4px 0 4px;
 }
 
-.places-line {
+.distance-line {
   margin: 0;
-  color: #7b8d87;
+  color: #5f756d;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .details-btn {
@@ -170,8 +245,38 @@ defineProps({
   background: #557067;
   color: white;
   border-radius: 999px;
-  padding: 10px 18px;
+  padding: 12px 22px;
   font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
+  white-space: nowrap;
+}
+
+.details-btn:hover {
+  background: #486158;
+}
+
+@media (max-width: 768px) {
+  .facility-image {
+    height: 180px;
+  }
+
+  .facility-body {
+    padding: 18px 18px 0;
+  }
+
+  .facility-top-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .facility-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .details-btn {
+    width: 100%;
+  }
 }
 </style>

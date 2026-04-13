@@ -1,27 +1,47 @@
 <template>
   <section class="search-top">
-    <label class="search-bar">
+    <div class="search-bar">
       <span class="search-icon">⌕</span>
+
       <input
+        v-model="inputValue"
         class="search-input"
-        :value="modelValue"
         type="text"
         placeholder="Search by facility name, suburb, or care type..."
-        @input="$emit('update:modelValue', $event.target.value)"
+        @keyup.enter="handleSearch"
       />
-    </label>
+
+      <button class="search-btn" @click="handleSearch">
+        Search
+      </button>
+    </div>
   </section>
 </template>
 
 <script setup>
-defineProps({
+import { ref, watch } from 'vue'
+
+const props = defineProps({
   modelValue: {
     type: String,
     default: ''
   }
 })
 
-defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue'])
+
+const inputValue = ref(props.modelValue)
+
+watch(
+  () => props.modelValue,
+  (val) => {
+    inputValue.value = val
+  }
+)
+
+function handleSearch() {
+  emit('update:modelValue', inputValue.value)
+}
 </script>
 
 <style scoped>
@@ -62,5 +82,19 @@ defineEmits(['update:modelValue'])
 
 .search-input::placeholder {
   color: #bec5c2;
+}
+
+.search-btn {
+  background: #4f6f67;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.search-btn:hover {
+  background: #3f5c55;
 }
 </style>

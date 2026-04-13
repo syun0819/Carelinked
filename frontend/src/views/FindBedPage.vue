@@ -30,14 +30,14 @@
     <section class="results-layout">
       <FilterPanel
         :selected-care-types="selectedCareTypes"
-        :selected-funding="selectedFunding"
+        :selectedAvailability="selectedAvailability"
         :distance="distance"
         :care-type-options="careTypeOptions"
-        :funding-options="fundingOptions"
+        :availabilityOptions="availabilityOptions"
         :min-distance="minDistance"
         :max-distance="maxDistance"
         @update:selectedCareTypes="selectedCareTypes = $event"
-        @update:selectedFunding="selectedFunding = $event"
+        @update:selectedAvailability="selectedAvailability = $event"
         @update:distance="distance = $event"
         @reset="resetFilters"
       />
@@ -49,6 +49,9 @@
           :sort-by="sortBy"
           @update:sortBy="sortBy = $event"
         />
+        
+        <div v-if="loading" class="status-message">Loading facilities...</div>
+        <div v-else-if="error" class="status-message error">{{ error }}</div>
 
         <ListSection
           v-if="activeView === 'list'"
@@ -57,12 +60,17 @@
 
         <MapSection
           v-else
-          :facilities="filteredFacilities"
+          :search-query="searchQuery"
+          :selected-care-types="selectedCareTypes"
+          :distance="distance"
         />
 
-        <PaginationBar />
-
-        
+        <PaginationBar
+          :current-page="currentPage"
+          :page-size="pageSize"
+          :total="totalResults"
+          @page-change="handlePageChange"
+        />
       </div>
     </section>
     
@@ -72,8 +80,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import mockFacilities from '../mock_data/mockFacilities'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { searchFacilities } from '../services/facilitiesApi'
+import { mapFacilityCard } from '../utils/facilityMappers'
 
 import Header from '../components/Header.vue'
 import SearchBar from '../components/search/SearchBar.vue'
@@ -84,40 +94,95 @@ import MapSection from '../components/MapSection.vue'
 import PaginationBar from '../components/search/PaginationBar.vue'
 import FooterSection from '../components/FooterSection.vue'
 
+const route = useRoute()
+
+const facilities = ref([])
+const loading = ref(false)
+const error = ref('')
+
 const searchQuery = ref('')
 const activeView = ref('list')
 const sortBy = ref('closest')
 
-const careTypeOptions = [
-  { value: 'Residential Care', label: 'Residential Aged Care', icon: '🏠' },
-  { value: 'Home Care Package (HCP)', label: 'Home Care Package (HCP)', icon: '♡' },
-  { value: 'CHSP - Community Support', label: 'CHSP - Community Support', icon: '○' },
-  { value: 'Respite Care', label: 'Respite (Short Stay)', icon: '🛏️' },
-  { value: 'Memory Care', label: 'Dementia / Memory Care', icon: '🧠' }
-]
-
-const fundingOptions = [
-  { value: 'Government Funded (CHSP/HCP)', label: 'Government Funded (CHSP/HCP)' },
-  { value: 'DVA (Veterans)', label: 'DVA (Veterans)' },
-  { value: 'Private / Self-funded', label: 'Private / Self-funded' }
-]
-
 const selectedCareTypes = ref([])
-const selectedFunding = ref([])
+const selectedAvailability = ref([])
 
 const distance = ref(10)
 const minDistance = 1
 const maxDistance = 20
 
-function resetFilters() {
-  selectedCareTypes.value = []
-  selectedFunding.value = []
-  distance.value = 10
+const currentPage = ref(1)
+const pageSize = 20
+const totalResults = ref(0)
+
+const careTypeOptions = [
+  { value: 'Residential', label: 'Residential', icon: '🏠' },
+  { value: 'Home Care', label: 'Home Care', icon: '♡' },
+  { value: 'Transition Care', label: 'Transition Care', icon: '🔄' },
+  { value: 'Short-Term Restorative Care (STRC)', label: 'Short-Term Restorative Care (STRC)', icon: '🛏️' },
+  { value: 'Multi-Purpose Service', label: 'Multi-Purpose Service', icon: '🏥' },
+  { value: 'National Aboriginal and Torres Strait Islander Aged Care Program', label: 'Indigenous Care', icon: '🌿' }
+]
+
+const availabilityOptions = [
+  { value: 'High', label: 'High' },
+  { value: 'Medium', label: 'Medium' },
+  { value: 'Low', label: 'Low' }
+]
+
+async function fetchFacilities() {
+  loading.value = true
+  error.value = ''
+
+  try {
+    const q = searchQuery.value.trim()
+
+    const params = {
+      limit: pageSize,
+      offset: (currentPage.value - 1) * pageSize
+    }
+
+    if (q) {
+      if (/^\d+$/.test(q)) {
+        params.postcode = q
+      } else {
+        params.suburb = q
+      }
+    }
+
+    if (selectedCareTypes.value.length > 0) {
+      params.care_type = selectedCareTypes.value.join(',')
+    }
+
+    console.log('search params:', params)
+
+    const data = await searchFacilities(params)
+    console.log('search response:', data)
+
+    facilities.value = (data.results || data.items || data.facilities || []).map(mapFacilityCard)
+    totalResults.value = data.total || 0
+  } catch (err) {
+    console.error('Failed to load facilities:', err)
+    error.value = 'Failed to load facilities.'
+    facilities.value = []
+    totalResults.value = 0
+  } finally {
+    loading.value = false
+  }
 }
 
-function getWaitWeeks(wait) {
-  const match = wait.match(/\d+/)
-  return match ? Number(match[0]) : 999
+function handlePageChange(page) {
+  currentPage.value = page
+  fetchFacilities()
+}
+
+function resetFilters() {
+  searchQuery.value = ''
+  selectedCareTypes.value = []
+  selectedAvailability.value = []
+  distance.value = 10
+  sortBy.value = 'closest'
+  currentPage.value = 1
 }
 
 function getAvailabilityRank(level) {
@@ -127,41 +192,54 @@ function getAvailabilityRank(level) {
   return 0
 }
 
+function getAvailabilityLevel(facility) {
+  const beds = facility.totalBeds ?? facility.residential_places ?? 0
+
+  if (beds >= 80) return 'High'
+  if (beds <= 30) return 'Low'
+  return 'Medium'
+}
+
 const filteredFacilities = computed(() => {
-  const q = searchQuery.value.trim().toLowerCase()
+  let result = [...facilities.value]
 
-  let result = mockFacilities.filter((f) => {
-    const matchesQuery =
-      !q ||
-      f.service_name.toLowerCase().includes(q) ||
-      f.physical_suburb.toLowerCase().includes(q) ||
-      f.care_type.toLowerCase().includes(q)
-
-    const matchesCareType =
-      selectedCareTypes.value.length === 0 ||
-      selectedCareTypes.value.includes(f.care_type)
-
-    const matchesFunding =
-      selectedFunding.value.length === 0 || true
-
-    return matchesQuery && matchesCareType && matchesFunding
-  })
-
-  if (sortBy.value === 'wait') {
-    result = [...result].sort(
-      (a, b) => getWaitWeeks(a.estimated_wait_time) - getWaitWeeks(b.estimated_wait_time)
+  if (selectedAvailability.value.length > 0) {
+    result = result.filter(f =>
+      selectedAvailability.value.includes(getAvailabilityLevel(f))
     )
-  } else if (sortBy.value === 'name') {
-    result = [...result].sort((a, b) =>
-      a.service_name.localeCompare(b.service_name)
-    )
-  } else {
-    result = [...result].sort(
-      (a, b) => getAvailabilityRank(b.availability_level) - getAvailabilityRank(a.availability_level)
+  }
+
+  if (sortBy.value === 'name') {
+    result.sort((a, b) => a.name.localeCompare(b.name))
+  } else if (sortBy.value === 'availability') {
+    result.sort(
+      (a, b) => getAvailabilityRank(getAvailabilityLevel(b)) - getAvailabilityRank(getAvailabilityLevel(a))
     )
   }
 
   return result
+})
+
+watch(
+  () => route.query.careType,
+  (newCareType) => {
+    selectedCareTypes.value = newCareType ? [newCareType] : []
+    currentPage.value = 1
+  },
+  { immediate: true }
+)
+
+watch(
+  [searchQuery, selectedCareTypes, sortBy],
+  () => {
+    currentPage.value = 1
+    fetchFacilities()
+  },
+  { deep: true }
+)
+
+onMounted(() => {
+  fetchFacilities()
 })
 </script>
 
@@ -204,6 +282,12 @@ const filteredFacilities = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-width: 0;
+}
+
+.results-main > * {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .view-toggle {
