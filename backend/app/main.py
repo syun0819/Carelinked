@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app.core.database import engine, Base, AsyncSessionLocal
-from app.routers import facilities
+from app.routers import autocomplete, facilities
 
 
 @asynccontextmanager
@@ -23,6 +23,7 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(facilities.router)
+app.include_router(autocomplete.router)
 
 app.add_middleware(
     CORSMiddleware,

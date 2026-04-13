@@ -76,13 +76,30 @@ async def _fetch_ml_records_bulk(db: AsyncSession, facility_ids: List[str]) -> d
         return {}
 
 
+def _sort_rows(rows: list, sort_by: Optional[str], user_lat: Optional[float], user_lng: Optional[float]) -> list:
+    """Sort a list of AgedCareService rows. Rows without coords go last for distance sort."""
+    if sort_by == "beds_desc":
+        rows.sort(key=lambda r: r.residential_places or 0, reverse=True)
+    elif sort_by == "beds_asc":
+        rows.sort(key=lambda r: r.residential_places or 0)
+    elif sort_by == "distance" and user_lat is not None and user_lng is not None:
+        def dist_key(r):
+            if r.latitude is None or r.longitude is None:
+                return float("inf")
+            return haversine_distance(user_lat, user_lng, r.latitude, r.longitude)
+        rows.sort(key=dist_key)
+    else:
+        rows.sort(key=lambda r: r.service_name or "")
+    return rows
+
+
 async def search_facilities(
     db: AsyncSession,
     suburb: Optional[str],
     postcode: Optional[str],
     region: Optional[str],
     keyword: Optional[str],
-    care_type: Optional[str],
+    care_type: Optional[List[str]],
     abs_remoteness: Optional[str],
     min_beds: Optional[int],
     max_beds: Optional[int],
@@ -90,6 +107,8 @@ async def search_facilities(
     limit: int,
     offset: int,
     max_distance_km: Optional[float] = None,
+    user_lat: Optional[float] = None,
+    user_lng: Optional[float] = None,
 ) -> Tuple[List[AgedCareService], int]:
     query = select(AgedCareService).where(AgedCareService.physical_state == "VIC")
 
@@ -103,7 +122,7 @@ async def search_facilities(
         query = query.where(AgedCareService.service_name.ilike(f"%{keyword}%"))
 
     if care_type:
-        query = query.where(AgedCareService.care_type == care_type)
+        query = query.where(AgedCareService.care_type.in_(care_type))
     if abs_remoteness:
         query = query.where(AgedCareService.abs_remoteness.ilike(f"%{abs_remoteness}%"))
     if min_beds is not None:
@@ -118,26 +137,24 @@ async def search_facilities(
             db=db, suburb=suburb, postcode=postcode
         )
 
-    apply_distance = center_lat is not None and center_lng is not None and max_distance_km is not None
+    apply_distance_filter = center_lat is not None and center_lng is not None and max_distance_km is not None
+    apply_distance_sort = sort_by == "distance" and user_lat is not None and user_lng is not None
 
-    if apply_distance:
-        result = await db.execute(query.order_by(AgedCareService.service_name.asc()))
-        all_rows = result.scalars().all()
+    if apply_distance_filter or apply_distance_sort:
+        result = await db.execute(query)
+        all_rows = list(result.scalars().all())
 
-        filtered = [
-            r for r in all_rows
-            if r.latitude is not None
-            and r.longitude is not None
-            and haversine_distance(center_lat, center_lng, r.latitude, r.longitude) <= max_distance_km
-        ]
-        if sort_by == "beds_desc":
-            filtered.sort(key=lambda r: r.residential_places or 0, reverse=True)
-        elif sort_by == "beds_asc":
-            filtered.sort(key=lambda r: r.residential_places or 0)
-        else:
-            filtered.sort(key=lambda r: r.service_name or "")
-        total = len(filtered)
-        rows = filtered[offset: offset + limit]
+        if apply_distance_filter:
+            all_rows = [
+                r for r in all_rows
+                if r.latitude is not None
+                and r.longitude is not None
+                and haversine_distance(center_lat, center_lng, r.latitude, r.longitude) <= max_distance_km
+            ]
+
+        all_rows = _sort_rows(all_rows, sort_by, user_lat, user_lng)
+        total = len(all_rows)
+        rows = all_rows[offset: offset + limit]
     else:
         count_query = select(func.count()).select_from(query.subquery())
         total_result = await db.execute(count_query)
@@ -168,7 +185,7 @@ async def get_facilities_for_map(
     suburb: Optional[str],
     postcode: Optional[str],
     region: Optional[str],
-    care_type: Optional[str],
+    care_type: Optional[List[str]],
     max_distance_km: Optional[float],
     center_lat: Optional[float],
     center_lng: Optional[float],
@@ -182,7 +199,7 @@ async def get_facilities_for_map(
     if region:
         query = query.where(AgedCareService.aged_care_planning_region.ilike(f"%{region}%"))
     if care_type:
-        query = query.where(AgedCareService.care_type == care_type)
+        query = query.where(AgedCareService.care_type.in_(care_type))
 
     result = await db.execute(query)
     rows = result.scalars().all()

@@ -172,7 +172,7 @@ async function fetchFacilities() {
 
     // care type filter
     if (selectedCareTypes.value.length > 0) {
-      params.care_type = selectedCareTypes.value.join(',')
+      params.care_type = selectedCareTypes.value
     }
 
     // 距離 filter：只有有位置才送

@@ -4,7 +4,10 @@ async function request(path, params = {}) {
   const url = new URL(`${API_BASE_URL}${path}`)
 
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
+    if (value === undefined || value === null || value === '') return
+    if (Array.isArray(value)) {
+      value.forEach(v => url.searchParams.append(key, v))
+    } else {
       url.searchParams.append(key, value)
     }
   })
