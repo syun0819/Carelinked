@@ -58,3 +58,27 @@ class FacilityMapResponse(BaseModel):
     total: int
     results: List[FacilityMapMarker]
     message: Optional[str] = None
+
+
+class FacilityAutoComplete(BaseModel):
+    id: str
+    name: str
+    type: str = "facility"
+
+
+class SuburbAutoComplete(BaseModel):
+    name: str
+    postcode: str
+    type: str = "suburb"
+
+
+class PostcodeAutoComplete(BaseModel):
+    postcode: str
+    suburb: str
+    type: str = "postcode"
+
+
+class AutoCompleteResponse(BaseModel):
+    facilities: List[FacilityAutoComplete] = []
+    suburbs: List[SuburbAutoComplete] = []
+    postcodes: List[PostcodeAutoComplete] = []
