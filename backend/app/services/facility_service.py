@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.aged_care import AgedCareService
 from app.models.availability import FacilityAvailabilityML
 from app.schemas.aged_care import FacilityCard, FacilityDetail, FacilityMapMarker
+from app.services import location_service
 
 _DATA_SOURCE_BEDS = "Based on residential bed capacity data (aged_care_services)"
 _DATA_SOURCE_ML = "Based on ML prediction model (aged_care_facility_availability)"
@@ -88,8 +89,6 @@ async def search_facilities(
     sort_by: Optional[str],
     limit: int,
     offset: int,
-    user_lat: Optional[float] = None,
-    user_lng: Optional[float] = None,
     max_distance_km: Optional[float] = None,
 ) -> Tuple[List[AgedCareService], int]:
     query = select(AgedCareService).where(AgedCareService.physical_state == "VIC")
@@ -112,12 +111,16 @@ async def search_facilities(
     if max_beds is not None:
         query = query.where(AgedCareService.residential_places <= max_beds)
 
-    apply_distance = (
-        user_lat is not None and user_lng is not None and max_distance_km is not None
-    )
+    # Resolve center coords from postcode or suburb when distance filtering is requested
+    center_lat, center_lng = None, None
+    if max_distance_km is not None and (postcode or suburb):
+        center_lat, center_lng = await location_service.get_location_center(
+            db=db, suburb=suburb, postcode=postcode
+        )
+
+    apply_distance = center_lat is not None and center_lng is not None and max_distance_km is not None
 
     if apply_distance:
-        # Distance filtering must happen in Python; fetch all matching rows first
         result = await db.execute(query.order_by(AgedCareService.service_name.asc()))
         all_rows = result.scalars().all()
 
@@ -125,8 +128,14 @@ async def search_facilities(
             r for r in all_rows
             if r.latitude is not None
             and r.longitude is not None
-            and haversine_distance(user_lat, user_lng, r.latitude, r.longitude) <= max_distance_km
+            and haversine_distance(center_lat, center_lng, r.latitude, r.longitude) <= max_distance_km
         ]
+        if sort_by == "beds_desc":
+            filtered.sort(key=lambda r: r.residential_places or 0, reverse=True)
+        elif sort_by == "beds_asc":
+            filtered.sort(key=lambda r: r.residential_places or 0)
+        else:
+            filtered.sort(key=lambda r: r.service_name or "")
         total = len(filtered)
         rows = filtered[offset: offset + limit]
     else:
@@ -267,7 +276,12 @@ async def get_recommended_facilities(db: AsyncSession) -> List[FacilityCard]:
         )
         row = (await db.execute(query)).scalar_one_or_none()
         if row:
-            results.append(FacilityCard.model_validate(row))
+            ml_record = await _fetch_ml_record(db, row.id)
+            ml_label = get_ml_availability_group(ml_record, row.care_type)
+            card = FacilityCard.model_validate(row)
+            card.availability_group = ml_label or calculate_availability(row.residential_places)
+            card.data_source = _DATA_SOURCE_ML if ml_label else _DATA_SOURCE_BEDS
+            results.append(card)
     return results
 
 
@@ -290,16 +304,25 @@ async def get_similar_facilities(
     candidates = result.scalars().all()
 
     if target.latitude is None or target.longitude is None:
-        return [FacilityCard.model_validate(r) for r in candidates[:limit]]
+        nearest = list(candidates[:limit])
+    else:
+        with_distance = [
+            (haversine_distance(target.latitude, target.longitude, r.latitude, r.longitude), r)
+            for r in candidates
+            if r.latitude is not None and r.longitude is not None
+        ]
+        with_distance.sort(key=lambda x: x[0])
+        nearest = [r for _, r in with_distance[:limit]]
 
-    with_distance = [
-        (haversine_distance(target.latitude, target.longitude, r.latitude, r.longitude), r)
-        for r in candidates
-        if r.latitude is not None and r.longitude is not None
-    ]
-    with_distance.sort(key=lambda x: x[0])
-
-    return [FacilityCard.model_validate(r) for _, r in with_distance[:limit]]
+    ml_map = await _fetch_ml_records_bulk(db, [r.id for r in nearest])
+    cards: List[FacilityCard] = []
+    for r in nearest:
+        ml_label = get_ml_availability_group(ml_map.get(r.id), r.care_type)
+        card = FacilityCard.model_validate(r)
+        card.availability_group = ml_label or calculate_availability(r.residential_places)
+        card.data_source = _DATA_SOURCE_ML if ml_label else _DATA_SOURCE_BEDS
+        cards.append(card)
+    return cards
 
 
 async def get_nearest_facilities(

@@ -31,8 +31,6 @@ async def search(
     sort_by: Optional[str] = Query("name"),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    user_lat: Optional[float] = Query(None),
-    user_lng: Optional[float] = Query(None),
     max_distance_km: Optional[float] = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
@@ -49,8 +47,6 @@ async def search(
         sort_by=sort_by,
         limit=limit,
         offset=offset,
-        user_lat=user_lat,
-        user_lng=user_lng,
         max_distance_km=max_distance_km,
     )
 
