@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,7 +24,7 @@ async def search(
     postcode: Optional[str] = Query(None),
     region: Optional[str] = Query(None),
     keyword: Optional[str] = Query(None),
-    care_type: Optional[str] = Query(None),
+    care_type: Optional[List[str]] = Query(default=None),
     abs_remoteness: Optional[str] = Query(None),
     min_beds: Optional[int] = Query(None),
     max_beds: Optional[int] = Query(None),

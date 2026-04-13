@@ -82,7 +82,7 @@ async def search_facilities(
     postcode: Optional[str],
     region: Optional[str],
     keyword: Optional[str],
-    care_type: Optional[str],
+    care_type: Optional[List[str]],
     abs_remoteness: Optional[str],
     min_beds: Optional[int],
     max_beds: Optional[int],
@@ -103,7 +103,7 @@ async def search_facilities(
         query = query.where(AgedCareService.service_name.ilike(f"%{keyword}%"))
 
     if care_type:
-        query = query.where(AgedCareService.care_type == care_type)
+        query = query.where(AgedCareService.care_type.in_(care_type))
     if abs_remoteness:
         query = query.where(AgedCareService.abs_remoteness.ilike(f"%{abs_remoteness}%"))
     if min_beds is not None:
@@ -168,7 +168,7 @@ async def get_facilities_for_map(
     suburb: Optional[str],
     postcode: Optional[str],
     region: Optional[str],
-    care_type: Optional[str],
+    care_type: Optional[List[str]],
     max_distance_km: Optional[float],
     center_lat: Optional[float],
     center_lng: Optional[float],
@@ -182,7 +182,7 @@ async def get_facilities_for_map(
     if region:
         query = query.where(AgedCareService.aged_care_planning_region.ilike(f"%{region}%"))
     if care_type:
-        query = query.where(AgedCareService.care_type == care_type)
+        query = query.where(AgedCareService.care_type.in_(care_type))
 
     result = await db.execute(query)
     rows = result.scalars().all()
