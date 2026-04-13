@@ -88,6 +88,9 @@ async def search_facilities(
     sort_by: Optional[str],
     limit: int,
     offset: int,
+    user_lat: Optional[float] = None,
+    user_lng: Optional[float] = None,
+    max_distance_km: Optional[float] = None,
 ) -> Tuple[List[AgedCareService], int]:
     query = select(AgedCareService).where(AgedCareService.physical_state == "VIC")
 
@@ -109,21 +112,38 @@ async def search_facilities(
     if max_beds is not None:
         query = query.where(AgedCareService.residential_places <= max_beds)
 
-    count_query = select(func.count()).select_from(query.subquery())
-    total_result = await db.execute(count_query)
-    total = total_result.scalar() or 0
+    apply_distance = (
+        user_lat is not None and user_lng is not None and max_distance_km is not None
+    )
 
-    if sort_by == "beds_desc":
-        query = query.order_by(AgedCareService.residential_places.desc())
-    elif sort_by == "beds_asc":
-        query = query.order_by(AgedCareService.residential_places.asc())
+    if apply_distance:
+        # Distance filtering must happen in Python; fetch all matching rows first
+        result = await db.execute(query.order_by(AgedCareService.service_name.asc()))
+        all_rows = result.scalars().all()
+
+        filtered = [
+            r for r in all_rows
+            if r.latitude is not None
+            and r.longitude is not None
+            and haversine_distance(user_lat, user_lng, r.latitude, r.longitude) <= max_distance_km
+        ]
+        total = len(filtered)
+        rows = filtered[offset: offset + limit]
     else:
-        query = query.order_by(AgedCareService.service_name.asc())
+        count_query = select(func.count()).select_from(query.subquery())
+        total_result = await db.execute(count_query)
+        total = total_result.scalar() or 0
 
-    query = query.limit(limit).offset(offset)
+        if sort_by == "beds_desc":
+            query = query.order_by(AgedCareService.residential_places.desc())
+        elif sort_by == "beds_asc":
+            query = query.order_by(AgedCareService.residential_places.asc())
+        else:
+            query = query.order_by(AgedCareService.service_name.asc())
 
-    result = await db.execute(query)
-    rows = list(result.scalars().all())
+        query = query.limit(limit).offset(offset)
+        result = await db.execute(query)
+        rows = list(result.scalars().all())
 
     ml_map = await _fetch_ml_records_bulk(db, [r.id for r in rows])
     for row in rows:
