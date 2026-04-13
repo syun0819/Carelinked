@@ -8,6 +8,7 @@ from app.schemas.aged_care import FacilityCard, FacilityDetail, FacilityMapRespo
 from app.services.facility_service import (
     get_facilities_for_map,
     get_facility_by_id,
+    get_nearest_facilities,
     get_recommended_facilities,
     get_similar_facilities,
     search_facilities,
@@ -30,6 +31,7 @@ async def search(
     sort_by: Optional[str] = Query("name"),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
+    max_distance_km: Optional[float] = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
     results, total = await search_facilities(
@@ -45,6 +47,7 @@ async def search(
         sort_by=sort_by,
         limit=limit,
         offset=offset,
+        max_distance_km=max_distance_km,
     )
 
     cards = []
@@ -57,8 +60,16 @@ async def search(
 
 
 @router.get("/recommended", response_model=FacilitySearchResponse)
-async def recommended(db: AsyncSession = Depends(get_db)):
-    results = await get_recommended_facilities(db)
+async def recommended(
+    user_lat: Optional[float] = Query(None),
+    user_lng: Optional[float] = Query(None),
+    limit: int = Query(6, ge=1, le=50),
+    db: AsyncSession = Depends(get_db),
+):
+    if user_lat is not None and user_lng is not None:
+        results = await get_nearest_facilities(db, user_lat, user_lng, limit=limit)
+    else:
+        results = await get_recommended_facilities(db)
     return FacilitySearchResponse(total=len(results), results=results)
 
 
