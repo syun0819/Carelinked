@@ -5,6 +5,8 @@
         <p class="explore-subtitle">
           Find the right aged care for you
         </p>
+
+        <LocationPrompt @location-success="handleLocationSuccess" />
       </div>
     
     <ResultsHeader
@@ -26,12 +28,15 @@
 <script setup>
 import FacilityCard from './FacilityCard.vue'
 import ResultsHeader from './search/ResultsHeader.vue'
+import LocationPrompt from '../components/LocationPrompt.vue'
 
 import { onMounted, ref } from 'vue'
 import { getRecommendedFacilities } from '../services/facilitiesApi'
 import { mapFacilityCard } from '../utils/facilityMappers'
 
 const recommendedFacilities = ref([])
+
+const distance = ref(10)
 
 onMounted(async () => {
   const data = await getRecommendedFacilities()
@@ -40,12 +45,22 @@ onMounted(async () => {
 
 const sortOption = ref('closest')
 
+const userLocation = ref(null)
+
 defineProps({
   facilities: {
     type: Array,
     required: true
   }
 })
+
+function handleLocationSuccess(location) {
+  userLocation.value = location
+  console.log('Explore page location:', location)
+
+  // 如果 explore 有自己的 fetch function，就在這裡呼叫
+  loadExploreFacilities()
+}
 </script>
 
 <style scoped>
@@ -74,6 +89,21 @@ defineProps({
   color: #6b736f;
   margin-top: 10px;
   font-family: 'Inter', sans-serif;
+}
+
+.location-btn {
+  border: none;
+  border-radius: 24px;
+  padding: 8px 16px;
+  background: #2e7d32;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.location-btn:hover {
+  background: #1b5e20;
 }
 
 .stats-card {

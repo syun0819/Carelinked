@@ -11,14 +11,16 @@
             Victoria, with real wait times and funding options explained clearly.
         </p>
 
-        <button class="primary-btn">Search Care Places</button>
-
+        <button class="primary-btn" @click="goToFindBed">
+          Search Care Places
+        </button>
         <div class="care-tags">
-            <span>Residential Care</span>
-            <span>Home Care Package</span>
-            <span>Memory Care</span>
-            <span>Respite Care</span>
-            <span>High-Level Care</span>
+          <button @click="goToFindBedWithType('Residential')">Residential Care</button>
+          <button @click="goToFindBedWithType('Home Care')">Home Care</button>
+          <button @click="goToFindBedWithType('Transition Care')">Transition Care</button>
+          <button @click="goToFindBedWithType('Short-Term Restorative Care (STRC)')">Short-Term Restorative Care</button>
+          <button @click="goToFindBedWithType('Multi-Purpose Service')">Multi-Purpose Service</button>
+          <button @click="goToFindBedWithType('National Aboriginal and Torres Strait Islander Aged Care Program')">Indigenous Care</button>
         </div>
         </div>
 
@@ -29,6 +31,23 @@
         </div>
     </section>
 </template>
+
+<script setup>
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+function goToFindBed() {
+  router.push('/find-bed')
+}
+
+function goToFindBedWithType(careType) {
+  router.push({
+    path: '/find-bed',
+    query: { careType }
+  })
+}
+</script>
 
 <style>
 .hero-section {

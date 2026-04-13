@@ -49,6 +49,9 @@
           :sort-by="sortBy"
           @update:sortBy="sortBy = $event"
         />
+        
+        <div v-if="loading" class="status-message">Loading facilities...</div>
+        <div v-else-if="error" class="status-message error">{{ error }}</div>
 
         <ListSection
           v-if="activeView === 'list'"
@@ -62,9 +65,12 @@
           :distance="distance"
         />
 
-        <PaginationBar />
-
-        
+        <PaginationBar
+          :current-page="currentPage"
+          :page-size="pageSize"
+          :total="totalResults"
+          @page-change="handlePageChange"
+        />
       </div>
     </section>
     
@@ -75,7 +81,8 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { searchFacilities, getRecommendedFacilities } from '../services/facilitiesApi'
+import { useRoute } from 'vue-router'
+import { searchFacilities } from '../services/facilitiesApi'
 import { mapFacilityCard } from '../utils/facilityMappers'
 
 import Header from '../components/Header.vue'
@@ -87,8 +94,9 @@ import MapSection from '../components/MapSection.vue'
 import PaginationBar from '../components/search/PaginationBar.vue'
 import FooterSection from '../components/FooterSection.vue'
 
+const route = useRoute()
+
 const facilities = ref([])
-const selectedAvailability = ref([])
 const loading = ref(false)
 const error = ref('')
 
@@ -96,49 +104,16 @@ const searchQuery = ref('')
 const activeView = ref('list')
 const sortBy = ref('closest')
 
-async function fetchFacilities() {
-  loading.value = true
-  error.value = ''
+const selectedCareTypes = ref([])
+const selectedAvailability = ref([])
 
-  try {
-    const q = searchQuery.value.trim()
-    let data
+const distance = ref(10)
+const minDistance = 1
+const maxDistance = 20
 
-    if (!q) {
-      data = await getRecommendedFacilities()
-      facilities.value = (data.results || []).map(mapFacilityCard)
-      return
-    }
-
-    const params = {
-      limit: 20,
-      offset: 0
-    }
-
-    if (/^\d+$/.test(q)) {
-      params.postcode = q
-    } else {
-      params.suburb = q
-    }
-
-    console.log('search params:', params)
-
-    data = await searchFacilities(params)
-    console.log('search response:', data)
-
-    facilities.value = (data.results || []).map(mapFacilityCard)
-  } catch (err) {
-    console.error('Failed to load facilities:', err)
-    error.value = 'Failed to load facilities.'
-    facilities.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(() => {
-  fetchFacilities()
-})
+const currentPage = ref(1)
+const pageSize = 20
+const totalResults = ref(0)
 
 const careTypeOptions = [
   { value: 'Residential', label: 'Residential', icon: '🏠' },
@@ -146,7 +121,7 @@ const careTypeOptions = [
   { value: 'Transition Care', label: 'Transition Care', icon: '🔄' },
   { value: 'Short-Term Restorative Care (STRC)', label: 'Short-Term Restorative Care (STRC)', icon: '🛏️' },
   { value: 'Multi-Purpose Service', label: 'Multi-Purpose Service', icon: '🏥' },
-  { value: 'National Aboriginal and Torres Strait Islander Aged Care Program', label: 'National Aboriginal and Torres Strait Islander Aged Care Program', icon: '🌿' }
+  { value: 'National Aboriginal and Torres Strait Islander Aged Care Program', label: 'Indigenous Care', icon: '🌿' }
 ]
 
 const availabilityOptions = [
@@ -155,24 +130,59 @@ const availabilityOptions = [
   { value: 'Low', label: 'Low' }
 ]
 
-const selectedCareTypes = ref([])
+async function fetchFacilities() {
+  loading.value = true
+  error.value = ''
 
-const distance = ref(10)
-const minDistance = 1
-const maxDistance = 20
+  try {
+    const q = searchQuery.value.trim()
 
-watch(
-  [searchQuery, selectedCareTypes, sortBy],
-  () => {
-    fetchFacilities()
-  },
-  { deep: true }
-)
+    const params = {
+      limit: pageSize,
+      offset: (currentPage.value - 1) * pageSize
+    }
+
+    if (q) {
+      if (/^\d+$/.test(q)) {
+        params.postcode = q
+      } else {
+        params.suburb = q
+      }
+    }
+
+    if (selectedCareTypes.value.length > 0) {
+      params.care_type = selectedCareTypes.value.join(',')
+    }
+
+    console.log('search params:', params)
+
+    const data = await searchFacilities(params)
+    console.log('search response:', data)
+
+    facilities.value = (data.results || data.items || data.facilities || []).map(mapFacilityCard)
+    totalResults.value = data.total || 0
+  } catch (err) {
+    console.error('Failed to load facilities:', err)
+    error.value = 'Failed to load facilities.'
+    facilities.value = []
+    totalResults.value = 0
+  } finally {
+    loading.value = false
+  }
+}
+
+function handlePageChange(page) {
+  currentPage.value = page
+  fetchFacilities()
+}
 
 function resetFilters() {
+  searchQuery.value = ''
   selectedCareTypes.value = []
   selectedAvailability.value = []
   distance.value = 10
+  sortBy.value = 'closest'
+  currentPage.value = 1
 }
 
 function getAvailabilityRank(level) {
@@ -193,12 +203,6 @@ function getAvailabilityLevel(facility) {
 const filteredFacilities = computed(() => {
   let result = [...facilities.value]
 
-  if (selectedCareTypes.value.length > 0) {
-    result = result.filter(f =>
-      selectedCareTypes.value.includes(f.careType)
-    )
-  }
-
   if (selectedAvailability.value.length > 0) {
     result = result.filter(f =>
       selectedAvailability.value.includes(getAvailabilityLevel(f))
@@ -207,9 +211,35 @@ const filteredFacilities = computed(() => {
 
   if (sortBy.value === 'name') {
     result.sort((a, b) => a.name.localeCompare(b.name))
+  } else if (sortBy.value === 'availability') {
+    result.sort(
+      (a, b) => getAvailabilityRank(getAvailabilityLevel(b)) - getAvailabilityRank(getAvailabilityLevel(a))
+    )
   }
 
   return result
+})
+
+watch(
+  () => route.query.careType,
+  (newCareType) => {
+    selectedCareTypes.value = newCareType ? [newCareType] : []
+    currentPage.value = 1
+  },
+  { immediate: true }
+)
+
+watch(
+  [searchQuery, selectedCareTypes, sortBy],
+  () => {
+    currentPage.value = 1
+    fetchFacilities()
+  },
+  { deep: true }
+)
+
+onMounted(() => {
+  fetchFacilities()
 })
 </script>
 
@@ -252,6 +282,12 @@ const filteredFacilities = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-width: 0;
+}
+
+.results-main > * {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .view-toggle {
