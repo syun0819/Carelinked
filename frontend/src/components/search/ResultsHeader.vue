@@ -1,15 +1,16 @@
 <template>
   <div class="results-header">
     <p class="results-count">
-      Showing {{ count }} care facilities within {{ distance }} km
+      Showing {{ start }}–{{ end }} of {{ count }} care facilities
     </p>
 
     <label class="sort-box">
       <span>Sort by:</span>
       <select :value="sortBy" @change="$emit('update:sortBy', $event.target.value)">
-        <option value="closest">Closest to me</option>
-        <option value="availability">Highest availability</option>
         <option value="name">A to Z</option>
+        <option value="beds_desc">Most beds</option>
+        <option value="beds_asc">Fewest beds</option>
+        <option value="distance">Closest to me</option>
       </select>
     </label>
   </div>
@@ -25,9 +26,17 @@ defineProps({
     type: Number,
     default: 10
   },
+  start: {
+    type: Number,
+    default: 0
+  },
+  end: {
+    type: Number,
+    default: 0
+  },
   sortBy: {
     type: String,
-    default: 'closest'
+    default: 'name'
   }
 })
 

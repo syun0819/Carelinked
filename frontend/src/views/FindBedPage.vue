@@ -30,10 +30,10 @@
     <section class="results-layout">
       <FilterPanel
         :selected-care-types="selectedCareTypes"
-        :selectedAvailability="selectedAvailability"
+        :selected-availability="selectedAvailability"
         :distance="distance"
         :care-type-options="careTypeOptions"
-        :availabilityOptions="availabilityOptions"
+        :availability-options="availabilityOptions"
         :min-distance="minDistance"
         :max-distance="maxDistance"
         @update:selectedCareTypes="selectedCareTypes = $event"
@@ -44,14 +44,19 @@
 
       <div class="results-main">
         <ResultsHeader
-          :count="filteredFacilities.length"
+          :count="activeView === 'map' ? mapResultCount : totalResults"
+          :start="activeView === 'map' ? (mapResultCount ? 1 : 0) : startIndex"
+          :end="activeView === 'map' ? mapResultCount : endIndex"
           :distance="distance"
           :sort-by="sortBy"
           @update:sortBy="sortBy = $event"
         />
-        
+
         <div v-if="loading" class="status-message">Loading facilities...</div>
         <div v-else-if="error" class="status-message error">{{ error }}</div>
+        <div v-else-if="locationStore.locationError" class="status-message error">
+          {{ locationStore.locationError }}
+        </div>
 
         <ListSection
           v-if="activeView === 'list'"
@@ -63,9 +68,14 @@
           :search-query="searchQuery"
           :selected-care-types="selectedCareTypes"
           :distance="distance"
+          :user-lat="locationStore.userLat"
+          :user-lng="locationStore.userLng"
+          :is-active="activeView === 'map'"
+          @update:count="mapResultCount = $event"
         />
 
         <PaginationBar
+          v-if="activeView === 'list'"
           :current-page="currentPage"
           :page-size="pageSize"
           :total="totalResults"
@@ -73,9 +83,8 @@
         />
       </div>
     </section>
-    
+
     <FooterSection />
-  
   </div>
 </template>
 
@@ -84,6 +93,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { searchFacilities } from '../services/facilitiesApi'
 import { mapFacilityCard } from '../utils/facilityMappers'
+import { useLocationStore } from '../stores/locationStore'
 
 import Header from '../components/Header.vue'
 import SearchBar from '../components/search/SearchBar.vue'
@@ -95,6 +105,7 @@ import PaginationBar from '../components/search/PaginationBar.vue'
 import FooterSection from '../components/FooterSection.vue'
 
 const route = useRoute()
+const locationStore = useLocationStore()
 
 const facilities = ref([])
 const loading = ref(false)
@@ -102,7 +113,7 @@ const error = ref('')
 
 const searchQuery = ref('')
 const activeView = ref('list')
-const sortBy = ref('closest')
+const sortBy = ref('name')
 
 const selectedCareTypes = ref([])
 const selectedAvailability = ref([])
@@ -113,6 +124,7 @@ const maxDistance = 20
 
 const currentPage = ref(1)
 const pageSize = 20
+const mapResultCount = ref(0)
 const totalResults = ref(0)
 
 const careTypeOptions = [
@@ -121,7 +133,11 @@ const careTypeOptions = [
   { value: 'Transition Care', label: 'Transition Care', icon: '🔄' },
   { value: 'Short-Term Restorative Care (STRC)', label: 'Short-Term Restorative Care (STRC)', icon: '🛏️' },
   { value: 'Multi-Purpose Service', label: 'Multi-Purpose Service', icon: '🏥' },
-  { value: 'National Aboriginal and Torres Strait Islander Aged Care Program', label: 'Indigenous Care', icon: '🌿' }
+  {
+    value: 'National Aboriginal and Torres Strait Islander Aged Care Program',
+    label: 'Indigenous Care',
+    icon: '🌿'
+  }
 ]
 
 const availabilityOptions = [
@@ -136,22 +152,48 @@ async function fetchFacilities() {
 
   try {
     const q = searchQuery.value.trim()
+    const hasUserLocation =
+      locationStore.userLat != null && locationStore.userLng != null
 
     const params = {
       limit: pageSize,
-      offset: (currentPage.value - 1) * pageSize
+      offset: (currentPage.value - 1) * pageSize,
+      sort_by: sortBy.value
     }
 
+    // 搜尋框：數字當 postcode，其餘文字走 keyword
     if (q) {
       if (/^\d+$/.test(q)) {
         params.postcode = q
       } else {
-        params.suburb = q
+        params.keyword = q
       }
     }
 
+    // care type filter
     if (selectedCareTypes.value.length > 0) {
       params.care_type = selectedCareTypes.value.join(',')
+    }
+
+    // 距離 filter：只有有位置才送
+    if (distance.value != null && hasUserLocation) {
+      params.user_lat = locationStore.userLat
+      params.user_lng = locationStore.userLng
+      params.max_distance_km = distance.value
+    }
+
+    // 如果排序是 distance，也一定要有位置
+    if (sortBy.value === 'distance') {
+      if (!hasUserLocation) {
+        error.value = 'Location is required for distance sorting.'
+        facilities.value = []
+        totalResults.value = 0
+        loading.value = false
+        return
+      }
+
+      params.user_lat = locationStore.userLat
+      params.user_lng = locationStore.userLng
     }
 
     console.log('search params:', params)
@@ -159,8 +201,9 @@ async function fetchFacilities() {
     const data = await searchFacilities(params)
     console.log('search response:', data)
 
-    facilities.value = (data.results || data.items || data.facilities || []).map(mapFacilityCard)
-    totalResults.value = data.total || 0
+    const rawFacilities = data.results || data.items || data.facilities || []
+    facilities.value = rawFacilities.map(mapFacilityCard)
+    totalResults.value = data.total || facilities.value.length
   } catch (err) {
     console.error('Failed to load facilities:', err)
     error.value = 'Failed to load facilities.'
@@ -170,6 +213,16 @@ async function fetchFacilities() {
     loading.value = false
   }
 }
+
+const startIndex = computed(() => {
+  return totalResults.value === 0
+    ? 0
+    : (currentPage.value - 1) * pageSize + 1
+})
+
+const endIndex = computed(() => {
+  return Math.min(currentPage.value * pageSize, totalResults.value)
+})
 
 function handlePageChange(page) {
   currentPage.value = page
@@ -181,7 +234,6 @@ function resetFilters() {
   selectedCareTypes.value = []
   selectedAvailability.value = []
   distance.value = 10
-  sortBy.value = 'closest'
   currentPage.value = 1
 }
 
@@ -200,20 +252,16 @@ function getAvailabilityLevel(facility) {
   return 'Medium'
 }
 
+function getDistanceValue(facility) {
+  return facility.distanceKm ?? facility.distance ?? Number.MAX_SAFE_INTEGER
+}
+
 const filteredFacilities = computed(() => {
   let result = [...facilities.value]
 
   if (selectedAvailability.value.length > 0) {
-    result = result.filter(f =>
+    result = result.filter((f) =>
       selectedAvailability.value.includes(getAvailabilityLevel(f))
-    )
-  }
-
-  if (sortBy.value === 'name') {
-    result.sort((a, b) => a.name.localeCompare(b.name))
-  } else if (sortBy.value === 'availability') {
-    result.sort(
-      (a, b) => getAvailabilityRank(getAvailabilityLevel(b)) - getAvailabilityRank(getAvailabilityLevel(a))
     )
   }
 
@@ -230,7 +278,7 @@ watch(
 )
 
 watch(
-  [searchQuery, selectedCareTypes, sortBy],
+  [searchQuery, selectedCareTypes, selectedAvailability, distance, sortBy],
   () => {
     currentPage.value = 1
     fetchFacilities()
@@ -238,8 +286,21 @@ watch(
   { deep: true }
 )
 
-onMounted(() => {
-  fetchFacilities()
+watch(
+  () => [locationStore.userLat, locationStore.userLng],
+  ([lat, lng]) => {
+    if (lat != null && lng != null) {
+      currentPage.value = 1
+      fetchFacilities()
+    }
+  }
+)
+
+onMounted(async () => {
+  if (!locationStore.locationLoaded) {
+    await locationStore.requestUserLocation()
+  }
+  await fetchFacilities()
 })
 </script>
 

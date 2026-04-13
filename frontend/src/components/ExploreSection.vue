@@ -1,66 +1,115 @@
 <template>
   <section class="explore-section">
     <div class="explore-header">
-        <h1 class="explore-title">Explore Aged Care</h1>
-        <p class="explore-subtitle">
-          Find the right aged care for you
-        </p>
+      <h1 class="explore-title">Explore Aged Care</h1>
+      <p class="explore-subtitle">
+        Find the right aged care for you
+      </p>
+    </div>
 
-        <LocationPrompt @location-success="handleLocationSuccess" />
-      </div>
-    
     <ResultsHeader
-      :count="facilities.length"
+      :count="displayFacilities.length"
       :sort-by="sortOption"
       :distance="distance"
       @update:sortBy="sortOption = $event"
     />
-    <div class="explore-grid">
+
+    <div v-if="loading" class="status-message">
+      Loading recommended facilities...
+    </div>
+
+    <div v-else class="explore-grid">
       <FacilityCard
-        v-for="facility in facilities"
+        v-for="facility in displayFacilities"
         :key="facility.id"
         :facility="facility"
       />
+    </div>
+
+    <div class="explore-actions">
+      <button class="more-btn" @click="goToFindBed">
+        View more facilities
+      </button>
     </div>
   </section>
 </template>
 
 <script setup>
+import { ref, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import FacilityCard from './FacilityCard.vue'
 import ResultsHeader from './search/ResultsHeader.vue'
-import LocationPrompt from '../components/LocationPrompt.vue'
-
-import { onMounted, ref } from 'vue'
 import { getRecommendedFacilities } from '../services/facilitiesApi'
 import { mapFacilityCard } from '../utils/facilityMappers'
 
-const recommendedFacilities = ref([])
+const router = useRouter()
 
-const distance = ref(10)
-
-onMounted(async () => {
-  const data = await getRecommendedFacilities()
-  recommendedFacilities.value = (data.results || []).map(mapFacilityCard)
-})
-
-const sortOption = ref('closest')
-
-const userLocation = ref(null)
-
-defineProps({
-  facilities: {
-    type: Array,
-    required: true
+const props = defineProps({
+  userLocation: {
+    type: Object,
+    default: null
   }
 })
 
-function handleLocationSuccess(location) {
-  userLocation.value = location
-  console.log('Explore page location:', location)
+const recommendedFacilities = ref([])
+const distance = ref(10)
+const sortOption = ref('closest')
+const loading = ref(false)
 
-  // 如果 explore 有自己的 fetch function，就在這裡呼叫
-  loadExploreFacilities()
+async function loadRecommendedFacilities() {
+  loading.value = true
+
+  try {
+    const params = {
+      limit: 6
+    }
+
+    if (
+      props.userLocation &&
+      props.userLocation.lat != null &&
+      props.userLocation.lng != null
+    ) {
+      params.user_lat = props.userLocation.lat
+      params.user_lng = props.userLocation.lng
+    }
+
+    const data = await getRecommendedFacilities(params)
+    recommendedFacilities.value = (data.results || []).map(mapFacilityCard)
+  } catch (error) {
+    console.error('Failed to load recommended facilities:', error)
+    recommendedFacilities.value = []
+  } finally {
+    loading.value = false
+  }
 }
+
+function goToFindBed() {
+  router.push('/find-bed')
+}
+
+const displayFacilities = computed(() => {
+  let result = [...recommendedFacilities.value]
+
+  if (sortOption.value === 'name') {
+    result.sort((a, b) => a.name.localeCompare(b.name))
+  } else if (sortOption.value === 'closest') {
+    result.sort((a, b) => {
+      const aDistance = a.distanceKm ?? a.distance ?? Number.MAX_SAFE_INTEGER
+      const bDistance = b.distanceKm ?? b.distance ?? Number.MAX_SAFE_INTEGER
+      return aDistance - bDistance
+    })
+  }
+
+  return result
+})
+
+watch(
+  () => props.userLocation,
+  () => {
+    loadRecommendedFacilities()
+  },
+  { immediate: true, deep: true }
+)
 </script>
 
 <style scoped>
@@ -80,7 +129,6 @@ function handleLocationSuccess(location) {
   font-weight: 700;
   color: #1f2d2a;
   margin: 0;
-
   font-family: 'Georgia', serif;
 }
 
@@ -91,118 +139,43 @@ function handleLocationSuccess(location) {
   font-family: 'Inter', sans-serif;
 }
 
-.location-btn {
-  border: none;
-  border-radius: 24px;
-  padding: 8px 16px;
-  background: #2e7d32;
-  color: white;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.location-btn:hover {
-  background: #1b5e20;
-}
-
-.stats-card {
-  width: fit-content;
-  margin: 0 auto 24px;
-  background: white;
-  border: 1px solid #e3dfd8;
-  border-radius: 10px;
-  padding: 10px 18px;
-  text-align: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
-}
-
-.summary-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  gap: 16px;
-}
-
-.summary-text {
-  margin: 0;
-  font-size: 13px;
-  color: #6b736f;
-  font-family: 'Inter', sans-serif;
-}
-
-.sort-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: 'Inter', sans-serif;
-}
-
-.sort-box label {
-  font-size: 13px;
-  color: #6b736f;
-}
-
-.sort-box select {
-  padding: 6px 10px;
-  border: 1px solid #ddd8cf;
-  border-radius: 8px;
-  background: white;
-  font-size: 13px;
-  color: #1f2d2a;
-  cursor: pointer;
-  appearance: auto;
-}
-
-.sort-box select:focus,
-.sort-box select:active {
-  background-color: white;
-  color: #1f2d2a;
-  outline: none;
-  border-color: #bfc8c2;
-}
-
 .explore-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 24px;
 }
 
-.pagination {
+.explore-actions {
   display: flex;
   justify-content: center;
-  align-items: center;
-  gap: 8px;
   margin-top: 28px;
 }
 
-.pagination button {
-  min-width: 32px;
-  height: 32px;
-  border: 1px solid #ddd8cf;
-  background: white;
+.more-btn {
+  border: none;
   border-radius: 999px;
+  padding: 12px 22px;
+  background: #557067;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 13px;
-  color: #5f6d67;
 }
 
-.pagination button.active {
-  background: #5d8b72;
-  color: white;
-  border-color: #5d8b72;
+.more-btn:hover {
+  background: #486158;
+}
+
+.status-message {
+  text-align: center;
+  color: #6b736f;
+  padding: 24px 0;
 }
 
 @media (max-width: 1024px) {
   .explore-section {
     padding-left: 24px;
     padding-right: 24px;
-  }
-
-  .summary-row {
-    flex-direction: column;
-    align-items: flex-start;
   }
 
   .explore-grid {
