@@ -280,3 +280,36 @@ async def get_similar_facilities(
     with_distance.sort(key=lambda x: x[0])
 
     return [FacilityCard.model_validate(r) for _, r in with_distance[:limit]]
+
+
+async def get_nearest_facilities(
+    db: AsyncSession,
+    user_lat: float,
+    user_lng: float,
+    limit: int = 6,
+) -> List[FacilityCard]:
+    query = (
+        select(AgedCareService)
+        .where(AgedCareService.physical_state == "VIC")
+        .where(AgedCareService.latitude.isnot(None))
+        .where(AgedCareService.longitude.isnot(None))
+    )
+    result = await db.execute(query)
+    rows = result.scalars().all()
+
+    with_distance = [
+        (haversine_distance(user_lat, user_lng, r.latitude, r.longitude), r)
+        for r in rows
+    ]
+    with_distance.sort(key=lambda x: x[0])
+    nearest = [r for _, r in with_distance[:limit]]
+
+    ml_map = await _fetch_ml_records_bulk(db, [r.id for r in nearest])
+    cards: List[FacilityCard] = []
+    for r in nearest:
+        ml_label = get_ml_availability_group(ml_map.get(r.id), r.care_type)
+        card = FacilityCard.model_validate(r)
+        card.availability_group = ml_label or calculate_availability(r.residential_places)
+        card.data_source = _DATA_SOURCE_ML if ml_label else _DATA_SOURCE_BEDS
+        cards.append(card)
+    return cards
