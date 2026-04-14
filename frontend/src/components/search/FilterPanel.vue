@@ -65,30 +65,48 @@
     <hr class="filter-divider" />
 
     <div class="filter-section">
-      <p class="filter-title">BED AVAILABILITY</p>
+      <div class="filter-title">LOCATION TYPE</div>
 
-      <label
-        v-for="item in availabilityOptions"
-        :key="item.value"
-        class="filter-option"
-        :class="{ selected: selectedAvailability.includes(item.value) }"
-      >
-        <input
-          type="checkbox"
-          :checked="selectedAvailability.includes(item.value)"
-          @change="toggleAvailability(item.value)"
-        />
-        <span class="custom-checkbox">
-          <span v-if="selectedAvailability.includes(item.value)">✓</span>
-        </span>
-        <span class="option-text">{{ item.label }}</span>
-      </label>
+      <select v-model="localRemoteness" class="filter-select">
+        <option value="">All</option>
+        <option value="Major Cities">Major Cities</option>
+        <option value="Inner Regional">Inner Regional</option>
+        <option value="Outer Regional">Outer Regional</option>
+        <option value="Remote">Remote</option>
+        <option value="Very Remote">Very Remote</option>
+      </select>
+    </div>
+
+    <hr class="filter-divider" />
+
+    <div class="filter-section">
+      <div class="filter-title">MIN BEDS</div>
+
+      <input
+        type="number"
+        v-model="localMinBeds"
+        class="filter-input"
+        placeholder="e.g. 20"
+      />
+    </div>
+
+    <hr class="filter-divider" />
+
+    <div class="filter-section">
+      <div class="filter-title">MAX BEDS</div>
+
+      <input
+        type="number"
+        v-model="localMaxBeds"
+        class="filter-input"
+        placeholder="e.g. 100"
+      />
     </div>
   </aside>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, watch, ref } from 'vue'
 
 const props = defineProps({
   selectedCareTypes: {
@@ -119,23 +137,66 @@ const props = defineProps({
     type: Number,
     default: 20
   },
-  selectedAvailability: {
-    type: Array,
-    default: () => []
+  selectedRemoteness: {
+    type: String,
+    default: ''
   },
-  availabilityOptions: {
-    type: Array,
-    default: () => []
+  minBeds: {
+    type: Number,
+    default: null
   },
+  maxBeds: {
+    type: Number,
+    default: null
+  }
 })
 
 const emit = defineEmits([
   'update:selectedCareTypes',
   'update:distance',
+  'update:selectedRemoteness',
+  'update:minBeds',
+  'update:maxBeds',
   'update:distanceFilterEnabled',
-  'update:selectedAvailability',
   'reset'
 ])
+
+const localRemoteness = ref(props.selectedRemoteness || '')
+const localMinBeds = ref(props.minBeds)
+const localMaxBeds = ref(props.maxBeds)
+
+watch(localRemoteness, (val) => {
+  emit('update:selectedRemoteness', val)
+})
+
+watch(localMinBeds, (val) => {
+  emit('update:minBeds', val === '' ? null : Number(val))
+})
+
+watch(localMaxBeds, (val) => {
+  emit('update:maxBeds', val === '' ? null : Number(val))
+})
+
+watch(
+  () => props.selectedRemoteness,
+  (val) => {
+    localRemoteness.value = val || ''
+  }
+)
+
+watch(
+  () => props.minBeds,
+  (val) => {
+    localMinBeds.value = val
+  }
+)
+
+watch(
+  () => props.maxBeds,
+  (val) => {
+    localMaxBeds.value = val
+  }
+)
 
 function toggleCareType(value) {
   const next = props.selectedCareTypes.includes(value)
@@ -143,14 +204,6 @@ function toggleCareType(value) {
     : [...props.selectedCareTypes, value]
 
   emit('update:selectedCareTypes', next)
-}
-
-function toggleAvailability(value) {
-  const next = props.selectedAvailability.includes(value)
-    ? props.selectedAvailability.filter(item => item !== value)
-    : [...props.selectedAvailability, value]
-
-  emit('update:selectedAvailability', next)
 }
 
 const rangeStyle = computed(() => {
@@ -371,5 +424,44 @@ const rangeStyle = computed(() => {
   border: 4px solid #4f7d6f;
   margin-top: -8px;
   cursor: pointer;
+}
+
+.filter-select,
+.filter-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid #cfd6cf;
+  border-radius: 8px;
+  background: #fffdfa;
+  color: #33413c;
+  font-size: 15px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.filter-select:focus,
+.filter-input:focus {
+  border-color: #6f8f80;
+  box-shadow: 0 0 0 3px rgba(111, 143, 128, 0.12);
+  background: #ffffff;
+}
+
+.filter-input::placeholder {
+  color: #a8b0ab;
+}
+
+.filter-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #6b736f 50%),
+    linear-gradient(135deg, #6b736f 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(50% - 3px),
+    calc(100% - 12px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 38px;
 }
 </style>

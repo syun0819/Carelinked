@@ -7,7 +7,7 @@
         v-model="inputValue"
         class="search-input"
         type="text"
-        placeholder="Search by facility name, suburb, or care type..."
+        placeholder="Search by suburb, postcode or region..."
         @keyup.enter="handleSearch"
       />
 

@@ -5,7 +5,6 @@ export function mapFacilityCard(item) {
   return {
     id: item.id,
     name: item.service_name || '',
-    image: DEFAULT_IMAGE,
     address: item.physical_address || '',
     suburb: item.physical_suburb || '',
     postcode: item.physical_post_code || '',
@@ -14,15 +13,9 @@ export function mapFacilityCard(item) {
     acpr: item.aged_care_planning_region || '',
     remoteness: item.abs_remoteness || '',
     totalBeds: item.residential_places ?? 0,
-
-    state: '',
-    organisationType: '',
-    funding: '',
-    providerType: '',
-    bedAvailability: 'Unknown',
-    estimatedWaitTime: '',
-    waitWeeks: null,
-    distance: null
+    bedAvailability: item.availability_group || 'Unknown',
+    
+    image: DEFAULT_IMAGE,
   }
 }
 
@@ -30,7 +23,6 @@ export function mapFacilityDetail(item) {
   return {
     id: item.id,
     name: item.service_name || '',
-    image: DEFAULT_IMAGE,
     address: item.physical_address || '',
     suburb: item.physical_suburb || '',
     postcode: item.physical_post_code || '',
@@ -39,18 +31,15 @@ export function mapFacilityDetail(item) {
     acpr: item.aged_care_planning_region || '',
     remoteness: item.abs_remoteness || '',
     totalBeds: item.residential_places ?? 0,
-
-    state: item.state || '',
-    organisationType: item.organisation_type || '',
-    funding: item.funding || '',
-    providerType: item.provider_type || '',
-    bedAvailability: item.availability_group || item.bed_availability || 'Unknown',
-    estimatedWaitTime: item.estimated_wait_time || '',
-    waitWeeks: item.wait_weeks ?? null,
-    distance: item.distance ?? null,
-
+    homeCarePlaces: item.home_care_places ?? 0,
+    restorativeCarePlaces: item.restorative_care_places ?? 0,
+    bedAvailability: item.availability_group || 'Unknown',
     latitude: item.latitude ?? null,
-    longitude: item.longitude ?? null
+    longitude: item.longitude ?? null,
+    organisationType: item.organisation_type || '',
+    governmentFunding: item.australian_government_funding ?? null,
+
+    image: DEFAULT_IMAGE,
   }
 }
 

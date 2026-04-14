@@ -1,17 +1,15 @@
 <template>
   <div class="detail-page">
-    <Header/>
+    <Header />
 
     <div v-if="facility" class="detail-container">
-      <!-- Breadcrumb -->
       <div class="breadcrumb">
-        <span class="breadcrumb-link" @click="goHome">Home</span>
-        <span class="breadcrumb-separator">></span>
+        <span class="breadcrumb-link" @click="goBack">← Back to results</span>
+        <span class="breadcrumb-separator">|</span>
         <span class="breadcrumb-current">{{ facility.name }}</span>
       </div>
 
       <div class="detail-layout">
-        <!-- Left -->
         <div class="detail-main">
           <div class="detail-image-wrapper">
             <img
@@ -29,19 +27,19 @@
 
             <p class="facility-address">📍 {{ facility.address }}</p>
             <div class="care-tag-wrapper">
-                <span class="care-tag">{{ facility.careType }}</span>
+              <span class="care-tag">{{ facility.careType }}</span>
             </div>
           </div>
 
           <div class="summary-cards">
             <div class="summary-card">
-                <div class="summary-value availability-text">{{ facility.bedAvailability }}</div>
-                <div class="summary-label">BED AVAILABILITY ESTIMATION</div>
+              <div class="summary-value availability-text">{{ facility.bedAvailability }}</div>
+              <div class="summary-label">BED AVAILABILITY ESTIMATION</div>
             </div>
 
             <div class="summary-card">
-                <div class="summary-value">{{ facility.totalBeds }}</div>
-                <div class="summary-label">TOTAL BEDS</div>
+              <div class="summary-value">{{ facility.totalBeds }}</div>
+              <div class="summary-label">TOTAL BEDS</div>
             </div>
           </div>
 
@@ -49,32 +47,32 @@
             <h2 class="section-title">Aged Care Details</h2>
 
             <div class="detail-table">
-                <div class="detail-row">
-                    <span class="detail-label">Physical Suburb</span>
-                    <span class="detail-value">{{ facility.suburb }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">State</span>
-                    <span class="detail-value">{{ facility.state }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Postcode</span>
-                    <span class="detail-value">{{ facility.postcode }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Care Type</span>
-                    <span class="detail-value">{{ facility.careType }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Organisation Type</span>
-                    <span class="detail-value">{{ facility.organisationType }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Australian Government Funding</span>
-                    <span class="detail-value">{{ facility.funding }}</span>
-                </div>
+              <div class="detail-row">
+                <span class="detail-label">Physical Suburb</span>
+                <span class="detail-value">{{ facility.suburb }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">State</span>
+                <span class="detail-value">Victoria</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Postcode</span>
+                <span class="detail-value">{{ facility.postcode }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Care Type</span>
+                <span class="detail-value">{{ facility.careType }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Organisation Type</span>
+                <span class="detail-value">{{ facility.organisationType }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Government Funding</span>
+                <span class="detail-value">${{ facility.governmentFunding }}</span>
+              </div>
             </div>
-           </div>
+          </div>
 
           <div class="similar-section">
             <h2 class="section-title">Similar Facilities Nearby</h2>
@@ -88,32 +86,34 @@
           </div>
         </div>
 
-        <!-- Right -->
         <aside class="detail-sidebar">
           <div class="sidebar-card">
             <h3 class="sidebar-title">Location</h3>
-            <div class="map-placeholder">Map</div>
-            <button class="sidebar-btn">Find with Map</button>
+
+            <div v-if="hasCoordinates" ref="mapEl" class="detail-map"></div>
+            <div v-else class="map-placeholder">Location unavailable</div>
+
+            <button class="sidebar-btn" @click="goToMapSearch">Find with Map</button>
           </div>
 
           <div class="sidebar-card provider-card">
             <h3 class="sidebar-title">About the Provider</h3>
 
             <div class="provider-top">
-                <p class="provider-name">{{ facility.provider }}</p>
-                <p class="provider-sub">{{ facility.providerType }}</p>
+              <p class="provider-name">{{ facility.provider }}</p>
+              <p class="provider-sub">{{ facility.providerType }}</p>
             </div>
 
             <div class="provider-info">
-                <div class="provider-row">
+              <div class="provider-row">
                 <span class="provider-label">ABS Remoteness</span>
                 <span class="provider-value">{{ facility.remoteness }}</span>
-                </div>
+              </div>
 
-                <div class="provider-row">
+              <div class="provider-row">
                 <span class="provider-label">Aged Care Planning Region (ACPR)</span>
                 <span class="provider-value">{{ facility.acpr }}</span>
-                </div>
+              </div>
             </div>
           </div>
 
@@ -130,14 +130,21 @@
     <div v-else class="detail-container">
       <p>Facility not found.</p>
     </div>
+
+    <FooterSection />
   </div>
 </template>
 
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
+import { onMounted, onBeforeUnmount, ref, computed, nextTick } from 'vue'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+
 import Header from '../components/Header.vue'
+import FooterSection from '../components/FooterSection.vue'
 import FacilityCard from '../components/FacilityCard.vue'
-import { onMounted, ref } from 'vue'
+
 import { getFacilityDetail, getSimilarFacilities } from '../services/facilitiesApi'
 import { mapFacilityCard, mapFacilityDetail } from '../utils/facilityMappers'
 
@@ -148,6 +155,50 @@ const facility = ref(null)
 const similarFacilities = ref([])
 const loading = ref(false)
 const error = ref('')
+
+const mapEl = ref(null)
+let map = null
+let marker = null
+
+const hasCoordinates = computed(() => {
+  return (
+    facility.value &&
+    facility.value.latitude != null &&
+    facility.value.longitude != null
+  )
+})
+
+function initMap() {
+  if (!hasCoordinates.value || !mapEl.value) return
+
+  if (map) {
+    map.remove()
+    map = null
+  }
+
+  map = L.map(mapEl.value, {
+    zoomControl: true
+  }).setView([facility.value.latitude, facility.value.longitude], 15)
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map)
+
+  marker = L.marker([facility.value.latitude, facility.value.longitude]).addTo(map)
+
+  marker.bindPopup(`
+    <div>
+      <strong>${facility.value.name}</strong><br />
+      ${facility.value.address || ''}
+    </div>
+  `)
+
+  setTimeout(() => {
+    if (map) {
+      map.invalidateSize()
+    }
+  }, 100)
+}
 
 async function fetchFacilityDetail() {
   loading.value = true
@@ -161,6 +212,9 @@ async function fetchFacilityDetail() {
 
     const similarData = await getSimilarFacilities(id, 2)
     similarFacilities.value = (similarData.results || []).map(mapFacilityCard)
+
+    await nextTick()
+    initMap()
   } catch (err) {
     console.error(err)
     error.value = 'Failed to load facility details.'
@@ -173,12 +227,45 @@ onMounted(() => {
   fetchFacilityDetail()
 })
 
+onBeforeUnmount(() => {
+  if (map) {
+    map.remove()
+    map = null
+  }
+})
+
 const goBack = () => {
-  router.back()
+  const hasSearchState = Object.keys(route.query).length > 0
+
+  if (hasSearchState) {
+    router.push({
+      path: '/find-bed',
+      query: route.query
+    })
+  } else {
+    router.back()
+  }
 }
 
 const goHome = () => {
   router.push('/')
+}
+
+const goToMapSearch = () => {
+  if (facility.value?.suburb) {
+    router.push({
+      path: '/find-bed',
+      query: {
+        ...route.query,
+        suburb: facility.value.suburb
+      }
+    })
+  } else {
+    router.push({
+      path: '/find-bed',
+      query: route.query
+    })
+  }
 }
 
 const printPage = () => {
@@ -197,7 +284,7 @@ const copyAddress = async () => {
 .detail-page {
   background: #f7f4ee;
   min-height: 100vh;
-  padding: 0 0 70px;
+  padding: 0 0 0px;
   color: #22332e;
 }
 
@@ -327,6 +414,10 @@ const copyAddress = async () => {
   border-radius: 10px;
   padding: 14px 16px 12px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+  justify-content: center;
 }
 
 .summary-value {
@@ -346,6 +437,7 @@ const copyAddress = async () => {
   line-height: 1.35;
   color: #7f8d87;
   text-transform: uppercase;
+  text-align: center;
 }
 
 .info-card,
@@ -400,17 +492,28 @@ const copyAddress = async () => {
   text-align: right;
 }
 
+.detail-map {
+  width: 100%;
+  height: 220px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #ddd8cf;
+  margin-bottom: 14px;
+}
+
 .map-placeholder {
-  height: 172px;
-  border-radius: 10px;
-  background: #e8ecef;
+  width: 100%;
+  height: 220px;
+  border-radius: 14px;
+  border: 1px solid #ddd8cf;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #74807a;
-  margin: 14px 0 12px;
-  font-size: 18px;
+  background: #f8f8f8;
+  color: #7a7a7a;
+  margin-bottom: 14px;
 }
+
 
 .sidebar-btn {
   width: 138px;

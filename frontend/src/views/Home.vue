@@ -15,8 +15,8 @@
         </div>
       </div>
     </section>
-
-    <ExploreSection :facilities="facilities" />
+    
+    <ExploreSection :user-location="userLocation" />
 
     <HowItWorksSection />
 
@@ -34,8 +34,11 @@ import FooterSection from '../components/FooterSection.vue'
 
 import { getRecommendedFacilities } from '../services/facilitiesApi'
 import { mapFacilityCard } from '../utils/facilityMappers'
+import { useLocationStore } from '../stores/locationStore'
 
 const facilities = ref([])
+const userLocation = ref(null)
+const locationStore = useLocationStore()
 
 async function fetchRecommendedFacilities() {
   try {
@@ -48,8 +51,27 @@ async function fetchRecommendedFacilities() {
   }
 }
 
-onMounted(() => {
+function requestLocation() {
+  if (!navigator.geolocation) return
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      userLocation.value = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude
+      }
+      console.log('User location:', userLocation.value)
+    },
+    (err) => {
+      console.warn('Location denied:', err.message)
+    }
+  )
+}
+
+onMounted(async () => {
   fetchRecommendedFacilities()
+  requestLocation()
+  await locationStore.requestUserLocation()
 })
 </script>
 

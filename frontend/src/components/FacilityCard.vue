@@ -58,7 +58,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const props = defineProps({
   facility: {
@@ -68,17 +68,18 @@ const props = defineProps({
 })
 
 const router = useRouter()
+const route = useRoute()
+
 
 const goToDetail = () => {
-  router.push(`/facility/${props.facility.id}`)
+  router.push({
+    path: `/facility/${props.facility.id}`,
+    query: route.query
+  })
 }
 
 const availabilityLevel = computed(() => {
-  const beds = props.facility.totalBeds || props.facility.residential_places || 0
-
-  if (beds >= 80) return 'High'
-  if (beds <= 30) return 'Low'
-  return 'Medium'
+  return props.facility.bedAvailability || 'Unknown'
 })
 
 const availabilityClass = computed(() => {
@@ -114,7 +115,7 @@ const availabilityClass = computed(() => {
   justify-content: space-between;
   align-items: flex-start;
   gap: 18px;
-  height: 100px;
+  min-height: 100px;
 }
 
 .facility-main-info {
@@ -130,6 +131,10 @@ const availabilityClass = computed(() => {
   font-weight: 700;
   color: #24332f;
   font-family: Georgia, serif;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .facility-address {
@@ -137,6 +142,7 @@ const availabilityClass = computed(() => {
   color: #7b8d87;
   font-size: 12px;
   line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .recommended-badge {
@@ -148,6 +154,7 @@ const availabilityClass = computed(() => {
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
+  align-self: flex-start;
 }
 
 .tag-row {
@@ -238,6 +245,7 @@ const availabilityClass = computed(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+  overflow-wrap: anywhere;
 }
 
 .details-btn {

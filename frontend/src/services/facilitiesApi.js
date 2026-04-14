@@ -21,7 +21,7 @@ export function searchFacilities(params = {}) {
   return request('/api/v1/facilities/search', params)
 }
 
-export function getRecommendedFacilities(params = {}) {
+export async function getRecommendedFacilities(params = {}) {
   return request('/api/v1/facilities/recommended', params)
 }
 

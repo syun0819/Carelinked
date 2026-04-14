@@ -7,7 +7,10 @@
       <p>Get a personalised estimate of how long you may wait for an aged care placement.</p>
     </section>
 
-    <SearchBar v-model="searchQuery" />
+    <SearchBar
+      v-model="searchQuery"
+      @search="handleSearch"
+    />
 
     <section class="view-toggle">
       <button
@@ -30,16 +33,19 @@
     <section class="results-layout">
       <FilterPanel
         :selected-care-types="selectedCareTypes"
-        :selectedAvailability="selectedAvailability"
+        :selected-remoteness="selectedRemoteness"
+        :min-beds="minBeds"
+        :max-beds="maxBeds"
         :distance="distance"
         :distanceFilterEnabled="distanceFilterEnabled"
         :distanceWarning="distanceWarning"
         :care-type-options="careTypeOptions"
-        :availabilityOptions="availabilityOptions"
         :min-distance="minDistance"
         :max-distance="maxDistance"
         @update:selectedCareTypes="selectedCareTypes = $event"
-        @update:selectedAvailability="selectedAvailability = $event"
+        @update:selectedRemoteness="selectedRemoteness = $event"
+        @update:minBeds="minBeds = $event"
+        @update:maxBeds="maxBeds = $event"
         @update:distance="distance = $event"
         @update:distanceFilterEnabled="distanceFilterEnabled = $event"
         @reset="resetFilters"
@@ -47,14 +53,20 @@
 
       <div class="results-main">
         <ResultsHeader
-          :count="filteredFacilities.length"
+          :count="activeView === 'map' ? mapResultCount : totalResults"
+          :start="activeView === 'map' ? (mapResultCount ? 1 : 0) : startIndex"
+          :end="activeView === 'map' ? mapResultCount : endIndex"
           :distance="distance"
           :sort-by="sortBy"
+          :viewMode="activeView"
           @update:sortBy="sortBy = $event"
         />
-        
+
         <div v-if="loading" class="status-message">Loading facilities...</div>
         <div v-else-if="error" class="status-message error">{{ error }}</div>
+        <div v-else-if="locationStore.locationError" class="status-message error">
+          {{ locationStore.locationError }}
+        </div>
 
         <ListSection
           v-if="activeView === 'list'"
@@ -66,9 +78,14 @@
           :search-query="searchQuery"
           :selected-care-types="selectedCareTypes"
           :distance="distance"
+          :user-lat="locationStore.userLat"
+          :user-lng="locationStore.userLng"
+          :is-active="activeView === 'map'"
+          @update:count="mapResultCount = $event"
         />
 
         <PaginationBar
+          v-if="activeView === 'list'"
           :current-page="currentPage"
           :page-size="pageSize"
           :total="totalResults"
@@ -76,17 +93,17 @@
         />
       </div>
     </section>
-    
+
     <FooterSection />
-  
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { searchFacilities } from '../services/facilitiesApi'
 import { mapFacilityCard } from '../utils/facilityMappers'
+import { useLocationStore } from '../stores/locationStore'
 
 import Header from '../components/Header.vue'
 import SearchBar from '../components/search/SearchBar.vue'
@@ -98,6 +115,8 @@ import PaginationBar from '../components/search/PaginationBar.vue'
 import FooterSection from '../components/FooterSection.vue'
 
 const route = useRoute()
+const router = useRouter()
+const locationStore = useLocationStore()
 
 const facilities = ref([])
 const loading = ref(false)
@@ -105,10 +124,12 @@ const error = ref('')
 
 const searchQuery = ref('')
 const activeView = ref('list')
-const sortBy = ref('closest')
+const sortBy = ref('name')
 
 const selectedCareTypes = ref([])
-const selectedAvailability = ref([])
+const selectedRemoteness = ref('')
+const minBeds = ref(null)
+const maxBeds = ref(null)
 
 const distance = ref(10)
 const minDistance = 1
@@ -118,6 +139,7 @@ const distanceWarning = ref('')
 
 const currentPage = ref(1)
 const pageSize = 20
+const mapResultCount = ref(0)
 const totalResults = ref(0)
 
 const careTypeOptions = [
@@ -126,13 +148,11 @@ const careTypeOptions = [
   { value: 'Transition Care', label: 'Transition Care', icon: '🔄' },
   { value: 'Short-Term Restorative Care (STRC)', label: 'Short-Term Restorative Care (STRC)', icon: '🛏️' },
   { value: 'Multi-Purpose Service', label: 'Multi-Purpose Service', icon: '🏥' },
-  { value: 'National Aboriginal and Torres Strait Islander Aged Care Program', label: 'Indigenous Care', icon: '🌿' }
-]
-
-const availabilityOptions = [
-  { value: 'High', label: 'High' },
-  { value: 'Medium', label: 'Medium' },
-  { value: 'Low', label: 'Low' }
+  {
+    value: 'National Aboriginal and Torres Strait Islander Aged Care Program',
+    label: 'Indigenous Care',
+    icon: '🌿'
+  }
 ]
 
 async function fetchFacilities() {
@@ -142,22 +162,56 @@ async function fetchFacilities() {
 
   try {
     const q = searchQuery.value.trim()
+    const hasUserLocation =
+      locationStore.userLat != null && locationStore.userLng != null
 
     const params = {
       limit: pageSize,
-      offset: (currentPage.value - 1) * pageSize
+      offset: (currentPage.value - 1) * pageSize,
+      sort_by: sortBy.value
     }
 
-    if (q) {
+    if (q !== '') {
       if (/^\d+$/.test(q)) {
         params.postcode = q
       } else {
-        params.suburb = q
+        params.keyword = q
       }
     }
 
     if (selectedCareTypes.value.length > 0) {
-      params.care_type = selectedCareTypes.value
+      params.care_type = selectedCareTypes.value.join(',')
+    }
+
+    if (selectedRemoteness.value) {
+      params.abs_remoteness = selectedRemoteness.value
+    }
+
+    if (minBeds.value != null) {
+      params.min_beds = minBeds.value
+    }
+
+    if (maxBeds.value != null) {
+      params.max_beds = maxBeds.value
+    }
+
+    if (hasUserLocation) {
+      params.user_lat = locationStore.userLat
+      params.user_lng = locationStore.userLng
+      params.max_distance_km = distance.value ?? 10
+    }
+
+    if (sortBy.value === 'distance') {
+      if (!hasUserLocation) {
+        error.value = 'Location is required for distance sorting.'
+        facilities.value = []
+        totalResults.value = 0
+        loading.value = false
+        return
+      }
+
+      params.user_lat = locationStore.userLat
+      params.user_lng = locationStore.userLng
     }
 
     if (distanceFilterEnabled.value) {
@@ -173,8 +227,9 @@ async function fetchFacilities() {
     const data = await searchFacilities(params)
     console.log('search response:', data)
 
-    facilities.value = (data.results || data.items || data.facilities || []).map(mapFacilityCard)
-    totalResults.value = data.total || 0
+    const rawFacilities = data.results || data.items || data.facilities || []
+    facilities.value = rawFacilities.map(mapFacilityCard)
+    totalResults.value = data.total || facilities.value.length
   } catch (err) {
     console.error('Failed to load facilities:', err)
     error.value = 'Failed to load facilities.'
@@ -185,77 +240,155 @@ async function fetchFacilities() {
   }
 }
 
+const startIndex = computed(() => {
+  return totalResults.value === 0
+    ? 0
+    : (currentPage.value - 1) * pageSize + 1
+})
+
+const endIndex = computed(() => {
+  return Math.min(currentPage.value * pageSize, totalResults.value)
+})
+
 function handlePageChange(page) {
   currentPage.value = page
+  syncStateToQuery()
+  fetchFacilities()
+}
+
+function handleSearch() {
+  currentPage.value = 1
+  syncStateToQuery()
   fetchFacilities()
 }
 
 function resetFilters() {
   searchQuery.value = ''
   selectedCareTypes.value = []
-  selectedAvailability.value = []
+  selectedRemoteness.value = ''
+  minBeds.value = null
+  maxBeds.value = null
   distance.value = 10
   distanceFilterEnabled.value = false
   distanceWarning.value = ''
   sortBy.value = 'closest'
   currentPage.value = 1
+  syncStateToQuery()
 }
 
-function getAvailabilityRank(level) {
-  if (level === 'High') return 3
-  if (level === 'Medium') return 2
-  if (level === 'Low') return 1
-  return 0
+function getDistanceValue(facility) {
+  return facility.distanceKm ?? facility.distance ?? Number.MAX_SAFE_INTEGER
 }
 
-function getAvailabilityLevel(facility) {
-  const beds = facility.totalBeds ?? facility.residential_places ?? 0
-
-  if (beds >= 80) return 'High'
-  if (beds <= 30) return 'Low'
-  return 'Medium'
-}
-
-const filteredFacilities = computed(() => {
-  let result = [...facilities.value]
-
-  if (selectedAvailability.value.length > 0) {
-    result = result.filter(f =>
-      selectedAvailability.value.includes(getAvailabilityLevel(f))
-    )
-  }
-
-  if (sortBy.value === 'name') {
-    result.sort((a, b) => a.name.localeCompare(b.name))
-  } else if (sortBy.value === 'availability') {
-    result.sort(
-      (a, b) => getAvailabilityRank(getAvailabilityLevel(b)) - getAvailabilityRank(getAvailabilityLevel(a))
-    )
-  }
-
-  return result
-})
+const filteredFacilities = computed(() => facilities.value)
 
 watch(
   () => route.query.careType,
   (newCareType) => {
-    selectedCareTypes.value = newCareType ? [newCareType] : []
+    selectedCareTypes.value = normalizeCareTypes(newCareType)
     currentPage.value = 1
   },
   { immediate: true }
 )
 
 watch(
-  [searchQuery, selectedCareTypes, sortBy, distanceFilterEnabled, distance],
+  [
+    searchQuery,
+    selectedCareTypes,
+    selectedRemoteness,
+    minBeds,
+    maxBeds,
+    distanceFilterEnabled,
+    distance,
+    sortBy,
+    activeView
+  ],
   () => {
     currentPage.value = 1
+    syncStateToQuery()
     fetchFacilities()
   },
   { deep: true }
 )
 
-onMounted(() => {
-  fetchFacilities()
+watch(
+  () => [locationStore.userLat, locationStore.userLng],
+  ([lat, lng]) => {
+    if (lat != null && lng != null) {
+      currentPage.value = 1
+      fetchFacilities()
+    }
+  }
+)
+
+function applyQueryToState() {
+  searchQuery.value = route.query.search ?? ''
+  activeView.value = route.query.view ?? 'list'
+  sortBy.value = route.query.sortBy ?? 'name'
+
+  selectedCareTypes.value = normalizeCareTypes(route.query.careType)
+
+  selectedRemoteness.value = route.query.remoteness ?? ''
+
+  minBeds.value = route.query.minBeds ? Number(route.query.minBeds) : null
+  maxBeds.value = route.query.maxBeds ? Number(route.query.maxBeds) : null
+
+  distance.value = route.query.distance ? Number(route.query.distance) : 10
+  distanceFilterEnabled.value = route.query.distanceEnabled === 'true'
+
+  currentPage.value = route.query.page ? Number(route.query.page) : 1
+}
+
+function syncStateToQuery() {
+  const uniqueCareTypes = [...new Set(selectedCareTypes.value)]
+
+  router.replace({
+    path: '/find-bed',
+    query: {
+      search: searchQuery.value || undefined,
+      view: activeView.value !== 'list' ? activeView.value : undefined,
+      sortBy: sortBy.value || undefined,
+      careType: uniqueCareTypes.length ? uniqueCareTypes : undefined,
+      remoteness: selectedRemoteness.value || undefined,
+      minBeds: minBeds.value != null ? String(minBeds.value) : undefined,
+      maxBeds: maxBeds.value != null ? String(maxBeds.value) : undefined,
+      distance: distance.value !== 10 ? String(distance.value) : undefined,
+      distanceEnabled: distanceFilterEnabled.value ? 'true' : undefined,
+      page: currentPage.value !== 1 ? String(currentPage.value) : undefined
+    }
+  })
+}
+
+function normalizeCareTypes(value) {
+  if (!value) return []
+
+  if (Array.isArray(value)) {
+    return [...new Set(
+      value.flatMap(item =>
+        String(item)
+          .split(',')
+          .map(v => v.trim())
+          .filter(Boolean)
+      )
+    )]
+  }
+
+  return [...new Set(
+    String(value)
+      .split(',')
+      .map(v => v.trim())
+      .filter(Boolean)
+  )]
+}
+
+onMounted(async () => {
+  applyQueryToState()
+
+  if (!locationStore.locationLoaded) {
+    await locationStore.requestUserLocation()
+  }
+
+  await fetchFacilities()
 })
 </script>
 
