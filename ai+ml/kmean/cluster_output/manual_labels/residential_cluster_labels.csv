@@ -1,0 +1,4 @@
+stream_name,selected_k,cluster_id,label_id,label_name
+residential,3,0,2,Potentially Available
+residential,3,1,1,Likely Available
+residential,3,2,2,Potentially Available
