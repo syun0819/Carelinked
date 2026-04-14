@@ -1,7 +1,7 @@
 <template>
   <header class="header">
     <router-link to="/" class="logo">
-      <div class="logo-icon">🏢</div>
+      <img :src="logo" alt="CareLink logo" class="logo-img" />
       <div class="logo-text">
         <div class="brand">CareLink</div>
         <div class="sub">VICTORIA</div>
@@ -18,6 +18,10 @@
     </nav>
   </header>
 </template>
+
+<script setup>
+import logo from '../assets/CareLinkLogo.png'
+</script>
 
 <style scoped>
 .header {
@@ -39,8 +43,10 @@
   color: inherit;
 }
 
-.logo-icon {
-  font-size: 20px;
+.logo-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
 }
 
 .logo-text {

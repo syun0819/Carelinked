@@ -30,14 +30,17 @@
     <section class="results-layout">
       <FilterPanel
         :selected-care-types="selectedCareTypes"
-        :selected-availability="selectedAvailability"
+        :selected-remoteness="selectedRemoteness"
+        :min-beds="minBeds"
+        :max-beds="maxBeds"
         :distance="distance"
         :care-type-options="careTypeOptions"
-        :availability-options="availabilityOptions"
         :min-distance="minDistance"
         :max-distance="maxDistance"
         @update:selectedCareTypes="selectedCareTypes = $event"
-        @update:selectedAvailability="selectedAvailability = $event"
+        @update:selectedRemoteness="selectedRemoteness = $event"
+        @update:minBeds="minBeds = $event"
+        @update:maxBeds="maxBeds = $event"
         @update:distance="distance = $event"
         @reset="resetFilters"
       />
@@ -116,7 +119,9 @@ const activeView = ref('list')
 const sortBy = ref('name')
 
 const selectedCareTypes = ref([])
-const selectedAvailability = ref([])
+const selectedRemoteness = ref('')
+const minBeds = ref(null)
+const maxBeds = ref(null)
 
 const distance = ref(10)
 const minDistance = 1
@@ -140,12 +145,6 @@ const careTypeOptions = [
   }
 ]
 
-const availabilityOptions = [
-  { value: 'High', label: 'High' },
-  { value: 'Medium', label: 'Medium' },
-  { value: 'Low', label: 'Low' }
-]
-
 async function fetchFacilities() {
   loading.value = true
   error.value = ''
@@ -161,7 +160,6 @@ async function fetchFacilities() {
       sort_by: sortBy.value
     }
 
-    // 搜尋框：數字當 postcode，其餘文字走 keyword
     if (q) {
       if (/^\d+$/.test(q)) {
         params.postcode = q
@@ -170,19 +168,28 @@ async function fetchFacilities() {
       }
     }
 
-    // care type filter
     if (selectedCareTypes.value.length > 0) {
-      params.care_type = selectedCareTypes.value
+      params.care_type = selectedCareTypes.value.join(',')
     }
 
-    // 距離 filter：只有有位置才送
-    if (distance.value != null && hasUserLocation) {
+    if (selectedRemoteness.value) {
+      params.abs_remoteness = selectedRemoteness.value
+    }
+
+    if (minBeds.value != null) {
+      params.min_beds = minBeds.value
+    }
+
+    if (maxBeds.value != null) {
+      params.max_beds = maxBeds.value
+    }
+
+    if (hasUserLocation) {
       params.user_lat = locationStore.userLat
       params.user_lng = locationStore.userLng
-      params.max_distance_km = distance.value
+      params.max_distance_km = distance.value ?? 10
     }
 
-    // 如果排序是 distance，也一定要有位置
     if (sortBy.value === 'distance') {
       if (!hasUserLocation) {
         error.value = 'Location is required for distance sorting.'
@@ -232,41 +239,18 @@ function handlePageChange(page) {
 function resetFilters() {
   searchQuery.value = ''
   selectedCareTypes.value = []
-  selectedAvailability.value = []
+  selectedRemoteness.value = ''
+  minBeds.value = null
+  maxBeds.value = null
   distance.value = 10
   currentPage.value = 1
-}
-
-function getAvailabilityRank(level) {
-  if (level === 'High') return 3
-  if (level === 'Medium') return 2
-  if (level === 'Low') return 1
-  return 0
-}
-
-function getAvailabilityLevel(facility) {
-  const beds = facility.totalBeds ?? facility.residential_places ?? 0
-
-  if (beds >= 80) return 'High'
-  if (beds <= 30) return 'Low'
-  return 'Medium'
 }
 
 function getDistanceValue(facility) {
   return facility.distanceKm ?? facility.distance ?? Number.MAX_SAFE_INTEGER
 }
 
-const filteredFacilities = computed(() => {
-  let result = [...facilities.value]
-
-  if (selectedAvailability.value.length > 0) {
-    result = result.filter((f) =>
-      selectedAvailability.value.includes(getAvailabilityLevel(f))
-    )
-  }
-
-  return result
-})
+const filteredFacilities = computed(() => facilities.value)
 
 watch(
   () => route.query.careType,
@@ -278,7 +262,7 @@ watch(
 )
 
 watch(
-  [searchQuery, selectedCareTypes, selectedAvailability, distance, sortBy],
+  [searchQuery, selectedCareTypes, selectedRemoteness, minBeds, maxBeds, distance, sortBy],
   () => {
     currentPage.value = 1
     fetchFacilities()

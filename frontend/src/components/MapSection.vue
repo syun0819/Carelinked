@@ -76,6 +76,9 @@ function buildParams() {
     } else {
       params.suburb = q
     }
+  } else {
+    params.region = 'Melbourne'
+    params.max_distance_km = props.distance ?? 10
   }
 
   if (props.selectedCareTypes.length > 0) {

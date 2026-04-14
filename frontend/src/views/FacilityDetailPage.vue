@@ -130,18 +130,23 @@
     <div v-else class="detail-container">
       <p>Facility not found.</p>
     </div>
+
+    <FooterSection />
   </div>
 </template>
 
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
-import Header from '../components/Header.vue'
-import FacilityCard from '../components/FacilityCard.vue'
 import { onMounted, onBeforeUnmount, ref, computed, nextTick } from 'vue'
-import { getFacilityDetail, getSimilarFacilities } from '../services/facilitiesApi'
-import { mapFacilityCard, mapFacilityDetail } from '../utils/facilityMappers'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+
+import Header from '../components/Header.vue'
+import FooterSection from '../components/FooterSection.vue'
+import FacilityCard from '../components/FacilityCard.vue'
+
+import { getFacilityDetail, getSimilarFacilities } from '../services/facilitiesApi'
+import { mapFacilityCard, mapFacilityDetail } from '../utils/facilityMappers'
 
 const route = useRoute()
 const router = useRouter()
@@ -266,7 +271,7 @@ const copyAddress = async () => {
 .detail-page {
   background: #f7f4ee;
   min-height: 100vh;
-  padding: 0 0 70px;
+  padding: 0 0 0px;
   color: #22332e;
 }
 
