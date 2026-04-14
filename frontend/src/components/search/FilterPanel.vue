@@ -30,24 +30,36 @@
     <hr class="filter-divider" />
 
     <div class="filter-section">
-      <p class="filter-title">DISTANCE FROM YOU</p>
-
-      <div class="distance-top">
-        <span>Within</span>
-        <strong>{{ distance }} km</strong>
+      <div class="distance-header">
+        <p class="filter-title">DISTANCE FILTER</p>
+        <label class="toggle-switch">
+          <input
+            type="checkbox"
+            :checked="distanceFilterEnabled"
+            @change="$emit('update:distanceFilterEnabled', $event.target.checked)"
+          />
+          <span class="toggle-track"></span>
+        </label>
       </div>
 
-      <div class="range-wrap">
-        <input
-          class="distance-range"
-          type="range"
-          :min="minDistance"
-          :max="maxDistance"
-          :value="distance"
-          :style="rangeStyle"
-          @input="$emit('update:distance', Number($event.target.value))"
-        />
-      </div>
+      <template v-if="distanceFilterEnabled">
+        <div class="distance-top">
+          <span>Within</span>
+          <strong>{{ distance }} km</strong>
+        </div>
+        <div class="range-wrap">
+          <input
+            class="distance-range"
+            type="range"
+            :min="minDistance"
+            :max="maxDistance"
+            :value="distance"
+            :style="rangeStyle"
+            @input="$emit('update:distance', Number($event.target.value))"
+          />
+        </div>
+        <p v-if="distanceWarning" class="distance-warning-hint">{{ distanceWarning }}</p>
+      </template>
     </div>
 
     <hr class="filter-divider" />
@@ -105,6 +117,14 @@ const props = defineProps({
     type: Number,
     default: 10
   },
+  distanceFilterEnabled: {
+    type: Boolean,
+    default: false
+  },
+  distanceWarning: {
+    type: String,
+    default: ''
+  },
   careTypeOptions: {
     type: Array,
     default: () => []
@@ -137,6 +157,7 @@ const emit = defineEmits([
   'update:selectedRemoteness',
   'update:minBeds',
   'update:maxBeds',
+  'update:distanceFilterEnabled',
   'reset'
 ])
 
@@ -308,6 +329,66 @@ const rangeStyle = computed(() => {
 .funding-text {
   white-space: normal;
   word-break: keep-all;
+}
+
+.distance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #dbd8d4;
+  border-radius: 22px;
+  transition: background 0.2s;
+}
+
+.toggle-track::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 3px;
+  top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.toggle-switch input:checked + .toggle-track {
+  background: #4f7d6f;
+}
+
+.toggle-switch input:checked + .toggle-track::before {
+  transform: translateX(18px);
+}
+
+.distance-warning-hint {
+  margin: 0;
+  font-size: 12px;
+  color: #c07000;
+  line-height: 1.4;
 }
 
 .distance-top {

@@ -34,6 +34,8 @@
         :min-beds="minBeds"
         :max-beds="maxBeds"
         :distance="distance"
+        :distanceFilterEnabled="distanceFilterEnabled"
+        :distanceWarning="distanceWarning"
         :care-type-options="careTypeOptions"
         :min-distance="minDistance"
         :max-distance="maxDistance"
@@ -42,6 +44,7 @@
         @update:minBeds="minBeds = $event"
         @update:maxBeds="maxBeds = $event"
         @update:distance="distance = $event"
+        @update:distanceFilterEnabled="distanceFilterEnabled = $event"
         @reset="resetFilters"
       />
 
@@ -126,6 +129,8 @@ const maxBeds = ref(null)
 const distance = ref(10)
 const minDistance = 1
 const maxDistance = 20
+const distanceFilterEnabled = ref(false)
+const distanceWarning = ref('')
 
 const currentPage = ref(1)
 const pageSize = 20
@@ -148,6 +153,7 @@ const careTypeOptions = [
 async function fetchFacilities() {
   loading.value = true
   error.value = ''
+  distanceWarning.value = ''
 
   try {
     const q = searchQuery.value.trim()
@@ -203,6 +209,14 @@ async function fetchFacilities() {
       params.user_lng = locationStore.userLng
     }
 
+    if (distanceFilterEnabled.value) {
+      if (!q) {
+        distanceWarning.value = 'Please enter a suburb or postcode to use distance filtering'
+      } else {
+        params.max_distance_km = distance.value
+      }
+    }
+
     console.log('search params:', params)
 
     const data = await searchFacilities(params)
@@ -243,6 +257,9 @@ function resetFilters() {
   minBeds.value = null
   maxBeds.value = null
   distance.value = 10
+  distanceFilterEnabled.value = false
+  distanceWarning.value = ''
+  sortBy.value = 'closest'
   currentPage.value = 1
 }
 
@@ -262,7 +279,16 @@ watch(
 )
 
 watch(
-  [searchQuery, selectedCareTypes, selectedRemoteness, minBeds, maxBeds, distance, sortBy],
+  [
+    searchQuery,
+    selectedCareTypes,
+    selectedRemoteness,
+    minBeds,
+    maxBeds,
+    distanceFilterEnabled,
+    distance,
+    sortBy
+  ],
   () => {
     currentPage.value = 1
     fetchFacilities()
@@ -357,6 +383,7 @@ onMounted(async () => {
   text-decoration: underline;
   text-underline-offset: 4px;
 }
+
 
 @media (max-width: 1024px) {
   .results-layout {
