@@ -32,6 +32,7 @@
         :selected-care-types="selectedCareTypes"
         :selectedAvailability="selectedAvailability"
         :distance="distance"
+        :distanceFilterEnabled="distanceFilterEnabled"
         :care-type-options="careTypeOptions"
         :availabilityOptions="availabilityOptions"
         :min-distance="minDistance"
@@ -39,6 +40,7 @@
         @update:selectedCareTypes="selectedCareTypes = $event"
         @update:selectedAvailability="selectedAvailability = $event"
         @update:distance="distance = $event"
+        @update:distanceFilterEnabled="distanceFilterEnabled = $event"
         @reset="resetFilters"
       />
 
@@ -52,6 +54,7 @@
         
         <div v-if="loading" class="status-message">Loading facilities...</div>
         <div v-else-if="error" class="status-message error">{{ error }}</div>
+        <div v-if="distanceWarning" class="distance-warning">{{ distanceWarning }}</div>
 
         <ListSection
           v-if="activeView === 'list'"
@@ -110,6 +113,8 @@ const selectedAvailability = ref([])
 const distance = ref(10)
 const minDistance = 1
 const maxDistance = 20
+const distanceFilterEnabled = ref(false)
+const distanceWarning = ref('')
 
 const currentPage = ref(1)
 const pageSize = 20
@@ -133,6 +138,7 @@ const availabilityOptions = [
 async function fetchFacilities() {
   loading.value = true
   error.value = ''
+  distanceWarning.value = ''
 
   try {
     const q = searchQuery.value.trim()
@@ -152,6 +158,17 @@ async function fetchFacilities() {
 
     if (selectedCareTypes.value.length > 0) {
       params.care_type = selectedCareTypes.value
+<<<<<<< Updated upstream
+=======
+    }
+
+    if (distanceFilterEnabled.value) {
+      if (!q) {
+        distanceWarning.value = 'Please enter a suburb or postcode to use distance filtering'
+      } else {
+        params.max_distance_km = distance.value
+      }
+>>>>>>> Stashed changes
     }
 
     console.log('search params:', params)
@@ -181,6 +198,8 @@ function resetFilters() {
   selectedCareTypes.value = []
   selectedAvailability.value = []
   distance.value = 10
+  distanceFilterEnabled.value = false
+  distanceWarning.value = ''
   sortBy.value = 'closest'
   currentPage.value = 1
 }
@@ -230,7 +249,7 @@ watch(
 )
 
 watch(
-  [searchQuery, selectedCareTypes, sortBy],
+  [searchQuery, selectedCareTypes, sortBy, distanceFilterEnabled, distance],
   () => {
     currentPage.value = 1
     fetchFacilities()
@@ -311,6 +330,15 @@ onMounted(() => {
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 4px;
+}
+
+.distance-warning {
+  background: #fff8e1;
+  border: 1px solid #f5c842;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #7a5c00;
 }
 
 @media (max-width: 1024px) {
