@@ -11,16 +11,24 @@
     <nav class="nav">
       <router-link to="/" class="nav-item" active-class="active">Home</router-link>
       <router-link to="/find-bed" class="nav-item" active-class="active">
-        Find a Bed
+        Find Care
       </router-link>
-      <a>Wait Time Estimator</a>
-      <a>How it Works</a>
+      <button class="nav-item nav-link-btn" @click="goToSection('#how-it-works')">
+        How It Works
+      </button>
     </nav>
   </header>
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
 import logo from '../assets/CareLinkLogo.png'
+
+const router = useRouter()
+
+function goToSection(hash) {
+  router.push({ path: '/', hash })
+}
 </script>
 
 <style scoped>
@@ -74,16 +82,25 @@ import logo from '../assets/CareLinkLogo.png'
   gap: 32px;
 }
 
-.nav a {
-  font-size: 14px;
+.nav-item {
+  font-size: 17px;
   color: #6f7f78;
   text-decoration: none;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
+  background: none;
+  border: none;
+  padding: 0;
+  line-height: 1.2;
 }
 
-.nav a.active {
+.nav-item.active {
   color: #1f2d2a;
-  font-weight: 500;
+  font-weight: 600;
+}
+
+.nav-link-btn:hover,
+.nav-item:hover {
+  color: #2f4e44;
 }
 </style>

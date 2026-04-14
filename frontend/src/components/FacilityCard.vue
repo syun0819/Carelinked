@@ -10,10 +10,10 @@
       <div class="facility-top-row">
         <div class="facility-main-info">
           <h3>{{ facility.name }}</h3>
-          <p class="facility-address">📍 {{ facility.address }}</p>
+          <p class="facility-address">📍 {{ displayAddress }}</p>
 
           <div class="tag-row">
-            <span v-if="facility.careType" class="tag-chip">
+            <span v-if="facility.careType" class="tag-chip" :class="careTypeClass">
               {{ facility.careType }}
             </span>
           </div>
@@ -38,18 +38,13 @@
       </div>
 
       <div class="facility-footer">
-        <p class="distance-line">
+        <p v-if="facility.distance !== null && facility.distance !== undefined" class="distance-line">
           📍
-          <span v-if="facility.distance !== null && facility.distance !== undefined">
-            {{ facility.distance }} km away
-          </span>
-          <span v-else>
-            {{ facility.suburb || facility.postcode || 'Location unavailable' }}
-          </span>
+          <span>{{ facility.distance }} km away</span>
         </p>
 
         <button class="details-btn" @click.stop="goToDetail">
-          View Details
+          View details →
         </button>
       </div>
     </div>
@@ -82,6 +77,34 @@ const availabilityLevel = computed(() => {
   return props.facility.bedAvailability || 'Unknown'
 })
 
+const displayAddress = computed(() => {
+  const locationParts = [props.facility.suburb, props.facility.postcode].filter(Boolean)
+  const locationText = locationParts.join(' ')
+
+  if (!props.facility.address) {
+    return locationText || 'Location unavailable'
+  }
+
+  if (!locationText || props.facility.address.includes(locationText)) {
+    return props.facility.address
+  }
+
+  return `${props.facility.address}, ${locationText}`
+})
+
+const careTypeClass = computed(() => {
+  const type = (props.facility.careType || '').toLowerCase()
+
+  if (type.includes('residential')) return 'tag-residential'
+  if (type.includes('home care') || type.includes('hcp')) return 'tag-home-care'
+  if (type.includes('transition')) return 'tag-transition'
+  if (type.includes('restorative') || type.includes('strc')) return 'tag-restorative'
+  if (type.includes('multi-purpose')) return 'tag-multi-purpose'
+  if (type.includes('aboriginal') || type.includes('torres strait')) return 'tag-indigenous'
+
+  return 'tag-default'
+})
+
 const availabilityClass = computed(() => {
   if (availabilityLevel.value === 'High') return 'availability-high'
   if (availabilityLevel.value === 'Medium') return 'availability-medium'
@@ -97,17 +120,18 @@ const availabilityClass = computed(() => {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+  font-family: var(--font-sans);
 }
 
 .facility-image {
   width: 100%;
-  height: 200px;
+  height: 220px;
   object-fit: cover;
   display: block;
 }
 
 .facility-body {
-  padding: 16px 26px 0;
+  padding: 20px 28px 0;
 }
 
 .facility-top-row {
@@ -126,11 +150,11 @@ const availabilityClass = computed(() => {
 
 .facility-top-row h3 {
   margin: 0;
-  font-size: 18px;
-  line-height: 1.3;
+  font-size: 24px;
+  line-height: 1.25;
   font-weight: 700;
   color: #24332f;
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
 
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -139,19 +163,19 @@ const availabilityClass = computed(() => {
 
 .facility-address {
   margin: 10px 0 0;
-  color: #7b8d87;
-  font-size: 12px;
-  line-height: 1.4;
+  color: #5f736b;
+  font-size: 16px;
+  line-height: 1.55;
   overflow-wrap: anywhere;
 }
 
 .recommended-badge {
   flex-shrink: 0;
   background: #eaf4ec;
-  color: #7aa284;
-  padding: 8px 14px;
+  color: #537764;
+  padding: 9px 14px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
   align-self: flex-start;
@@ -167,22 +191,53 @@ const availabilityClass = computed(() => {
 
 .tag-chip {
   background: #eef5ef;
-  color: #678072;
+  color: #4f6f60;
   border-radius: 999px;
-  padding: 5px 12px;
-  font-size: 10px;
+  padding: 9px 14px;
+  font-size: 14px;
   font-weight: 600;
-  line-height: 1;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
-.provider-chip {
-  background: #f1f0fb;
-  color: #6c63b6;
+.tag-residential {
+  background: #e4efe8;
+  color: #376c57;
+}
+
+.tag-home-care {
+  background: #e7eff5;
+  color: #416987;
+}
+
+.tag-transition {
+  background: #f0ebf9;
+  color: #6752a1;
+}
+
+.tag-restorative {
+  background: #f7eadf;
+  color: #9a6228;
+}
+
+.tag-multi-purpose {
+  background: #ecefe7;
+  color: #617053;
+}
+
+.tag-indigenous {
+  background: #f3e8dc;
+  color: #8a5931;
+}
+
+.tag-default {
+  background: #eef5ef;
+  color: #4f6f60;
 }
 
 .metrics-row {
-  margin-top: 4px;
-  padding: 4px 0;
+  margin-top: 8px;
+  padding: 10px 0;
   border-top: 1px solid #ece7dd;
   border-bottom: 1px solid #ece7dd;
 }
@@ -192,15 +247,15 @@ const availabilityClass = computed(() => {
 }
 
 .metric-value {
-  font-size: 24px;
+  font-size: 30px;
   line-height: 1;
   font-weight: 700;
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
 }
 
 .metric-caption {
-  font-size: 10px;
-  color: #5f756d;
+  font-size: 13px;
+  color: #4f655d;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   font-weight: 600;
@@ -223,11 +278,12 @@ const availabilityClass = computed(() => {
 }
 
 .info-line {
-  padding: 10px 0 10px;
+  padding: 14px 0;
   border-bottom: 1px solid #ece7dd;
-  color: #7b8d87;
-  font-size: 12px;
-  line-height: 1.4;
+  color: #5e706a;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.55;
 }
 
 .facility-footer {
@@ -235,13 +291,14 @@ const availabilityClass = computed(() => {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  padding: 4px 0 4px;
+  padding: 12px 0 14px;
 }
 
 .distance-line {
   margin: 0;
-  color: #5f756d;
-  font-size: 14px;
+  color: #4d645c;
+  font-size: 16px;
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -249,13 +306,14 @@ const availabilityClass = computed(() => {
 }
 
 .details-btn {
+  margin-left: auto;
   border: none;
   background: #557067;
   color: white;
   border-radius: 999px;
-  padding: 12px 22px;
+  padding: 13px 24px;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 16px;
   cursor: pointer;
   white-space: nowrap;
 }
@@ -285,6 +343,7 @@ const availabilityClass = computed(() => {
 
   .details-btn {
     width: 100%;
+    margin-left: 0;
   }
 }
 </style>

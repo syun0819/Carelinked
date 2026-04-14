@@ -1,5 +1,5 @@
 <template>
-  <section class="explore-section">
+  <section id="explore-care" class="explore-section">
     <div class="explore-header">
       <h1 class="explore-title">Explore Aged Care</h1>
       <p class="explore-subtitle">
@@ -7,12 +7,16 @@
       </p>
     </div>
 
-    <ResultsHeader
-      :count="displayFacilities.length"
-      :sort-by="sortOption"
-      :distance="distance"
-      @update:sortBy="sortOption = $event"
-    />
+    <div class="explore-results-header">
+      <ResultsHeader
+        :count="displayFacilities.length"
+        :start="displayFacilities.length ? 1 : 0"
+        :end="displayFacilities.length"
+        :sort-by="sortOption"
+        :distance="distance"
+        @update:sortBy="sortOption = $event"
+      />
+    </div>
 
     <div v-if="loading" class="status-message">
       Loading recommended facilities...
@@ -114,41 +118,48 @@ watch(
 
 <style scoped>
 .explore-section {
-  padding: 20px 80px 60px;
+  padding: 124px 40px 56px;
   background: #f7f4ee;
 }
 
 .explore-header {
   text-align: center;
-  margin-bottom: 20px;
-  margin-top: 30px;
+  margin: 0 0 32px;
 }
 
 .explore-title {
-  font-size: 28px;
+  font-size: 42px;
   font-weight: 700;
   color: #1f2d2a;
   margin: 0;
-  font-family: 'Georgia', serif;
+  font-family: var(--font-display);
+  line-height: 1.1;
 }
 
 .explore-subtitle {
-  font-size: 12px;
+  font-size: 20px;
   color: #6b736f;
-  margin-top: 10px;
-  font-family: 'Inter', sans-serif;
+  margin-top: 14px;
+  line-height: 1.45;
+  font-family: var(--font-sans);
 }
 
 .explore-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 760px));
+  justify-content: center;
   gap: 24px;
+}
+
+.explore-results-header {
+  width: min(100%, 1544px);
+  margin: 0 auto 24px;
 }
 
 .explore-actions {
   display: flex;
   justify-content: center;
-  margin-top: 28px;
+  margin-top: 32px;
 }
 
 .more-btn {
@@ -174,8 +185,7 @@ watch(
 
 @media (max-width: 1024px) {
   .explore-section {
-    padding-left: 24px;
-    padding-right: 24px;
+    padding: 164px 24px 56px;
   }
 
   .explore-grid {

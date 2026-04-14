@@ -22,7 +22,6 @@
         <span class="custom-checkbox">
           <span v-if="selectedCareTypes.includes(item.value)">✓</span>
         </span>
-        <span class="option-icon">{{ item.icon }}</span>
         <span class="option-text">{{ item.label }}</span>
       </label>
     </div>
@@ -254,7 +253,7 @@ const rangeStyle = computed(() => {
 .filter-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 18px;
 }
 
@@ -269,11 +268,11 @@ const rangeStyle = computed(() => {
 
 .filter-option {
   display: grid;
-  grid-template-columns: 28px 24px 1fr;
+  grid-template-columns: 24px minmax(0, 1fr);
   align-items: center;
-  column-gap: 4px;
-  min-height: 40px;
-  padding: 0 15px;
+  column-gap: 14px;
+  min-height: 54px;
+  padding: 0 12px;
   border-radius: 8px;
   border: 1px solid transparent;
   cursor: pointer;
@@ -290,8 +289,8 @@ const rangeStyle = computed(() => {
 }
 
 .custom-checkbox {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border: 2px solid #c5d1ca;
   border-radius: 6px;
   display: flex;
@@ -308,18 +307,15 @@ const rangeStyle = computed(() => {
   border-color: #4f7d6f;
 }
 
-.option-icon {
-  width: 22px;
-  text-align: center;
-  font-size: 19px;
-}
-
 .option-text {
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 16px;
+  line-height: 1.4;
   font-weight: 500;
   color: #40534d;
   text-align: left;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: anywhere;
 }
 
 .funding-option {

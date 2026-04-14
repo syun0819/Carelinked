@@ -292,8 +292,8 @@ const copyAddress = async () => {
   max-width: 1360px;
   margin: 0 auto;
   padding: 18px 32px 0;
-  margin-left: 100px;
-  margin-right: 100px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .breadcrumb {
@@ -356,7 +356,7 @@ const copyAddress = async () => {
 
 .facility-title {
   margin: 0;
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: 30px;
   line-height: 1.2;
   font-weight: 700;
@@ -451,7 +451,7 @@ const copyAddress = async () => {
 .section-title,
 .sidebar-title {
   margin: 0;
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: 20px;
   font-weight: 700;
   color: #22332e;
@@ -546,7 +546,7 @@ const copyAddress = async () => {
 
 .provider-name {
   margin: 0 0 6px;
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: 15px;
   font-weight: 700;
   color: #22332e;
