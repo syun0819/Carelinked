@@ -32,6 +32,8 @@
         :selected-care-types="selectedCareTypes"
         :selectedAvailability="selectedAvailability"
         :distance="distance"
+        :distanceFilterEnabled="distanceFilterEnabled"
+        :distanceWarning="distanceWarning"
         :care-type-options="careTypeOptions"
         :availabilityOptions="availabilityOptions"
         :min-distance="minDistance"
@@ -39,6 +41,7 @@
         @update:selectedCareTypes="selectedCareTypes = $event"
         @update:selectedAvailability="selectedAvailability = $event"
         @update:distance="distance = $event"
+        @update:distanceFilterEnabled="distanceFilterEnabled = $event"
         @reset="resetFilters"
       />
 
@@ -110,6 +113,8 @@ const selectedAvailability = ref([])
 const distance = ref(10)
 const minDistance = 1
 const maxDistance = 20
+const distanceFilterEnabled = ref(false)
+const distanceWarning = ref('')
 
 const currentPage = ref(1)
 const pageSize = 20
@@ -133,6 +138,7 @@ const availabilityOptions = [
 async function fetchFacilities() {
   loading.value = true
   error.value = ''
+  distanceWarning.value = ''
 
   try {
     const q = searchQuery.value.trim()
@@ -152,6 +158,14 @@ async function fetchFacilities() {
 
     if (selectedCareTypes.value.length > 0) {
       params.care_type = selectedCareTypes.value
+    }
+
+    if (distanceFilterEnabled.value) {
+      if (!q) {
+        distanceWarning.value = 'Please enter a suburb or postcode to use distance filtering'
+      } else {
+        params.max_distance_km = distance.value
+      }
     }
 
     console.log('search params:', params)
@@ -181,6 +195,8 @@ function resetFilters() {
   selectedCareTypes.value = []
   selectedAvailability.value = []
   distance.value = 10
+  distanceFilterEnabled.value = false
+  distanceWarning.value = ''
   sortBy.value = 'closest'
   currentPage.value = 1
 }
@@ -230,7 +246,7 @@ watch(
 )
 
 watch(
-  [searchQuery, selectedCareTypes, sortBy],
+  [searchQuery, selectedCareTypes, sortBy, distanceFilterEnabled, distance],
   () => {
     currentPage.value = 1
     fetchFacilities()
@@ -312,6 +328,7 @@ onMounted(() => {
   text-decoration: underline;
   text-underline-offset: 4px;
 }
+
 
 @media (max-width: 1024px) {
   .results-layout {
