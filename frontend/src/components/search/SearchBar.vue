@@ -68,7 +68,8 @@ function handleSearch() {
 
 .search-icon {
   color: #7b8d87;
-  font-size: 16px;
+  font-size: 30px;
+  margin-bottom: 8px;
 }
 
 .search-input {
