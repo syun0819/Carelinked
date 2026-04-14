@@ -112,8 +112,25 @@ function goToFindBedWithType(careType) {
 .care-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 25px;
+  gap: 12px;
   max-width: 550px;
+}
+
+.care-tags button {
+  padding: 4px 12px;
+  border-radius: 10px;              
+
+  background-color: #ffffff;      
+  color: #333;
+
+  border: 1px solid #e0e0e0;
+  font-size: 13px;
+  font-weight: 500;
+
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  cursor: pointer;
+
+  transition: all 0.2s ease;
 }
 
 .care-tags span {

@@ -25,6 +25,7 @@ import logo from '../assets/CareLinkLogo.png'
 
 <style scoped>
 .header {
+  position: fixed;
   width: 100%;
   padding: 16px 80px;
   background: white;
@@ -32,6 +33,7 @@ import logo from '../assets/CareLinkLogo.png'
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
+  z-index: 1000;
 }
 
 .logo {
