@@ -4,7 +4,7 @@
       Showing {{ start }}–{{ end }} of {{ count }} care facilities
     </p>
 
-    <label class="sort-box">
+    <label v-if="viewMode === 'list'" class="sort-box">
       <span>Sort by:</span>
       <select :value="sortBy" @change="$emit('update:sortBy', $event.target.value)">
         <option value="name">A to Z</option>
@@ -37,7 +37,8 @@ defineProps({
   sortBy: {
     type: String,
     default: 'name'
-  }
+  },
+  viewMode: String 
 })
 
 defineEmits(['update:sortBy'])

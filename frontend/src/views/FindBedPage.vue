@@ -7,7 +7,10 @@
       <p>Get a personalised estimate of how long you may wait for an aged care placement.</p>
     </section>
 
-    <SearchBar v-model="searchQuery" />
+    <SearchBar
+      v-model="searchQuery"
+      @search="handleSearch"
+    />
 
     <section class="view-toggle">
       <button
@@ -55,6 +58,7 @@
           :end="activeView === 'map' ? mapResultCount : endIndex"
           :distance="distance"
           :sort-by="sortBy"
+          :viewMode="activeView"
           @update:sortBy="sortBy = $event"
         />
 
@@ -96,7 +100,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { searchFacilities } from '../services/facilitiesApi'
 import { mapFacilityCard } from '../utils/facilityMappers'
 import { useLocationStore } from '../stores/locationStore'
@@ -111,6 +115,7 @@ import PaginationBar from '../components/search/PaginationBar.vue'
 import FooterSection from '../components/FooterSection.vue'
 
 const route = useRoute()
+const router = useRouter()
 const locationStore = useLocationStore()
 
 const facilities = ref([])
@@ -166,7 +171,7 @@ async function fetchFacilities() {
       sort_by: sortBy.value
     }
 
-    if (q) {
+    if (q !== '') {
       if (/^\d+$/.test(q)) {
         params.postcode = q
       } else {
@@ -247,6 +252,13 @@ const endIndex = computed(() => {
 
 function handlePageChange(page) {
   currentPage.value = page
+  syncStateToQuery()
+  fetchFacilities()
+}
+
+function handleSearch() {
+  currentPage.value = 1
+  syncStateToQuery()
   fetchFacilities()
 }
 
@@ -261,6 +273,7 @@ function resetFilters() {
   distanceWarning.value = ''
   sortBy.value = 'closest'
   currentPage.value = 1
+  syncStateToQuery()
 }
 
 function getDistanceValue(facility) {
@@ -272,7 +285,7 @@ const filteredFacilities = computed(() => facilities.value)
 watch(
   () => route.query.careType,
   (newCareType) => {
-    selectedCareTypes.value = newCareType ? [newCareType] : []
+    selectedCareTypes.value = normalizeCareTypes(newCareType)
     currentPage.value = 1
   },
   { immediate: true }
@@ -287,10 +300,12 @@ watch(
     maxBeds,
     distanceFilterEnabled,
     distance,
-    sortBy
+    sortBy,
+    activeView
   ],
   () => {
     currentPage.value = 1
+    syncStateToQuery()
     fetchFacilities()
   },
   { deep: true }
@@ -306,10 +321,73 @@ watch(
   }
 )
 
+function applyQueryToState() {
+  searchQuery.value = route.query.search ?? ''
+  activeView.value = route.query.view ?? 'list'
+  sortBy.value = route.query.sortBy ?? 'name'
+
+  selectedCareTypes.value = normalizeCareTypes(route.query.careType)
+
+  selectedRemoteness.value = route.query.remoteness ?? ''
+
+  minBeds.value = route.query.minBeds ? Number(route.query.minBeds) : null
+  maxBeds.value = route.query.maxBeds ? Number(route.query.maxBeds) : null
+
+  distance.value = route.query.distance ? Number(route.query.distance) : 10
+  distanceFilterEnabled.value = route.query.distanceEnabled === 'true'
+
+  currentPage.value = route.query.page ? Number(route.query.page) : 1
+}
+
+function syncStateToQuery() {
+  const uniqueCareTypes = [...new Set(selectedCareTypes.value)]
+
+  router.replace({
+    path: '/find-bed',
+    query: {
+      search: searchQuery.value || undefined,
+      view: activeView.value !== 'list' ? activeView.value : undefined,
+      sortBy: sortBy.value || undefined,
+      careType: uniqueCareTypes.length ? uniqueCareTypes : undefined,
+      remoteness: selectedRemoteness.value || undefined,
+      minBeds: minBeds.value != null ? String(minBeds.value) : undefined,
+      maxBeds: maxBeds.value != null ? String(maxBeds.value) : undefined,
+      distance: distance.value !== 10 ? String(distance.value) : undefined,
+      distanceEnabled: distanceFilterEnabled.value ? 'true' : undefined,
+      page: currentPage.value !== 1 ? String(currentPage.value) : undefined
+    }
+  })
+}
+
+function normalizeCareTypes(value) {
+  if (!value) return []
+
+  if (Array.isArray(value)) {
+    return [...new Set(
+      value.flatMap(item =>
+        String(item)
+          .split(',')
+          .map(v => v.trim())
+          .filter(Boolean)
+      )
+    )]
+  }
+
+  return [...new Set(
+    String(value)
+      .split(',')
+      .map(v => v.trim())
+      .filter(Boolean)
+  )]
+}
+
 onMounted(async () => {
+  applyQueryToState()
+
   if (!locationStore.locationLoaded) {
     await locationStore.requestUserLocation()
   }
+
   await fetchFacilities()
 })
 </script>

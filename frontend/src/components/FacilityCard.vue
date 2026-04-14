@@ -58,7 +58,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const props = defineProps({
   facility: {
@@ -68,9 +68,14 @@ const props = defineProps({
 })
 
 const router = useRouter()
+const route = useRoute()
+
 
 const goToDetail = () => {
-  router.push(`/facility/${props.facility.id}`)
+  router.push({
+    path: `/facility/${props.facility.id}`,
+    query: route.query
+  })
 }
 
 const availabilityLevel = computed(() => {

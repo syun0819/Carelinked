@@ -235,7 +235,16 @@ onBeforeUnmount(() => {
 })
 
 const goBack = () => {
-  router.back()
+  const hasSearchState = Object.keys(route.query).length > 0
+
+  if (hasSearchState) {
+    router.push({
+      path: '/find-bed',
+      query: route.query
+    })
+  } else {
+    router.back()
+  }
 }
 
 const goHome = () => {
@@ -247,11 +256,15 @@ const goToMapSearch = () => {
     router.push({
       path: '/find-bed',
       query: {
+        ...route.query,
         suburb: facility.value.suburb
       }
     })
   } else {
-    router.push('/find-bed')
+    router.push({
+      path: '/find-bed',
+      query: route.query
+    })
   }
 }
 
