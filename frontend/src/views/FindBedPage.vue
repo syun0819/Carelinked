@@ -158,8 +158,6 @@ async function fetchFacilities() {
 
     if (selectedCareTypes.value.length > 0) {
       params.care_type = selectedCareTypes.value
-<<<<<<< Updated upstream
-=======
     }
 
     if (distanceFilterEnabled.value) {
@@ -168,7 +166,6 @@ async function fetchFacilities() {
       } else {
         params.max_distance_km = distance.value
       }
->>>>>>> Stashed changes
     }
 
     console.log('search params:', params)
