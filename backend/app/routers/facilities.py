@@ -82,7 +82,7 @@ async def get_map(
     suburb: Optional[str] = Query(None),
     postcode: Optional[str] = Query(None),
     region: Optional[str] = Query(None),
-    care_type: Optional[str] = Query(None),
+    care_type: Optional[List[str]] = Query(default=None),
     max_distance_km: Optional[float] = Query(None),
     db: AsyncSession = Depends(get_db),
 ):

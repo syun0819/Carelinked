@@ -82,9 +82,11 @@ function buildParams() {
   }
 
   if (props.selectedCareTypes.length > 0) {
-    const mappedType = careTypeMap[props.selectedCareTypes[0]]
-    if (mappedType) {
-      params.care_type = mappedType
+    const mappedTypes = props.selectedCareTypes
+      .map(t => careTypeMap[t])
+      .filter(Boolean)
+    if (mappedTypes.length > 0) {
+      params.care_type = mappedTypes
     }
   }
 
