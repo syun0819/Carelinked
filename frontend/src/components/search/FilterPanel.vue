@@ -58,6 +58,7 @@
             @input="$emit('update:distance', Number($event.target.value))"
           />
         </div>
+        <p v-if="distanceWarning" class="distance-warning-hint">{{ distanceWarning }}</p>
       </template>
     </div>
 
@@ -101,6 +102,10 @@ const props = defineProps({
   distanceFilterEnabled: {
     type: Boolean,
     default: false
+  },
+  distanceWarning: {
+    type: String,
+    default: ''
   },
   careTypeOptions: {
     type: Array,
@@ -324,6 +329,13 @@ const rangeStyle = computed(() => {
 
 .toggle-switch input:checked + .toggle-track::before {
   transform: translateX(18px);
+}
+
+.distance-warning-hint {
+  margin: 0;
+  font-size: 12px;
+  color: #c07000;
+  line-height: 1.4;
 }
 
 .distance-top {

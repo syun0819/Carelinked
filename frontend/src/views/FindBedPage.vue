@@ -33,6 +33,7 @@
         :selectedAvailability="selectedAvailability"
         :distance="distance"
         :distanceFilterEnabled="distanceFilterEnabled"
+        :distanceWarning="distanceWarning"
         :care-type-options="careTypeOptions"
         :availabilityOptions="availabilityOptions"
         :min-distance="minDistance"
@@ -54,7 +55,6 @@
         
         <div v-if="loading" class="status-message">Loading facilities...</div>
         <div v-else-if="error" class="status-message error">{{ error }}</div>
-        <div v-if="distanceWarning" class="distance-warning">{{ distanceWarning }}</div>
 
         <ListSection
           v-if="activeView === 'list'"
@@ -329,14 +329,6 @@ onMounted(() => {
   text-underline-offset: 4px;
 }
 
-.distance-warning {
-  background: #fff8e1;
-  border: 1px solid #f5c842;
-  border-radius: 6px;
-  padding: 10px 14px;
-  font-size: 14px;
-  color: #7a5c00;
-}
 
 @media (max-width: 1024px) {
   .results-layout {
