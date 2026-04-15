@@ -7,7 +7,7 @@
             <span>with confidence.</span>
         </h1>
         <p class="hero-description">
-            Search residential aged care and home care services across Victoria.
+            Search residential aged care services across Victoria.
             See available beds, expected wait times, and funding options in one place.
         </p>
 
@@ -53,7 +53,6 @@ const router = useRouter()
 
 const careOptions = [
   { value: 'Residential', label: 'Residential homes' },
-  { value: 'Home Care', label: 'Home care services' },
   { value: 'Transition Care', label: 'Transition care' },
   { value: 'Short-Term Restorative Care (STRC)', label: 'Restorative care (STRC)' },
   { value: 'Multi-Purpose Service', label: 'Multi-purpose services' },

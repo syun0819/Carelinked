@@ -9,7 +9,7 @@
 
     <SearchBar
       v-model="searchQuery"
-      @search="handleSearch"
+      v-model:search-type="searchType"
     />
 
     <section class="view-toggle">
@@ -76,6 +76,7 @@
         <MapSection
           v-else
           :search-query="searchQuery"
+          :search-type="searchType"
           :selected-care-types="selectedCareTypes"
           :distance="distance"
           :user-lat="locationStore.userLat"
@@ -84,14 +85,16 @@
           @update:count="mapResultCount = $event"
         />
 
-        <PaginationBar
-          v-if="activeView === 'list'"
-          :current-page="currentPage"
-          :page-size="pageSize"
-          :total="totalResults"
-          @page-change="handlePageChange"
-        />
       </div>
+
+      <PaginationBar
+        v-if="activeView === 'list'"
+        class="pagination-row"
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :total="totalResults"
+        @page-change="handlePageChange"
+      />
     </section>
 
     <FooterSection />
@@ -123,6 +126,7 @@ const loading = ref(false)
 const error = ref('')
 
 const searchQuery = ref('')
+const searchType = ref('')
 const activeView = ref('list')
 const sortBy = ref('name')
 
@@ -144,7 +148,6 @@ const totalResults = ref(0)
 
 const careTypeOptions = [
   { value: 'Residential', label: 'Residential' },
-  { value: 'Home Care', label: 'Home Care' },
   { value: 'Transition Care', label: 'Transition Care' },
   { value: 'Short-Term Restorative Care (STRC)', label: 'Short-Term Restorative Care (STRC)' },
   { value: 'Multi-Purpose Service', label: 'Multi-Purpose Service' },
@@ -171,11 +174,7 @@ async function fetchFacilities() {
     }
 
     if (q !== '') {
-      if (/^\d+$/.test(q)) {
-        params.postcode = q
-      } else {
-        params.keyword = q
-      }
+      params[getSearchParamType(q)] = q
     }
 
     if (selectedCareTypes.value.length > 0) {
@@ -263,6 +262,7 @@ function handleSearch() {
 
 function resetFilters() {
   searchQuery.value = ''
+  searchType.value = ''
   selectedCareTypes.value = []
   selectedRemoteness.value = ''
   minBeds.value = null
@@ -293,6 +293,7 @@ watch(
 watch(
   [
     searchQuery,
+    searchType,
     selectedCareTypes,
     selectedRemoteness,
     minBeds,
@@ -322,6 +323,7 @@ watch(
 
 function applyQueryToState() {
   searchQuery.value = route.query.search ?? ''
+  searchType.value = normalizeSearchType(route.query.searchType ?? '')
   activeView.value = route.query.view ?? 'list'
   sortBy.value = route.query.sortBy ?? 'name'
 
@@ -345,6 +347,7 @@ function syncStateToQuery() {
     path: '/find-bed',
     query: {
       search: searchQuery.value || undefined,
+      searchType: searchType.value || undefined,
       view: activeView.value !== 'list' ? activeView.value : undefined,
       sortBy: sortBy.value || undefined,
       careType: uniqueCareTypes.length ? uniqueCareTypes : undefined,
@@ -356,6 +359,18 @@ function syncStateToQuery() {
       page: currentPage.value !== 1 ? String(currentPage.value) : undefined
     }
   })
+}
+
+function getSearchParamType(q) {
+  const type = normalizeSearchType(searchType.value)
+  if (type) return type
+  return /^\d+$/.test(q) ? 'postcode' : 'keyword'
+}
+
+function normalizeSearchType(value) {
+  const type = String(value).toLowerCase()
+  if (['suburb', 'postcode', 'region', 'keyword'].includes(type)) return type
+  return ''
 }
 
 function normalizeCareTypes(value) {
@@ -443,6 +458,10 @@ onMounted(async () => {
 .results-main > * {
   min-width: 0;
   max-width: 100%;
+}
+
+.pagination-row {
+  grid-column: 1 / -1;
 }
 
 .view-toggle {

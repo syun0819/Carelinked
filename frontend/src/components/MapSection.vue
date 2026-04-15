@@ -17,6 +17,10 @@ const props = defineProps({
     type: String,
     default: ''
   },
+  searchType: {
+    type: String,
+    default: ''
+  },
   selectedCareTypes: {
     type: Array,
     default: () => []
@@ -56,8 +60,6 @@ const careTypeMap = {
   'Residential Aged Care': 'Residential',
   'Residential Care': 'Residential',
   'Residential': 'Residential',
-  'Home Care Package (HCP)': 'Home Care',
-  'Home Care': 'Home Care',
   'Transition Care': 'Transition Care',
   'Short-Term Restorative Care (STRC)': 'Short-Term Restorative Care (STRC)',
   'Multi-Purpose Service': 'Multi-Purpose Service',
@@ -71,11 +73,7 @@ function buildParams() {
   const q = props.searchQuery.trim()
 
   if (q) {
-    if (/^\d+$/.test(q)) {
-      params.postcode = q
-    } else {
-      params.suburb = q
-    }
+    params[getSearchParamType(q)] = q
   } else {
     params.region = 'Melbourne'
     params.max_distance_km = props.distance ?? 10
@@ -95,6 +93,18 @@ function buildParams() {
   }
 
   return params
+}
+
+function getSearchParamType(q) {
+  const type = normalizeSearchType(props.searchType)
+  if (type) return type
+  return /^\d+$/.test(q) ? 'postcode' : 'keyword'
+}
+
+function normalizeSearchType(value) {
+  const type = String(value).toLowerCase()
+  if (['suburb', 'postcode', 'region', 'keyword'].includes(type)) return type
+  return ''
 }
 
 function getMarkerColor(availability) {
@@ -257,7 +267,7 @@ async function fetchMarkers() {
 
     let rawResults = []
 
-    if (params.suburb || params.postcode || params.care_type) {
+    if (params.suburb || params.postcode || params.region || params.keyword || params.care_type) {
       const data = await getMapFacilities(params)
       console.log('map response:', data)
       rawResults = data.results || []
@@ -289,7 +299,7 @@ onMounted(async () => {
 })
 
 watch(
-  () => [props.searchQuery, props.selectedCareTypes, props.distance],
+  () => [props.searchQuery, props.searchType, props.selectedCareTypes, props.distance],
   async () => {
     await fetchMarkers()
   },
