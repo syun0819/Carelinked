@@ -31,7 +31,6 @@ export function mapFacilityDetail(item) {
     acpr: item.aged_care_planning_region || '',
     remoteness: item.abs_remoteness || '',
     totalBeds: item.residential_places ?? 0,
-    homeCarePlaces: item.home_care_places ?? 0,
     restorativeCarePlaces: item.restorative_care_places ?? 0,
     bedAvailability: item.availability_group || 'Unknown',
     latitude: item.latitude ?? null,

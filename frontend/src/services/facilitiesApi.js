@@ -1,6 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-async function request(path, params = {}) {
+async function request(path, params = {}, options = {}) {
   const url = new URL(`${API_BASE_URL}${path}`)
   Object.entries(params).forEach(([key, value]) => {
     if (value === undefined || value === null || value === '') return
@@ -10,7 +10,9 @@ async function request(path, params = {}) {
       url.searchParams.append(key, value)
     }
   })
-  const res = await fetch(url)
+  const res = await fetch(url, {
+    signal: options.signal
+  })
   if (!res.ok) {
     throw new Error(`API request failed: ${res.status}`)
   }
@@ -19,6 +21,10 @@ async function request(path, params = {}) {
 
 export function searchFacilities(params = {}) {
   return request('/api/v1/facilities/search', params)
+}
+
+export function getSearchAutocomplete(q, options = {}) {
+  return request('/api/v1/search/autocomplete', { q }, options)
 }
 
 export async function getRecommendedFacilities(params = {}) {
