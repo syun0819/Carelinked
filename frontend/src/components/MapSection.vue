@@ -17,10 +17,6 @@ const props = defineProps({
     type: String,
     default: ''
   },
-  searchType: {
-    type: String,
-    default: ''
-  },
   selectedCareTypes: {
     type: Array,
     default: () => []
@@ -40,6 +36,10 @@ const props = defineProps({
   isActive: {
     type: Boolean,
     default: true
+  },
+  distanceFilterEnabled: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -53,13 +53,15 @@ let markersLayer = null
 let userMarker = null
 
 const defaultCenter = [-37.8136, 144.9631]
-const defaultZoom = 10
+const defaultZoom = 12
 const emit = defineEmits(['update:count'])
 
 const careTypeMap = {
   'Residential Aged Care': 'Residential',
   'Residential Care': 'Residential',
   'Residential': 'Residential',
+  'Home Care Package (HCP)': 'Home Care',
+  'Home Care': 'Home Care',
   'Transition Care': 'Transition Care',
   'Short-Term Restorative Care (STRC)': 'Short-Term Restorative Care (STRC)',
   'Multi-Purpose Service': 'Multi-Purpose Service',
@@ -73,10 +75,11 @@ function buildParams() {
   const q = props.searchQuery.trim()
 
   if (q) {
-    params[getSearchParamType(q)] = q
-  } else {
-    params.region = 'Melbourne'
-    params.max_distance_km = props.distance ?? 10
+    if (/^\d+$/.test(q)) {
+      params.postcode = q
+    } else {
+      params.suburb = q
+    }
   }
 
   if (props.selectedCareTypes.length > 0) {
@@ -88,23 +91,11 @@ function buildParams() {
     }
   }
 
-  if (props.distance != null) {
+  if (props.distanceFilterEnabled && props.distance != null) {
     params.max_distance_km = props.distance
   }
 
   return params
-}
-
-function getSearchParamType(q) {
-  const type = normalizeSearchType(props.searchType)
-  if (type) return type
-  return /^\d+$/.test(q) ? 'postcode' : 'keyword'
-}
-
-function normalizeSearchType(value) {
-  const type = String(value).toLowerCase()
-  if (['suburb', 'postcode', 'region', 'keyword'].includes(type)) return type
-  return ''
 }
 
 function getMarkerColor(availability) {
@@ -122,26 +113,16 @@ function createCustomIcon(color) {
         <div class="custom-marker-inner"></div>
       </div>
     `,
-    iconSize: [26, 38],
-    iconAnchor: [13, 38],
-    popupAnchor: [0, -34]
+    iconSize: [26, 26],
+    iconAnchor: [13, 26],
+    popupAnchor: [0, -28]
   })
 }
 
 function initMap() {
   if (map || !mapEl.value) return
 
-  let center = defaultCenter
-  let zoom = defaultZoom
-
-  if (props.userLat != null && props.userLng != null) {
-    center = [props.userLat, props.userLng]
-    zoom = 11
-  }
-
-  map = L.map(mapEl.value, {
-    zoomControl: true
-  }).setView(center, zoom)
+  map = L.map(mapEl.value).setView(defaultCenter, defaultZoom)
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
@@ -194,22 +175,60 @@ function renderUserMarker() {
   }
 }
 
+function offsetDuplicateCoordinates(facilities) {
+  const countMap = {}
+
+  facilities.forEach(facility => {
+    if (facility.latitude == null || facility.longitude == null) return
+    const key = `${facility.latitude},${facility.longitude}`
+    countMap[key] = (countMap[key] || 0) + 1
+  })
+
+  const indexMap = {}
+  const result = facilities.map(facility => {
+    if (facility.latitude == null || facility.longitude == null) {
+      return facility
+    }
+    const key = `${facility.latitude},${facility.longitude}`
+
+    if (countMap[key] === 1) return facility
+
+    indexMap[key] = (indexMap[key] ?? -1) + 1
+    const index = indexMap[key]
+    const total = countMap[key]
+    const offset = 0.0008
+    const angle = (2 * Math.PI * index) / total
+
+    return {
+      ...facility,
+      latitude: facility.latitude + offset * Math.cos(angle),
+      longitude: facility.longitude + offset * Math.sin(angle)
+    }
+  })
+  console.log('offset result:', result.length, result.map(f => `${f.latitude},${f.longitude}`))
+  return result
+}
+
 function renderMarkers() {
   if (!map || !markersLayer) return
 
   markersLayer.clearLayers()
   renderUserMarker()
 
-  const validMarkers = markers.value.filter(
-    (item) => item.latitude != null && item.longitude != null
+  const validMarkers = offsetDuplicateCoordinates(
+    markers.value.filter((item) => item.latitude != null && item.longitude != null)
   )
 
   if (validMarkers.length === 0) {
-    if (props.userLat != null && props.userLng != null) {
-      map.setView([props.userLat, props.userLng], 11)
+    markersLayer.clearLayers()
+
+    const params = buildParams()
+    if (params.postcode || params.suburb) {
+      // 保持当前地图位置不变，不重置到 Melbourne
     } else {
-      map.setView(defaultCenter, defaultZoom)
+      map.setView([-37.8136, 144.9631], 12)
     }
+
     invalidateMapSize()
     return
   }
@@ -240,18 +259,11 @@ function renderMarkers() {
     marker.addTo(markersLayer)
   })
 
-  const boundsPoints = validMarkers.map((item) => [item.latitude, item.longitude])
-
-  if (props.userLat != null && props.userLng != null) {
-    boundsPoints.push([props.userLat, props.userLng])
-  }
-
-  if (boundsPoints.length === 1) {
-    map.setView(boundsPoints[0], 12)
-  } else {
-    const bounds = L.latLngBounds(boundsPoints)
-    map.fitBounds(bounds, { padding: [30, 30] })
-  }
+  const leafletMarkers = validMarkers.map((item) =>
+    L.marker([item.latitude, item.longitude])
+  )
+  const group = L.featureGroup(leafletMarkers)
+  map.fitBounds(group.getBounds().pad(0.2))
 
   invalidateMapSize()
 }
@@ -267,7 +279,7 @@ async function fetchMarkers() {
 
     let rawResults = []
 
-    if (params.suburb || params.postcode || params.region || params.keyword || params.care_type) {
+    if (params.suburb || params.postcode || params.region) {
       const data = await getMapFacilities(params)
       console.log('map response:', data)
       rawResults = data.results || []
@@ -299,7 +311,7 @@ onMounted(async () => {
 })
 
 watch(
-  () => [props.searchQuery, props.searchType, props.selectedCareTypes, props.distance],
+  () => [props.searchQuery, props.selectedCareTypes, props.distance],
   async () => {
     await fetchMarkers()
   },

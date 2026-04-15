@@ -57,7 +57,7 @@ const props = defineProps({
 
 const recommendedFacilities = ref([])
 const distance = ref(10)
-const sortOption = ref('closest')
+const sortOption = ref('distance')
 const loading = ref(false)
 
 async function loadRecommendedFacilities() {
@@ -96,7 +96,7 @@ const displayFacilities = computed(() => {
 
   if (sortOption.value === 'name') {
     result.sort((a, b) => a.name.localeCompare(b.name))
-  } else if (sortOption.value === 'closest') {
+  } else if (sortOption.value === 'distance') {
     result.sort((a, b) => {
       const aDistance = a.distanceKm ?? a.distance ?? Number.MAX_SAFE_INTEGER
       const bDistance = b.distanceKm ?? b.distance ?? Number.MAX_SAFE_INTEGER
