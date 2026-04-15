@@ -116,6 +116,11 @@ onMounted(async () => {
   z-index: 2;
 }
 
+@media (max-width: 640px) {
+  .mode-switch-section {
+    height: auto;
+  }
+}
 .stats-wrapper {
   max-width: 1440px;
   margin: 0 auto;
@@ -136,14 +141,14 @@ onMounted(async () => {
   background: #ffffff;
   border: 1.5px solid #d8d1c8;
   border-radius: 12px;
-  padding: 18px 26px;
+  padding: 14px 18px;
   box-shadow: 0 10px 22px rgba(32, 43, 39, 0.08);
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
-  gap: 18px;
-  min-height: 108px;
+  gap: 14px;
+  min-height: 80px;
 }
 
 .stats-icon {
@@ -175,7 +180,7 @@ onMounted(async () => {
 }
 
 .stats-number {
-  font-size: 32px;
+  font-size: 22px;
   font-weight: 700;
   color: #223432;
   line-height: 1.1;
@@ -185,10 +190,10 @@ onMounted(async () => {
 }
 
 .stats-text {
-  font-size: 14px;
+  font-size: 12px;
   color: #5f7f79;
   line-height: 1.45;
-  margin-top: 8px;
+  margin-top: 4px;
   font-family: var(--font-sans);
   width: 100%;
   text-align: left;
@@ -202,25 +207,27 @@ onMounted(async () => {
 
 @media (max-width: 640px) {
   .stats-wrapper {
-    padding: 0 16px 8px;
+    padding: 0 16px;
+    transform: translateY(0);
+    margin-top: 24px;
   }
 
   .stats-grid {
     grid-template-columns: 1fr;
-    gap: 14px;
+    gap: 12px;
   }
 
   .stats-card {
-    padding: 16px 18px;
-    min-height: 104px;
+    padding: 14px 16px;
+    min-height: auto;
   }
 
   .stats-number {
-    font-size: 28px;
+    font-size: 20px;
   }
 
   .stats-text {
-    font-size: 13px;
+    font-size: 12px;
   }
 }
 </style>

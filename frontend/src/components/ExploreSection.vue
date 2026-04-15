@@ -118,17 +118,17 @@ watch(
 
 <style scoped>
 .explore-section {
-  padding: 124px 40px 56px;
+  padding: 120px 40px 56px;
   background: #f7f4ee;
 }
 
 .explore-header {
   text-align: center;
-  margin: 0 0 32px;
+  margin: 0 0 20px;
 }
 
 .explore-title {
-  font-size: 42px;
+  font-size: 28px;
   font-weight: 700;
   color: #1f2d2a;
   margin: 0;
@@ -137,9 +137,9 @@ watch(
 }
 
 .explore-subtitle {
-  font-size: 20px;
+  font-size: 15px;
   color: #6b736f;
-  margin-top: 14px;
+  margin-top: 8px;
   line-height: 1.45;
   font-family: var(--font-sans);
 }
@@ -185,7 +185,7 @@ watch(
 
 @media (max-width: 1024px) {
   .explore-section {
-    padding: 164px 24px 56px;
+    padding: 40px 24px 56px;
   }
 
   .explore-grid {

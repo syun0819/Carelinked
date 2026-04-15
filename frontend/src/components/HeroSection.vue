@@ -15,7 +15,7 @@
           <button class="primary-btn" @click="goToFindBed">
             Find available care
           </button>
-          <p class="care-tags-label">Or browse by care type</p>
+          <p class="care-tags-label">Or browse by Care Type</p>
         </div>
         <div class="care-tags">
           <button
@@ -83,32 +83,31 @@ function goToFindBedWithType(careType) {
 
 .hero-content {
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  gap: 16px;
-  max-width: 1540px;
+  grid-template-columns: 1fr 1fr;
+  gap: 110px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 56px 12px;
+  padding: 75px 40px;
   align-items: center;
-  min-height: 78vh;
+  min-height: 75vh;
 }
 
-.hero-left{
+.hero-left {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: 24px;
+  gap: 28px;
   text-align: left;
-  max-width: 620px;
 }
 
 .hero-left h1 {
-  font-size: 58px;
+  font-size: 42px;
   font-weight: 900;
   line-height: 1.2;
   color: #1a1a1a;
   margin: 0;
-  max-width: 620px;
+  font-family: 'Nunito', sans-serif;
 }
 
 .hero-left h1 span {
@@ -117,17 +116,16 @@ function goToFindBedWithType(careType) {
 
 .hero-description {
   margin: 0;
-  font-size: 19px;
+  font-size: 16px;
   line-height: 1.7;
   color: #4e5f59;
-  max-width: 580px;
 }
 
 .hero-actions {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 24px;
+  gap: 35px;
   margin: 0;
 }
 
@@ -135,33 +133,32 @@ function goToFindBedWithType(careType) {
   background: #5d8b72;
   color: white;
   border: none;
-  padding: 20px 40px;
+  padding: 14px 28px;
   border-radius: 12px;
-  font-size: 22px;
+  font-size: 17px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(93, 139, 114, 0.22);
+  font-family: 'Nunito', sans-serif;
+  box-shadow: 0 8px 20px rgba(93, 139, 114, 0.22);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .primary-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(93, 139, 114, 0.28);
+  box-shadow: 0 12px 24px rgba(93, 139, 114, 0.28);
 }
 
 .care-tags-label {
   margin: 0;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #4e6258;
-  margin-bottom: -12px;
 }
 
 .care-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 22px;
-  max-width: 620px;
+  gap: 8px 18px;
 }
 
 .care-tag-btn {
@@ -170,19 +167,18 @@ function goToFindBedWithType(careType) {
   background-color: transparent;
   color: #305447;
   border: none;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  line-height: 1.4;
+  font-family: 'Nunito', sans-serif;
   text-decoration: underline;
   text-underline-offset: 4px;
   text-decoration-thickness: 1.5px;
-  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .care-tag-btn:hover {
   color: #1f3e34;
-  text-decoration-color: #1f3e34;
 }
 
 .hero-right {
@@ -194,14 +190,11 @@ function goToFindBedWithType(careType) {
   position: relative;
   overflow: hidden;
   width: 100%;
-  max-width: 680px;
-  height: 440px;
+  max-width: 560px;
+  height: 380px;
   background: white;
   border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
 }
 
 .hero-image {
@@ -217,7 +210,7 @@ function goToFindBedWithType(careType) {
   left: 14px;
   bottom: 12px;
   margin: 0;
-  padding: 6px 10px;
+  padding: 5px 10px;
   border-radius: 999px;
   background: rgba(19, 46, 41, 0.72);
   color: #f4f5f1;
@@ -226,4 +219,31 @@ function goToFindBedWithType(careType) {
   backdrop-filter: blur(8px);
 }
 
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .hero-content {
+    grid-template-columns: 1fr;
+    padding: 80px 24px 48px;
+    min-height: auto;
+    gap: 32px;
+  }
+
+  .hero-left h1 {
+    font-size: 30px;
+  }
+
+  .hero-description {
+    font-size: 15px;
+  }
+
+  .primary-btn {
+    font-size: 15px;
+    padding: 12px 22px;
+  }
+
+  .hero-image-card {
+    height: 260px;
+    max-width: 100%;
+  }
+}
 </style>

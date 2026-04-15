@@ -8,6 +8,7 @@
       </div>
     </router-link>
 
+    <!-- Desktop nav -->
     <nav class="nav">
       <router-link to="/" class="nav-item" active-class="active">Home</router-link>
       <router-link to="/find-bed" class="nav-item" active-class="active">
@@ -17,16 +18,46 @@
         How It Works
       </button>
     </nav>
+
+    <!-- Mobile hamburger -->
+    <button class="hamburger" @click="menuOpen = !menuOpen" aria-label="Menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <!-- Mobile drawer -->
+    <div class="mobile-drawer" :class="{ open: menuOpen }">
+      <div class="drawer-header">
+        <span class="drawer-title">Menu</span>
+        <button class="drawer-close" @click="menuOpen = false">✕</button>
+      </div>
+      <nav class="drawer-nav">
+        <router-link to="/" class="drawer-item" @click="menuOpen = false">Home</router-link>
+        <router-link to="/find-bed" class="drawer-item" @click="menuOpen = false">Find Care</router-link>
+        <button class="drawer-item drawer-btn" @click="goToSectionMobile('#how-it-works')">How It Works</button>
+      </nav>
+    </div>
+
+    <!-- Overlay -->
+    <div class="drawer-overlay" :class="{ open: menuOpen }" @click="menuOpen = false"></div>
   </header>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import logo from '../assets/CareLinkLogo.png'
 
 const router = useRouter()
+const menuOpen = ref(false)
 
 function goToSection(hash) {
+  router.push({ path: '/', hash })
+}
+
+function goToSectionMobile(hash) {
+  menuOpen.value = false
   router.push({ path: '/', hash })
 }
 </script>
@@ -42,13 +73,13 @@ function goToSection(hash) {
   justify-content: space-between;
   box-sizing: border-box;
   z-index: 1000;
+  border-bottom: 1px solid #f0ece4;
 }
 
 .logo {
   display: flex;
   align-items: center;
   gap: 10px;
-  transform: scale(1.35);
   text-decoration: none;
   color: inherit;
 }
@@ -66,9 +97,10 @@ function goToSection(hash) {
 }
 
 .brand {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 16px;
   color: #1f2d2a;
+  font-family: var(--font-display);
 }
 
 .sub {
@@ -83,8 +115,8 @@ function goToSection(hash) {
 }
 
 .nav-item {
-  font-size: 17px;
-  color: #6f7f78;
+  font-size: 15px;
+  color: #2D6A5F;
   text-decoration: none;
   cursor: pointer;
   font-family: var(--font-sans);
@@ -102,5 +134,126 @@ function goToSection(hash) {
 .nav-link-btn:hover,
 .nav-item:hover {
   color: #2f4e44;
+}
+
+/* Hamburger */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  z-index: 1100;
+}
+
+.hamburger span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: #1f2d2a;
+  border-radius: 2px;
+}
+
+/* Mobile drawer */
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 75%;
+  max-width: 300px;
+  height: 100vh;
+  background: white;
+  z-index: 1200;
+  padding: 24px;
+  box-sizing: border-box;
+  transition: right 0.3s ease;
+  box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+}
+
+.mobile-drawer.open {
+  right: 0;
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.drawer-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2d2a;
+  font-family: var(--font-display);
+}
+
+.drawer-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #6f7f78;
+  padding: 0;
+}
+
+.drawer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.drawer-item {
+  display: block;
+  padding: 14px 16px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1f2d2a;
+  text-decoration: none;
+  border-radius: 10px;
+  font-family: var(--font-sans);
+  transition: background 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.drawer-item:hover,
+.drawer-item.router-link-active {
+  background: #f0ece4;
+  color: #2f4e44;
+  font-weight: 600;
+}
+
+/* Overlay */
+.drawer-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 1100;
+}
+
+.drawer-overlay.open {
+  display: block;
+}
+
+/* Mobile breakpoint */
+@media (max-width: 768px) {
+  .header {
+    padding: 16px 24px;
+  }
+
+  .nav {
+    display: none;
+  }
+
+  .hamburger {
+    display: flex;
+  }
 }
 </style>
