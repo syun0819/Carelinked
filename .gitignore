@@ -3,6 +3,8 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+data/
+
 # C extensions
 *.so
 
@@ -209,7 +211,6 @@ __marimo__/
 # data files
 *.xls
 *.xlsx
-*.csv
 *.pdf
 .DS_Store
 australian-postcodes.sql

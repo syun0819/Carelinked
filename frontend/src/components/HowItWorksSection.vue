@@ -46,7 +46,7 @@
 
 <style scoped>
 .how-it-works-section {
-  padding: 28px 44px 40px;
+  padding: 24px 44px 56px;
   background: #f7f4ee;
 }
 
@@ -54,17 +54,17 @@
   width: 100%;
   height: 1px;
   background: #d9d6cf;
-  margin-bottom: 56px;
+  margin-bottom: 40px;
 }
 
 .section-header {
   text-align: center;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
 }
 
 .section-header h2 {
   margin: 0 0 10px;
-  font-size: 32px;
+  font-size: 42px;
   line-height: 1.1;
   font-weight: 700;
   color: #22332e;
@@ -72,10 +72,10 @@
 
 .section-header p {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.4;
-  color: #8aa19a;
-  font-family: 'Inter', sans-serif;
+  font-size: 20px;
+  line-height: 1.45;
+  color: #6b736f;
+  font-family: var(--font-sans);
 }
 
 .how-cards {
@@ -106,17 +106,17 @@
 
 .how-step {
   margin-bottom: 8px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.2;
   font-weight: 700;
   letter-spacing: 0.02em;
   color: #6f8880;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
 }
 
 .how-card h3 {
   margin: 0 0 10px;
-  font-size: 20px;
+  font-size: 24px;
   line-height: 1.15;
   font-weight: 700;
   color: #22332e;
@@ -124,10 +124,10 @@
 
 .how-card p {
   margin: 0;
-  font-size: 10px;
-  line-height: 1.45;
-  color: #8aa19a;
-  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #6b736f;
+  font-family: var(--font-sans);
 }
 
 @media (max-width: 1024px) {

@@ -143,15 +143,14 @@ const mapResultCount = ref(0)
 const totalResults = ref(0)
 
 const careTypeOptions = [
-  { value: 'Residential', label: 'Residential', icon: '🏠' },
-  { value: 'Home Care', label: 'Home Care', icon: '♡' },
-  { value: 'Transition Care', label: 'Transition Care', icon: '🔄' },
-  { value: 'Short-Term Restorative Care (STRC)', label: 'Short-Term Restorative Care (STRC)', icon: '🛏️' },
-  { value: 'Multi-Purpose Service', label: 'Multi-Purpose Service', icon: '🏥' },
+  { value: 'Residential', label: 'Residential' },
+  { value: 'Home Care', label: 'Home Care' },
+  { value: 'Transition Care', label: 'Transition Care' },
+  { value: 'Short-Term Restorative Care (STRC)', label: 'Short-Term Restorative Care (STRC)' },
+  { value: 'Multi-Purpose Service', label: 'Multi-Purpose Service' },
   {
     value: 'National Aboriginal and Torres Strait Islander Aged Care Program',
-    label: 'Indigenous Care',
-    icon: '🌿'
+    label: 'Indigenous Care'
   }
 ]
 

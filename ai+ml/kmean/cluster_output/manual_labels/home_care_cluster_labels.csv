@@ -1,0 +1,6 @@
+stream_name,selected_k,cluster_id,label_id,label_name
+home_care,5,0,1,Likely Available
+home_care,5,1,5,Highly Constrained
+home_care,5,2,4,Constrained by Market
+home_care,5,3,1,Likely Available
+home_care,5,4,3,Constrained by Size

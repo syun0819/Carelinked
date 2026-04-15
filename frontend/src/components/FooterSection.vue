@@ -38,7 +38,7 @@
   background: linear-gradient(90deg, #17352f 0%, #132e29 100%);
   color: #d7dfda;
   padding: 42px 0 56px;
-  margin-top: 60px;
+  margin-top: 24px;
 }
 
 .footer-container {
@@ -53,13 +53,14 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   align-items: start;
+  gap: 48px;
 }
 
 .footer-brand {
-  justify-self: center;
+  justify-self: end;
   text-align: left;
   width: 360px;
-  padding-left: 300px;
+  padding-left: 0;
 }
 
 .footer-brand h3 {
@@ -68,7 +69,7 @@
   line-height: 1.1;
   font-weight: 700;
   color: #f3f4ef;
-  padding-left: 60px;
+  padding-left: 0;
 }
 
 .footer-location {
@@ -79,9 +80,9 @@
   line-height: 1.2;
   letter-spacing: 0.04em;
   color: #a9b3ae;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   text-align: left;
-  padding-left: 60px;
+  padding-left: 0;
 }
 
 .footer-brand p {
@@ -89,13 +90,13 @@
   font-size: 10px;
   line-height: 1.45;
   color: #9aa7a2;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   text-align: left;
   max-width: 360px;
 }
 
 .footer-links {
-  justify-self: center;
+  justify-self: start;
   text-align: left;
   width: 220px;
 }
@@ -106,7 +107,7 @@
   line-height: 1.2;
   font-weight: 700;
   color: #f3f4ef;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
 }
 
 .footer-links a {
@@ -116,7 +117,7 @@
   line-height: 0.8;
   color: #a9b3ae;
   text-decoration: none;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   transition: color 0.2s ease;
 }
 
@@ -143,7 +144,7 @@
   font-size: 10px;
   line-height: 1.3;
   color: #72817c;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
 }
 
 @media (max-width: 1024px) {
