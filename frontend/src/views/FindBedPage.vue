@@ -138,7 +138,7 @@ const distanceFilterEnabled = ref(false)
 const distanceWarning = ref('')
 
 const currentPage = ref(1)
-const pageSize = 20
+const pageSize = 4
 const mapResultCount = ref(0)
 const totalResults = ref(0)
 
@@ -401,18 +401,25 @@ onMounted(async () => {
 
 .page-title {
   text-align: center;
-  margin-top: 40px;
-  margin-bottom: 40px;
-  font-size: 14px;
-  color: #76828a
+  margin-top: 135px;
+  margin-bottom: 32px;
+  width: 100%;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .page-title h1 {
-  margin-bottom: 8px;
-  margin: 0 0 8px;
-  font-size: 28px;
-  font-weight: 700;
+  margin: 0 0 10px;
+  font-size: 42px;
+  font-weight: 800;
   color: #1f2d2a;
+  font-family: var(--font-display);
+}
+
+.page-title p {
+  font-size: 16px;
+  color: #76828a;
+  margin: 0;
 }
 
 .results-layout {
@@ -441,30 +448,49 @@ onMounted(async () => {
 .view-toggle {
   display: flex;
   justify-content: center;
-  gap: 22px;
+  gap: 0;
   margin-bottom: 30px;
+  background: white;
+  border: 1.5px solid #ddd8cf;
+  border-radius: 999px;
+  padding: 4px;
+  width: fit-content;
+  margin: 0 auto 30px;
 }
 
 .view-btn {
   border: none;
   background: transparent;
-  color: #6a7d76;
+  color: #2D6A5F;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
+  padding: 8px 22px;
+  border-radius: 999px;
+  transition: all 0.2s;
+  font-family: var(--font-sans);
 }
 
 .view-btn.active {
-  color: #557067;
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 4px;
+  background: #557067;
+  color: white;
+  font-weight: 600;
 }
 
+@media (max-width: 768px) {
+  .search-page {
+    padding: 0;
+  }
 
-@media (max-width: 1024px) {
+  .page-title {
+    margin-top: 120px;
+    margin-left: 15px;
+    padding: 0 20px;
+  }
+
   .results-layout {
     grid-template-columns: 1fr;
+    padding: 0 16px;
   }
 }
 </style>

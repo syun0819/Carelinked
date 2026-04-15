@@ -125,13 +125,13 @@ const availabilityClass = computed(() => {
 
 .facility-image {
   width: 100%;
-  height: 220px;
+  height: 160px;
   object-fit: cover;
   display: block;
 }
 
 .facility-body {
-  padding: 20px 28px 0;
+  padding: 14px 20px 0;
 }
 
 .facility-top-row {
@@ -150,21 +150,20 @@ const availabilityClass = computed(() => {
 
 .facility-top-row h3 {
   margin: 0;
-  font-size: 24px;
+  font-size: 18px;
   line-height: 1.25;
   font-weight: 700;
   color: #24332f;
   font-family: var(--font-display);
-
   display: -webkit-box;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .facility-address {
-  margin: 10px 0 0;
+  margin: 6px 0 0;
   color: #5f736b;
-  font-size: 16px;
+  font-size: 13px;
   line-height: 1.55;
   overflow-wrap: anywhere;
 }
@@ -173,9 +172,9 @@ const availabilityClass = computed(() => {
   flex-shrink: 0;
   background: #eaf4ec;
   color: #537764;
-  padding: 9px 14px;
+  padding: 6px 10px;
   border-radius: 999px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
   align-self: flex-start;
@@ -193,8 +192,8 @@ const availabilityClass = computed(() => {
   background: #eef5ef;
   color: #4f6f60;
   border-radius: 999px;
-  padding: 9px 14px;
-  font-size: 14px;
+  padding: 6px 10px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.1;
   white-space: nowrap;
@@ -247,7 +246,7 @@ const availabilityClass = computed(() => {
 }
 
 .metric-value {
-  font-size: 30px;
+  font-size: 22px;
   line-height: 1;
   font-weight: 700;
   font-family: var(--font-display);
@@ -311,9 +310,9 @@ const availabilityClass = computed(() => {
   background: #557067;
   color: white;
   border-radius: 999px;
-  padding: 13px 24px;
+  padding: 10px 18px;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
   white-space: nowrap;
 }
