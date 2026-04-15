@@ -1,7 +1,7 @@
 import math
 from typing import Optional, Tuple, List
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.aged_care import AgedCareService
@@ -48,6 +48,13 @@ def get_ml_availability_group(
     else:
         label = ml_record.residential_label_name
     return label if label else None
+
+
+def resolve_availability(ml_map: dict, row) -> tuple:
+    ml_label = get_ml_availability_group(ml_map.get(row.id), row.care_type)
+    availability_group = ml_label or calculate_availability(row.residential_places)
+    data_source = _DATA_SOURCE_ML if ml_label else _DATA_SOURCE_BEDS
+    return availability_group, data_source
 
 
 async def _fetch_ml_record(db: AsyncSession, facility_id: str) -> Optional[FacilityAvailabilityML]:
@@ -125,10 +132,22 @@ async def search_facilities(
         query = query.where(AgedCareService.care_type.in_(care_type))
     if abs_remoteness:
         query = query.where(AgedCareService.abs_remoteness.ilike(f"%{abs_remoteness}%"))
-    if min_beds is not None:
-        query = query.where(AgedCareService.residential_places >= min_beds)
-    if max_beds is not None:
-        query = query.where(AgedCareService.residential_places <= max_beds)
+    if min_beds is not None and min_beds > 0:
+        query = query.where(
+            or_(
+                AgedCareService.residential_places >= min_beds,
+                AgedCareService.residential_places == None,  # noqa: E711
+                AgedCareService.residential_places == 0,
+            )
+        )
+    if max_beds is not None and max_beds > 0:
+        query = query.where(
+            or_(
+                AgedCareService.residential_places <= max_beds,
+                AgedCareService.residential_places == None,  # noqa: E711
+                AgedCareService.residential_places == 0,
+            )
+        )
 
     # Resolve center coords from postcode or suburb when distance filtering is requested
     center_lat, center_lng = None, None
@@ -173,9 +192,7 @@ async def search_facilities(
 
     ml_map = await _fetch_ml_records_bulk(db, [r.id for r in rows])
     for row in rows:
-        ml_label = get_ml_availability_group(ml_map.get(row.id), row.care_type)
-        row._availability_group = ml_label or calculate_availability(row.residential_places)
-        row._data_source = _DATA_SOURCE_ML if ml_label else _DATA_SOURCE_BEDS
+        row._availability_group, row._data_source = resolve_availability(ml_map, row)
 
     return rows, total
 
@@ -221,9 +238,7 @@ async def get_facilities_for_map(
             if dist > max_distance_km:
                 continue
 
-        ml_label = get_ml_availability_group(ml_map.get(row.id), row.care_type)
-        availability_group = ml_label or calculate_availability(row.residential_places)
-        data_source = _DATA_SOURCE_ML if ml_label else _DATA_SOURCE_BEDS
+        availability_group, data_source = resolve_availability(ml_map, row)
 
         markers.append(
             FacilityMapMarker(
@@ -258,22 +273,14 @@ async def get_facility_by_id(
     if row is None:
         return None
 
-    ml_record = await _fetch_ml_record(db, facility_id)
-    ml_label = get_ml_availability_group(ml_record, row.care_type)
-
+    ml_map = await _fetch_ml_records_bulk(db, [facility_id])
     detail = FacilityDetail.model_validate(row)
-    if ml_label:
-        detail.availability_group = ml_label
-        detail.data_source = _DATA_SOURCE_ML
-    else:
-        detail.availability_group = calculate_availability(row.residential_places)
-        detail.data_source = _DATA_SOURCE_BEDS
+    detail.availability_group, detail.data_source = resolve_availability(ml_map, row)
     return detail
 
 
 _CARE_TYPE_SORT_FIELD = {
     "Residential": AgedCareService.residential_places,
-    "Home Care": AgedCareService.home_care_places,
     "Short-Term Restorative Care (STRC)": AgedCareService.restorative_care_places,
     "Transition Care": AgedCareService.restorative_care_places,
     "Multi-Purpose Service": AgedCareService.residential_places,
@@ -293,11 +300,9 @@ async def get_recommended_facilities(db: AsyncSession) -> List[FacilityCard]:
         )
         row = (await db.execute(query)).scalar_one_or_none()
         if row:
-            ml_record = await _fetch_ml_record(db, row.id)
-            ml_label = get_ml_availability_group(ml_record, row.care_type)
+            ml_map = await _fetch_ml_records_bulk(db, [row.id])
             card = FacilityCard.model_validate(row)
-            card.availability_group = ml_label or calculate_availability(row.residential_places)
-            card.data_source = _DATA_SOURCE_ML if ml_label else _DATA_SOURCE_BEDS
+            card.availability_group, card.data_source = resolve_availability(ml_map, row)
             results.append(card)
     return results
 
@@ -334,10 +339,8 @@ async def get_similar_facilities(
     ml_map = await _fetch_ml_records_bulk(db, [r.id for r in nearest])
     cards: List[FacilityCard] = []
     for r in nearest:
-        ml_label = get_ml_availability_group(ml_map.get(r.id), r.care_type)
         card = FacilityCard.model_validate(r)
-        card.availability_group = ml_label or calculate_availability(r.residential_places)
-        card.data_source = _DATA_SOURCE_ML if ml_label else _DATA_SOURCE_BEDS
+        card.availability_group, card.data_source = resolve_availability(ml_map, r)
         cards.append(card)
     return cards
 
@@ -367,9 +370,7 @@ async def get_nearest_facilities(
     ml_map = await _fetch_ml_records_bulk(db, [r.id for r in nearest])
     cards: List[FacilityCard] = []
     for r in nearest:
-        ml_label = get_ml_availability_group(ml_map.get(r.id), r.care_type)
         card = FacilityCard.model_validate(r)
-        card.availability_group = ml_label or calculate_availability(r.residential_places)
-        card.data_source = _DATA_SOURCE_ML if ml_label else _DATA_SOURCE_BEDS
+        card.availability_group, card.data_source = resolve_availability(ml_map, r)
         cards.append(card)
     return cards

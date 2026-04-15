@@ -1,3 +1,4 @@
+import re
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -17,6 +18,43 @@ from app.services import location_service
 
 router = APIRouter(prefix="/api/v1/facilities", tags=["facilities"])
 
+VALID_SORT_OPTIONS = {"name", "beds_desc", "beds_asc", "distance", "closest"}
+VALID_REMOTENESS = {"Major Cities", "Inner Regional", "Outer Regional", "Remote", "Very Remote"}
+VALID_CARE_TYPES = {
+    "Residential",
+    "Transition Care",
+    "Short-Term Restorative Care (STRC)",
+    "Multi-Purpose Service",
+    "National Aboriginal and Torres Strait Islander Aged Care Program",
+}
+
+def validate_text_input(value: Optional[str], field_name: str, max_length: int = 100) -> Optional[str]:
+    if value is None:
+        return None
+    value = value.strip()
+    if len(value) > max_length:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{field_name} must not exceed {max_length} characters."
+        )
+    if re.search(r"['\";\\<>]", value):
+        raise HTTPException(
+            status_code=400,
+            detail=f"{field_name} contains invalid characters."
+        )
+    return value
+
+def validate_postcode(postcode: Optional[str]) -> Optional[str]:
+    if postcode is None:
+        return None
+    postcode = postcode.strip()
+    if not re.fullmatch(r"\d{4}", postcode):
+        raise HTTPException(
+            status_code=400,
+            detail="Postcode must be exactly 4 digits."
+        )
+    return postcode
+
 
 @router.get("/search", response_model=FacilitySearchResponse)
 async def search(
@@ -26,16 +64,40 @@ async def search(
     keyword: Optional[str] = Query(None),
     care_type: Optional[List[str]] = Query(default=None),
     abs_remoteness: Optional[str] = Query(None),
-    min_beds: Optional[int] = Query(None),
-    max_beds: Optional[int] = Query(None),
+    min_beds: Optional[int] = Query(None, ge=0),
+    max_beds: Optional[int] = Query(None, ge=0),
     sort_by: Optional[str] = Query("name"),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    max_distance_km: Optional[float] = Query(None),
-    user_lat: Optional[float] = Query(None),
-    user_lng: Optional[float] = Query(None),
+    max_distance_km: Optional[float] = Query(None, ge=0, le=500),
+    user_lat: Optional[float] = Query(None, ge=-90, le=90),
+    user_lng: Optional[float] = Query(None, ge=-180, le=180),
     db: AsyncSession = Depends(get_db),
 ):
+    # Validate text inputs
+    suburb = validate_text_input(suburb, "Suburb")
+    region = validate_text_input(region, "Region")
+    keyword = validate_text_input(keyword, "Keyword")
+    postcode = validate_postcode(postcode)
+
+    # Validate sort_by
+    if sort_by and sort_by not in VALID_SORT_OPTIONS:
+        raise HTTPException(status_code=400, detail=f"Invalid sort_by value. Must be one of: {', '.join(VALID_SORT_OPTIONS)}")
+
+    # Validate remoteness
+    if abs_remoteness and abs_remoteness not in VALID_REMOTENESS:
+        raise HTTPException(status_code=400, detail=f"Invalid remoteness value.")
+
+    # Validate care types
+    if care_type:
+        for ct in care_type:
+            if ct not in VALID_CARE_TYPES:
+                raise HTTPException(status_code=400, detail=f"Invalid care type: {ct}")
+
+    # Validate min/max beds
+    if min_beds is not None and max_beds is not None and min_beds > max_beds:
+        raise HTTPException(status_code=400, detail="min_beds cannot be greater than max_beds.")
+
     results, total = await search_facilities(
         db=db,
         suburb=suburb,
@@ -65,8 +127,8 @@ async def search(
 
 @router.get("/recommended", response_model=FacilitySearchResponse)
 async def recommended(
-    user_lat: Optional[float] = Query(None),
-    user_lng: Optional[float] = Query(None),
+    user_lat: Optional[float] = Query(None, ge=-90, le=90),
+    user_lng: Optional[float] = Query(None, ge=-180, le=180),
     limit: int = Query(6, ge=1, le=50),
     db: AsyncSession = Depends(get_db),
 ):
@@ -83,9 +145,20 @@ async def get_map(
     postcode: Optional[str] = Query(None),
     region: Optional[str] = Query(None),
     care_type: Optional[List[str]] = Query(default=None),
-    max_distance_km: Optional[float] = Query(None),
+    max_distance_km: Optional[float] = Query(None, ge=0, le=500),
     db: AsyncSession = Depends(get_db),
 ):
+    # Validate text inputs
+    suburb = validate_text_input(suburb, "Suburb")
+    region = validate_text_input(region, "Region")
+    postcode = validate_postcode(postcode)
+
+    # Validate care types
+    if care_type:
+        for ct in care_type:
+            if ct not in VALID_CARE_TYPES:
+                raise HTTPException(status_code=400, detail=f"Invalid care type: {ct}")
+
     if not suburb and not postcode and not region:
         raise HTTPException(
             status_code=400,

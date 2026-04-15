@@ -64,9 +64,6 @@
 
         <div v-if="loading" class="status-message">Loading facilities...</div>
         <div v-else-if="error" class="status-message error">{{ error }}</div>
-        <div v-else-if="locationStore.locationError" class="status-message error">
-          {{ locationStore.locationError }}
-        </div>
 
         <ListSection
           v-if="activeView === 'list'"
@@ -79,8 +76,9 @@
           :search-type="searchType"
           :selected-care-types="selectedCareTypes"
           :distance="distance"
-          :user-lat="locationStore.userLat"
-          :user-lng="locationStore.userLng"
+          :distance-filter-enabled="distanceFilterEnabled"
+          :user-lat="null"
+          :user-lng="null"
           :is-active="activeView === 'map'"
           @update:count="mapResultCount = $event"
         />
@@ -106,8 +104,6 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { searchFacilities } from '../services/facilitiesApi'
 import { mapFacilityCard } from '../utils/facilityMappers'
-import { useLocationStore } from '../stores/locationStore'
-
 import Header from '../components/Header.vue'
 import SearchBar from '../components/search/SearchBar.vue'
 import FilterPanel from '../components/search/FilterPanel.vue'
@@ -119,8 +115,8 @@ import FooterSection from '../components/FooterSection.vue'
 
 const route = useRoute()
 const router = useRouter()
-const locationStore = useLocationStore()
 
+const initialized = ref(false)
 const facilities = ref([])
 const loading = ref(false)
 const error = ref('')
@@ -164,8 +160,6 @@ async function fetchFacilities() {
 
   try {
     const q = searchQuery.value.trim()
-    const hasUserLocation =
-      locationStore.userLat != null && locationStore.userLng != null
 
     const params = {
       limit: pageSize,
@@ -185,31 +179,12 @@ async function fetchFacilities() {
       params.abs_remoteness = selectedRemoteness.value
     }
 
-    if (minBeds.value != null) {
+    if (minBeds.value != null && minBeds.value > 0) {
       params.min_beds = minBeds.value
     }
 
-    if (maxBeds.value != null) {
+    if (maxBeds.value != null && maxBeds.value > 0) {
       params.max_beds = maxBeds.value
-    }
-
-    if (hasUserLocation) {
-      params.user_lat = locationStore.userLat
-      params.user_lng = locationStore.userLng
-      params.max_distance_km = distance.value ?? 10
-    }
-
-    if (sortBy.value === 'distance') {
-      if (!hasUserLocation) {
-        error.value = 'Location is required for distance sorting.'
-        facilities.value = []
-        totalResults.value = 0
-        loading.value = false
-        return
-      }
-
-      params.user_lat = locationStore.userLat
-      params.user_lng = locationStore.userLng
     }
 
     if (distanceFilterEnabled.value) {
@@ -270,7 +245,7 @@ function resetFilters() {
   distance.value = 10
   distanceFilterEnabled.value = false
   distanceWarning.value = ''
-  sortBy.value = 'closest'
+  sortBy.value = 'name'
   currentPage.value = 1
   syncStateToQuery()
 }
@@ -304,21 +279,12 @@ watch(
     activeView
   ],
   () => {
+    if (!initialized.value) return
     currentPage.value = 1
     syncStateToQuery()
     fetchFacilities()
   },
   { deep: true }
-)
-
-watch(
-  () => [locationStore.userLat, locationStore.userLng],
-  ([lat, lng]) => {
-    if (lat != null && lng != null) {
-      currentPage.value = 1
-      fetchFacilities()
-    }
-  }
 )
 
 function applyQueryToState() {
@@ -397,12 +363,8 @@ function normalizeCareTypes(value) {
 
 onMounted(async () => {
   applyQueryToState()
-
-  if (!locationStore.locationLoaded) {
-    await locationStore.requestUserLocation()
-  }
-
   await fetchFacilities()
+  initialized.value = true
 })
 </script>
 
