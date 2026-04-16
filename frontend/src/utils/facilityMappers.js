@@ -14,7 +14,8 @@ export function mapFacilityCard(item) {
     remoteness: item.abs_remoteness || '',
     totalBeds: item.residential_places ?? 0,
     bedAvailability: item.availability_group || 'Unknown',
-    
+    distance: item.distance_km ?? null,
+
     image: DEFAULT_IMAGE,
   }
 }
