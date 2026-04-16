@@ -64,6 +64,7 @@
 
         <div v-if="loading" class="status-message">Loading facilities...</div>
         <div v-else-if="error" class="status-message error">{{ error }}</div>
+        <div v-else-if="activeView === 'list' && totalResults === 0 && searchMessage" class="status-message">{{ searchMessage }}</div>
 
         <ListSection
           v-if="activeView === 'list'"
@@ -141,6 +142,7 @@ const currentPage = ref(1)
 const pageSize = 4
 const mapResultCount = ref(0)
 const totalResults = ref(0)
+const searchMessage = ref('')
 
 const careTypeOptions = [
   { value: 'Residential', label: 'Residential' },
@@ -203,11 +205,13 @@ async function fetchFacilities() {
     const rawFacilities = data.results || data.items || data.facilities || []
     facilities.value = rawFacilities.map(mapFacilityCard)
     totalResults.value = data.total || facilities.value.length
+    searchMessage.value = data.message || ''
   } catch (err) {
     console.error('Failed to load facilities:', err)
     error.value = 'Failed to load facilities.'
     facilities.value = []
     totalResults.value = 0
+    searchMessage.value = ''
   } finally {
     loading.value = false
   }
