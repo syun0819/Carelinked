@@ -122,7 +122,19 @@ async def search(
         card.availability_group = getattr(r, "_availability_group", None)
         card.data_source = getattr(r, "_data_source", None)
         cards.append(card)
-    return FacilitySearchResponse(total=total, results=cards)
+
+    message = None
+    if total == 0:
+        if care_type and (suburb or postcode or keyword):
+            message = "No facilities found in this area for the selected care type. Try changing the care type or broadening your search."
+        elif suburb or postcode:
+            message = "No facilities found in this area. Try a different suburb or postcode."
+        elif keyword:
+            message = f"No facilities found matching '{keyword}'. Try a different name or search by suburb."
+        else:
+            message = "No facilities found. Try adjusting your search criteria."
+
+    return FacilitySearchResponse(total=total, results=cards, message=message)
 
 
 @router.get("/recommended", response_model=FacilitySearchResponse)

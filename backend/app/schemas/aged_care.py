@@ -18,6 +18,7 @@ class FacilityCard(BaseModel):
     abs_remoteness: Optional[str] = None
     availability_group: Optional[str] = None
     data_source: Optional[str] = None
+    distance_km: Optional[float] = None
 
 
 class FacilityDetail(FacilityCard):
@@ -34,6 +35,7 @@ class FacilitySearchResponse(BaseModel):
 
     total: int
     results: List[FacilityCard]
+    message: Optional[str] = None
 
 
 class FacilityMapMarker(BaseModel):
