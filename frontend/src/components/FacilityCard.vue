@@ -106,10 +106,24 @@ const careTypeClass = computed(() => {
 })
 
 const availabilityClass = computed(() => {
-  if (availabilityLevel.value === 'High') return 'availability-high'
-  if (availabilityLevel.value === 'Medium') return 'availability-medium'
-  if (availabilityLevel.value === 'Low') return 'availability-low'
-  return ''
+  if (availabilityLevel.value === 'Likely Available' || availabilityLevel.value === '1') {
+    return 'availability-likely'
+  }
+  if (availabilityLevel.value === 'Potentially Available' || availabilityLevel.value === '2') {
+    return 'availability-potential'
+  }
+  if (
+    availabilityLevel.value === 'Constrained by Market' ||
+    availabilityLevel.value === 'Constrained by Size' ||
+    availabilityLevel.value === '3' ||
+    availabilityLevel.value === '4'
+  ) {
+    return 'availability-constrained'
+  }
+  if (availabilityLevel.value === 'Highly Constrained' || availabilityLevel.value === '5') {
+    return 'availability-highly-constrained'
+  }
+  return 'availability-default'
 })
 </script>
 
@@ -260,15 +274,19 @@ const availabilityClass = computed(() => {
   font-weight: 600;
 }
 
-.availability-high {
+.availability-likely {
   color: #4f7a62;
 }
 
-.availability-medium {
+.availability-potential {
+  color: #f2c94c;
+}
+
+.availability-constrained {
   color: #d9822b;
 }
 
-.availability-low {
+.availability-highly-constrained {
   color: #c53b2c;
 }
 
