@@ -35,6 +35,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "https://fit-5120-te-04-main-project.vercel.app",
+        "https://www.carelink.page"
     ],
     allow_credentials=True,
     allow_methods=["*"],
