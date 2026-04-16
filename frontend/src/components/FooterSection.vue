@@ -4,7 +4,7 @@
       <div class="footer-top">
         <div class="footer-brand">
           <h3>CareLink</h3>
-          <span class="footer-location">VICTORIA</span>
+          <span class="footer-location">AUSTRALIA</span>
           <p>
             Helping Australians find aged care beds faster.<br />
             Built with open government data.
