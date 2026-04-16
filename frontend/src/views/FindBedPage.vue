@@ -376,8 +376,21 @@ onMounted(async () => {
 .search-page {
   background: #f7f4ee;
   min-height: 100vh;
-  padding: 0px 0 60px;
+  padding: 0;
   color: #1f2d2a;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.search-top {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto 30px;
+  padding: 0 16px;
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .page-title {
@@ -407,11 +420,12 @@ onMounted(async () => {
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 16px;
   display: grid;
   grid-template-columns: 350px 1fr;
   gap: 26px;
   align-items: start;
+  box-sizing: border-box;
 }
 
 .results-main {

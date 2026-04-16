@@ -1,10 +1,10 @@
 <template>
   <aside class="filters-panel">
-    <div class="filters-header">
+    <div class="filters-header" @click="toggleFilters">
       <h2>Filters</h2>
       <div class="filters-header-right">
         <button class="reset-btn" @click.stop="$emit('reset')">Reset all</button>
-        <span class="toggle-icon" @click="toggleFilters">{{ filtersOpen ? '▲' : '▼' }}</span>
+        <span class="toggle-icon">{{ filtersOpen ? '▲' : '▼' }}</span>
       </div>
     </div>
 
