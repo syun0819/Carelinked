@@ -117,7 +117,7 @@ async def search_facilities(
     user_lat: Optional[float] = None,
     user_lng: Optional[float] = None,
 ) -> Tuple[List[AgedCareService], int]:
-    query = select(AgedCareService).where(AgedCareService.physical_state == "VIC")
+    query = select(AgedCareService)
 
     if suburb:
         query = query.where(AgedCareService.physical_suburb.ilike(f"%{suburb}%"))
@@ -207,7 +207,7 @@ async def get_facilities_for_map(
     center_lat: Optional[float],
     center_lng: Optional[float],
 ) -> Tuple[List[FacilityMapMarker], int]:
-    query = select(AgedCareService).where(AgedCareService.physical_state == "VIC")
+    query = select(AgedCareService)
 
     if suburb:
         query = query.where(AgedCareService.physical_suburb.ilike(f"%{suburb}%"))
@@ -266,7 +266,6 @@ async def get_facility_by_id(
     query = (
         select(AgedCareService)
         .where(AgedCareService.id == facility_id)
-        .where(AgedCareService.physical_state == "VIC")
     )
     result = await db.execute(query)
     row = result.scalar_one_or_none()
@@ -293,7 +292,6 @@ async def get_recommended_facilities(db: AsyncSession) -> List[FacilityCard]:
     for care_type, sort_field in _CARE_TYPE_SORT_FIELD.items():
         query = (
             select(AgedCareService)
-            .where(AgedCareService.physical_state == "VIC")
             .where(AgedCareService.care_type == care_type)
             .order_by(sort_field.desc().nulls_last())
             .limit(1)
@@ -318,7 +316,6 @@ async def get_similar_facilities(
 
     query = (
         select(AgedCareService)
-        .where(AgedCareService.physical_state == "VIC")
         .where(AgedCareService.care_type == target.care_type)
         .where(AgedCareService.id != target.id)
     )
@@ -353,7 +350,6 @@ async def get_nearest_facilities(
 ) -> List[FacilityCard]:
     query = (
         select(AgedCareService)
-        .where(AgedCareService.physical_state == "VIC")
         .where(AgedCareService.latitude.isnot(None))
         .where(AgedCareService.longitude.isnot(None))
     )
