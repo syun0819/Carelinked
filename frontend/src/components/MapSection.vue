@@ -99,9 +99,15 @@ function buildParams() {
 }
 
 function getMarkerColor(availability) {
-  if (availability === 'High') return '#4f7a62'
-  if (availability === 'Medium') return '#d9822b'
-  if (availability === 'Low') return '#d64545'
+  if (availability === 'Likely Available' || availability === '1') return '#4f7a62'
+  if (availability === 'Potentially Available' || availability === '2') return '#f2c94c'
+  if (
+    availability === 'Constrained by Market' ||
+    availability === 'Constrained by Size' ||
+    availability === '3' ||
+    availability === '4'
+  ) return '#d9822b'
+  if (availability === 'Highly Constrained' || availability === '5') return '#d64545'
   return '#7a6fd6'
 }
 
