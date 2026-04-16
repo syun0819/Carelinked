@@ -25,7 +25,6 @@ async def get_autocomplete(db: AsyncSession, q: str) -> AutoCompleteResponse:
         # Facility search
         fac_result = await db.execute(
             select(AgedCareService.id, AgedCareService.service_name)
-            .where(AgedCareService.physical_state == "VIC")
             .where(AgedCareService.service_name.ilike(f"%{q}%"))
             .order_by(AgedCareService.service_name)
             .limit(3)
@@ -38,7 +37,6 @@ async def get_autocomplete(db: AsyncSession, q: str) -> AutoCompleteResponse:
         # Suburb search
         sub_result = await db.execute(
             select(LocationGeo.suburb, LocationGeo.postcode)
-            .where(LocationGeo.state == "VIC")
             .where(LocationGeo.suburb.ilike(f"%{q}%"))
             .distinct(LocationGeo.suburb)
             .order_by(LocationGeo.suburb)
@@ -52,7 +50,6 @@ async def get_autocomplete(db: AsyncSession, q: str) -> AutoCompleteResponse:
         # Postcode search
         pc_result = await db.execute(
             select(LocationGeo.postcode, LocationGeo.suburb)
-            .where(LocationGeo.state == "VIC")
             .where(LocationGeo.postcode.like(f"{q}%"))
             .distinct(LocationGeo.postcode)
             .order_by(LocationGeo.postcode)
