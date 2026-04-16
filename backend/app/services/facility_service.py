@@ -338,6 +338,9 @@ async def get_similar_facilities(
     for r in nearest:
         card = FacilityCard.model_validate(r)
         card.availability_group, card.data_source = resolve_availability(ml_map, r)
+        card.distance_km = round(
+            haversine_distance(target.latitude, target.longitude, r.latitude, r.longitude), 2
+        ) if target.latitude and target.longitude and r.latitude and r.longitude else None
         cards.append(card)
     return cards
 
@@ -361,12 +364,13 @@ async def get_nearest_facilities(
         for r in rows
     ]
     with_distance.sort(key=lambda x: x[0])
-    nearest = [r for _, r in with_distance[:limit]]
+    nearest = [(dist, r) for dist, r in with_distance[:limit]]
 
-    ml_map = await _fetch_ml_records_bulk(db, [r.id for r in nearest])
+    ml_map = await _fetch_ml_records_bulk(db, [r.id for _, r in nearest])
     cards: List[FacilityCard] = []
-    for r in nearest:
+    for dist, r in nearest:
         card = FacilityCard.model_validate(r)
         card.availability_group, card.data_source = resolve_availability(ml_map, r)
+        card.distance_km = round(dist, 2)
         cards.append(card)
     return cards
