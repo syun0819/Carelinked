@@ -16,6 +16,27 @@ const routes = [
   { path: '/password', component: PasswordPage }
 ]
 
+function scrollToHashTarget(hash, behavior = 'auto') {
+  const target = document.querySelector(hash)
+  if (!target) return
+
+  const top = target.getBoundingClientRect().top + window.scrollY - 110
+  window.scrollTo({
+    top,
+    behavior
+  })
+}
+
+function keepHashTargetAligned(hash) {
+  const delays = [0, 100, 300, 700, 1200, 2000]
+
+  delays.forEach((delay, index) => {
+    setTimeout(() => {
+      scrollToHashTarget(hash, index === delays.length - 1 ? 'smooth' : 'auto')
+    }, delay)
+  })
+}
+
 const router = createRouter({
   history: createWebHistory(),
   routes,
@@ -25,14 +46,16 @@ const router = createRouter({
     }
 
     if (to.hash) {
-      return {
-        el: to.hash,
-        top: 110,
-        behavior: 'smooth'
-      }
+      return false
     }
 
     return { top: 0 }
+  }
+})
+
+router.afterEach((to) => {
+  if (to.hash) {
+    keepHashTargetAligned(to.hash)
   }
 })
 

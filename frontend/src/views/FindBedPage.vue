@@ -42,12 +42,7 @@
         :care-type-options="careTypeOptions"
         :min-distance="minDistance"
         :max-distance="maxDistance"
-        @update:selectedCareTypes="selectedCareTypes = $event"
-        @update:selectedRemoteness="selectedRemoteness = $event"
-        @update:minBeds="minBeds = $event"
-        @update:maxBeds="maxBeds = $event"
-        @update:distance="distance = $event"
-        @update:distanceFilterEnabled="distanceFilterEnabled = $event"
+        @apply="applyFilters"
         @reset="resetFilters"
       />
 
@@ -254,6 +249,15 @@ function resetFilters() {
   syncStateToQuery()
 }
 
+function applyFilters(filters) {
+  selectedCareTypes.value = filters.selectedCareTypes
+  selectedRemoteness.value = filters.selectedRemoteness
+  minBeds.value = filters.minBeds
+  maxBeds.value = filters.maxBeds
+  distance.value = filters.distance
+  distanceFilterEnabled.value = filters.distanceFilterEnabled
+}
+
 function getDistanceValue(facility) {
   return facility.distanceKm ?? facility.distance ?? Number.MAX_SAFE_INTEGER
 }
@@ -263,7 +267,13 @@ const filteredFacilities = computed(() => facilities.value)
 watch(
   () => route.query.careType,
   (newCareType) => {
-    selectedCareTypes.value = normalizeCareTypes(newCareType)
+    const nextCareTypes = normalizeCareTypes(newCareType)
+
+    if (arraysEqual(nextCareTypes, selectedCareTypes.value)) {
+      return
+    }
+
+    selectedCareTypes.value = nextCareTypes
     currentPage.value = 1
   },
   { immediate: true }
@@ -341,6 +351,11 @@ function normalizeSearchType(value) {
   const type = String(value).toLowerCase()
   if (['suburb', 'postcode', 'region', 'keyword'].includes(type)) return type
   return ''
+}
+
+function arraysEqual(a, b) {
+  if (a.length !== b.length) return false
+  return a.every((item, index) => item === b[index])
 }
 
 function normalizeCareTypes(value) {
