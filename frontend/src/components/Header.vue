@@ -15,7 +15,7 @@
         Find Care
       </router-link>
       <button class="nav-item nav-link-btn" @click="goToSection('#how-it-works')">
-        How It Works
+        Guide
       </button>
     </nav>
 
