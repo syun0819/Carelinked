@@ -1,5 +1,6 @@
-const DEFAULT_IMAGE =
-  'https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1200&q=80'
+import facilityExampleImage from '../assets/facility_example.jpg'
+
+const DEFAULT_IMAGE = facilityExampleImage
 
 export function mapFacilityCard(item) {
   return {
