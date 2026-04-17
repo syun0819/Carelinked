@@ -1,0 +1,36 @@
+k=3: best silhouette but
+
+It put 2119 facilities into one giant “large facility in a busy market” bucket.
+That cluster is too broad to label confidently with one name.
+
+
+k=4:
+It separates residential facilities into four pretty distinct patterns:
+
+Small providers in medium/large markets, low share.
+Large providers in large busy markets, low share.
+Mid/large providers that dominate small local markets.
+Very small providers with near-zero local demand.
+That is much easier to label consistently, for example:
+
+cluster 1: Constrained by Market
+cluster 0: Constrained by Size
+cluster 2: Potentially Available
+cluster 3: Likely Available
+
+k=5: 
+It further splits the broad market-constrained group into:
+
+Large providers in busy markets
+Mid-sized providers in busy markets
+Dominant providers in small markets
+Small providers in lighter markets
+Zero-demand dominant providers
+That gives a very natural 5-label style:
+
+Likely Available
+Potentially Available
+Constrained by Market
+Constrained by Size
+Highly Constrained
+The downside is that k=5 has a noticeably worse silhouette than k=4, so it is more interpretive than statistically strong.

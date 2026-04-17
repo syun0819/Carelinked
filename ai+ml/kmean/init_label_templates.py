@@ -28,10 +28,20 @@ def build_template(stream_name: str, selected_k: int) -> pd.DataFrame:
     manual_path = MANUAL_LABEL_DIR / f"{stream_name}_cluster_labels.csv"
     if manual_path.exists():
         existing_df = pd.read_csv(manual_path)
-        keep_columns = ["cluster_id", "label_id", "label_name"]
-        existing_df = existing_df[keep_columns]
+        required_columns = {"stream_name", "selected_k", "cluster_id", "label_id", "label_name"}
+        missing_columns = required_columns - set(existing_df.columns)
+        if missing_columns:
+            raise ValueError(
+                f"{manual_path} is missing required columns: {sorted(missing_columns)}"
+            )
+
+        matching_existing_df = existing_df[
+            (existing_df["stream_name"] == stream_name)
+            & (existing_df["selected_k"] == selected_k)
+        ][["cluster_id", "label_id", "label_name"]]
+
         template_df = template_df.drop(columns=["label_id", "label_name"]).merge(
-            existing_df,
+            matching_existing_df,
             on="cluster_id",
             how="left",
         )

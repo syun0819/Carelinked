@@ -20,10 +20,20 @@ def load_labeled_stream(stream_name: str, selected_k: int) -> pd.DataFrame:
     inspect_df = pd.read_csv(inspect_path, usecols=["facility_id", "cluster_id"])
     label_df = pd.read_csv(manual_label_path)
 
-    missing_columns = {"cluster_id", "label_id", "label_name"} - set(label_df.columns)
+    missing_columns = {"stream_name", "selected_k", "cluster_id", "label_id", "label_name"} - set(label_df.columns)
     if missing_columns:
         raise ValueError(
             f"{manual_label_path} is missing required columns: {sorted(missing_columns)}"
+        )
+
+    label_df = label_df[
+        (label_df["stream_name"] == stream_name)
+        & (label_df["selected_k"] == selected_k)
+    ].copy()
+
+    if label_df.empty:
+        raise ValueError(
+            f"{manual_label_path} does not contain labels for stream_name={stream_name!r} and selected_k={selected_k}."
         )
 
     if label_df["label_id"].isna().any() or label_df["label_name"].isna().any():
