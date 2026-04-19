@@ -1,16 +1,25 @@
 <template>
   <article class="facility-card">
-    <img
-      :src="facility.image"
-      :alt="facility.name"
-      class="facility-image"
-    />
+    <div class="facility-image-wrap">
+      <img
+        :src="facility.image"
+        :alt="facility.name"
+        class="facility-image"
+      />
+      <span v-if="showRecommended" class="recommended-badge">Recommended</span>
+    </div>
 
     <div class="facility-body">
       <div class="facility-top-row">
         <div class="facility-main-info">
           <h3>{{ facility.name }}</h3>
-          <p class="facility-address">📍 {{ displayAddress }}</p>
+          <p class="facility-address">
+            <svg class="location-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 21s7-6.1 7-12A7 7 0 0 0 5 9c0 5.9 7 12 7 12Z" />
+              <circle cx="12" cy="9" r="2.5" />
+            </svg>
+            <span>{{ displayAddress }}</span>
+          </p>
 
           <div class="tag-row">
             <span v-if="facility.careType" class="tag-chip" :class="careTypeClass">
@@ -19,7 +28,6 @@
           </div>
         </div>
 
-        <span class="recommended-badge">Recommended</span>
       </div>
 
       <div class="metrics-row">
@@ -27,24 +35,27 @@
           <div class="metric-value" :class="availabilityClass">
             {{ availabilityLevel || 'N/A' }}
           </div>
-          <div class="metric-caption">BED AVAILABILITY ESTIMATION</div>
+          <div class="metric-caption">AVAILABILITY</div>
         </div>
-      </div>
 
-      <div class="info-line">
-        <span>
-          {{ facility.funding || `Residential places: ${facility.totalBeds ?? 0}` }}
-        </span>
+        <div class="metric-block">
+          <div class="metric-value beds-value">{{ facility.totalBeds ?? 0 }}</div>
+          <div class="metric-caption">TOTAL BEDS</div>
+        </div>
       </div>
 
       <div class="facility-footer">
         <p v-if="facility.distance !== null && facility.distance !== undefined" class="distance-line">
-          📍
+          <svg class="location-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 21s7-6.1 7-12A7 7 0 0 0 5 9c0 5.9 7 12 7 12Z" />
+            <circle cx="12" cy="9" r="2.5" />
+          </svg>
           <span>{{ facility.distance }} km away</span>
         </p>
 
         <button class="details-btn" @click.stop="goToDetail">
-          View details →
+          <span>View details</span>
+          <span class="details-arrow" aria-hidden="true">→</span>
         </button>
       </div>
     </div>
@@ -59,6 +70,10 @@ const props = defineProps({
   facility: {
     type: Object,
     required: true
+  },
+  showRecommended: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -122,40 +137,53 @@ const availabilityClass = computed(() => {
   border: 1px solid #ddd8cf;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 8px rgba(31, 45, 42, 0.08);
   font-family: var(--font-sans);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.facility-image-wrap {
+  position: relative;
+  height: 190px;
+  overflow: hidden;
 }
 
 .facility-image {
   width: 100%;
-  height: 160px;
+  height: 100%;
   object-fit: cover;
   display: block;
 }
 
 .facility-body {
-  padding: 14px 20px 0;
+  padding: 18px 26px 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .facility-top-row {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 18px;
-  min-height: 100px;
+  min-height: 150px;
+  padding-bottom: 24px;
+  box-sizing: border-box;
 }
 
 .facility-main-info {
   flex: 1;
   min-width: 0;
   text-align: left;
+  display: flex;
+  flex-direction: column;
 }
 
 .facility-top-row h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.25;
-  font-weight: 700;
+  font-weight: 800;
   color: #24332f;
   font-family: var(--font-display);
   display: -webkit-box;
@@ -164,30 +192,47 @@ const availabilityClass = computed(() => {
 }
 
 .facility-address {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   color: #5f736b;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.55;
   overflow-wrap: anywhere;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+
+.location-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: #6f9181;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .recommended-badge {
-  flex-shrink: 0;
+  position: absolute;
+  top: 14px;
+  right: 14px;
   background: #eaf4ec;
   color: #537764;
-  padding: 6px 10px;
+  padding: 7px 14px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
-  align-self: flex-start;
 }
 
 .tag-row {
   display: flex;
   gap: 10px;
-  margin-top: 10px;
-  margin-bottom: 2px;
+  margin-top: auto;
+  margin-bottom: 0;
   flex-wrap: wrap;
 }
 
@@ -238,25 +283,56 @@ const availabilityClass = computed(() => {
 }
 
 .metrics-row {
-  margin-top: 8px;
-  padding: 10px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 0;
+  padding: 0;
   border-top: 1px solid #ece7dd;
   border-bottom: 1px solid #ece7dd;
 }
 
 .metric-block {
+  min-height: 62px;
+  padding: 6px 8px 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
+  box-sizing: border-box;
+}
+
+.metric-block.availability {
+  padding-top: 6px;
+}
+
+.metric-block + .metric-block {
+  border-left: 1px solid #ece7dd;
 }
 
 .metric-value {
-  font-size: 22px;
-  line-height: 1;
+  font-size: 18px;
+  line-height: 1.1;
   font-weight: 700;
   font-family: var(--font-display);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metric-block.availability .metric-value {
+  max-width: 100%;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.beds-value {
+  color: #24332f;
 }
 
 .metric-caption {
-  font-size: 13px;
+  margin-top: 3px;
+  font-size: 9px;
   color: #4f655d;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -283,17 +359,12 @@ color: #c9a200;
   color: #9e9e9e;
 }
 
-.availability-default {
-  color: #4f6a63;
+.metric-block.availability .availability-none {
+  font-size: 12px;
 }
 
-.info-line {
-  padding: 14px 0;
-  border-bottom: 1px solid #ece7dd;
-  color: #5e706a;
-  font-size: 15px;
-  font-weight: 500;
-  line-height: 1.55;
+.availability-default {
+  color: #4f6a63;
 }
 
 .facility-footer {
@@ -321,19 +392,27 @@ color: #c9a200;
   background: #557067;
   color: white;
   border-radius: 999px;
-  padding: 10px 18px;
+  padding: 7px 24px;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .details-btn:hover {
   background: #486158;
 }
 
+.details-arrow {
+  font-size: 18px;
+  line-height: 1;
+}
+
 @media (max-width: 768px) {
-  .facility-image {
+  .facility-image-wrap {
     height: 180px;
   }
 
@@ -342,8 +421,8 @@ color: #c9a200;
   }
 
   .facility-top-row {
-    flex-direction: column;
-    align-items: flex-start;
+    min-height: auto;
+    padding-bottom: 18px;
   }
 
   .facility-footer {
@@ -357,3 +436,4 @@ color: #c9a200;
   }
 }
 </style>
+

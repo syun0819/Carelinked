@@ -21,8 +21,14 @@ defineProps({
 
 <style scoped>
 .results-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
+}
+
+@media (max-width: 900px) {
+  .results-list {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

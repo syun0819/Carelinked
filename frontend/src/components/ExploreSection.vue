@@ -27,6 +27,7 @@
         v-for="facility in displayFacilities"
         :key="facility.id"
         :facility="facility"
+        show-recommended
       />
     </div>
 
@@ -146,9 +147,11 @@ watch(
 
 .explore-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 760px));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   justify-content: center;
   gap: 24px;
+  width: min(100%, 1544px);
+  margin: 0 auto;
 }
 
 .explore-results-header {
@@ -188,6 +191,12 @@ watch(
     padding: 40px 24px 56px;
   }
 
+  .explore-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
   .explore-grid {
     grid-template-columns: 1fr;
   }

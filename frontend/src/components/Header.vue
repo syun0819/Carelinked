@@ -12,10 +12,10 @@
     <nav class="nav">
       <router-link to="/" class="nav-item" active-class="active">Home</router-link>
       <router-link to="/find-bed" class="nav-item" active-class="active">
-        Find Care
+        Find a Bed
       </router-link>
       <button class="nav-item nav-link-btn" @click="goToSection('#how-it-works')">
-        Guide
+        How It Works
       </button>
     </nav>
 
@@ -34,7 +34,7 @@
       </div>
       <nav class="drawer-nav">
         <router-link to="/" class="drawer-item" @click="menuOpen = false">Home</router-link>
-        <router-link to="/find-bed" class="drawer-item" @click="menuOpen = false">Find Care</router-link>
+        <router-link to="/find-bed" class="drawer-item" @click="menuOpen = false">Find a Bed</router-link>
         <button class="drawer-item drawer-btn" @click="goToSectionMobile('#how-it-works')">How It Works</button>
       </nav>
     </div>

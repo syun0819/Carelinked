@@ -31,7 +31,19 @@
     </section>
 
     <section class="results-layout">
+      <ResultsHeader
+        class="results-header-row"
+        :count="activeView === 'map' ? mapResultCount : totalResults"
+        :start="activeView === 'map' ? (mapResultCount ? 1 : 0) : startIndex"
+        :end="activeView === 'map' ? mapResultCount : endIndex"
+        :distance="distance"
+        :sort-by="sortBy"
+        :viewMode="activeView"
+        @update:sortBy="sortBy = $event"
+      />
+
       <FilterPanel
+        class="filters-column"
         :selected-care-types="selectedCareTypes"
         :selected-remoteness="selectedRemoteness"
         :min-beds="minBeds"
@@ -47,16 +59,6 @@
       />
 
       <div class="results-main">
-        <ResultsHeader
-          :count="activeView === 'map' ? mapResultCount : totalResults"
-          :start="activeView === 'map' ? (mapResultCount ? 1 : 0) : startIndex"
-          :end="activeView === 'map' ? mapResultCount : endIndex"
-          :distance="distance"
-          :sort-by="sortBy"
-          :viewMode="activeView"
-          @update:sortBy="sortBy = $event"
-        />
-
         <div v-if="error" class="status-message error">{{ error }}</div>
         <div v-else-if="activeView === 'list' && !loading && totalResults === 0 && searchMessage" class="status-message">{{ searchMessage }}</div>
 
@@ -76,6 +78,8 @@
           :distance-filter-enabled="distanceFilterEnabled"
           :user-lat="null"
           :user-lng="null"
+          :focus-lat="focusLat"
+          :focus-lng="focusLng"
           :is-active="activeView === 'map'"
           @update:count="mapResultCount = $event"
         />
@@ -134,6 +138,8 @@ const minDistance = 1
 const maxDistance = 20
 const distanceFilterEnabled = ref(false)
 const distanceWarning = ref('')
+const focusLat = ref(null)
+const focusLng = ref(null)
 
 const currentPage = ref(1)
 const pageSize = 4
@@ -318,6 +324,8 @@ function applyQueryToState() {
 
   distance.value = route.query.distance ? Number(route.query.distance) : 10
   distanceFilterEnabled.value = route.query.distanceEnabled === 'true'
+  focusLat.value = route.query.focusLat ? Number(route.query.focusLat) : null
+  focusLng.value = route.query.focusLng ? Number(route.query.focusLng) : null
 
   currentPage.value = route.query.page ? Number(route.query.page) : 1
 }
@@ -338,6 +346,8 @@ function syncStateToQuery() {
       maxBeds: maxBeds.value != null ? String(maxBeds.value) : undefined,
       distance: distance.value !== 10 ? String(distance.value) : undefined,
       distanceEnabled: distanceFilterEnabled.value ? 'true' : undefined,
+      focusLat: focusLat.value != null ? String(focusLat.value) : undefined,
+      focusLng: focusLng.value != null ? String(focusLng.value) : undefined,
       page: currentPage.value !== 1 ? String(currentPage.value) : undefined
     }
   })
@@ -402,7 +412,7 @@ onMounted(async () => {
 
 .search-top {
   width: 100%;
-  max-width: 1000px;
+  max-width: 1280px;
   margin: 0 auto 30px;
   padding: 0 16px;
   display: flex;
@@ -435,17 +445,20 @@ onMounted(async () => {
 
 .results-layout {
   width: 100%;
-  max-width: 1000px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0 20px;
   display: grid;
-  grid-template-columns: 350px 1fr;
-  gap: 26px;
+  grid-template-columns: 330px minmax(0, 1fr);
+  column-gap: 32px;
+  row-gap: 10px;
   align-items: start;
   box-sizing: border-box;
 }
 
 .results-main {
+  grid-column: 2;
+  grid-row: 2;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -457,8 +470,19 @@ onMounted(async () => {
   max-width: 100%;
 }
 
+.results-header-row {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.filters-column {
+  grid-column: 1;
+  grid-row: 2;
+}
+
 .pagination-row {
   grid-column: 1 / -1;
+  grid-row: 3;
 }
 
 .view-toggle {
@@ -507,6 +531,14 @@ onMounted(async () => {
   .results-layout {
     grid-template-columns: 1fr;
     padding: 0 16px;
+  }
+
+  .results-header-row,
+  .filters-column,
+  .results-main,
+  .pagination-row {
+    grid-column: 1;
+    grid-row: auto;
   }
 }
 </style>

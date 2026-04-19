@@ -10,10 +10,14 @@
 
     <div class="filters-body" :class="{ collapsed: !filtersOpen }">
       <div class="filter-section">
-        <p class="filter-title">CARE TYPE</p>
+        <button class="section-toggle" type="button" @click="toggleSection('careType')">
+          <span class="filter-title">CARE TYPE</span>
+          <span class="section-toggle-icon" :class="{ open: sectionOpen.careType }"></span>
+        </button>
         <label
           v-for="item in careTypeOptions"
           :key="item.value"
+          v-show="sectionOpen.careType"
           class="filter-option"
           :class="{ selected: localCareTypes.includes(item.value) }"
         >
@@ -26,6 +30,16 @@
             <span v-if="localCareTypes.includes(item.value)">✓</span>
           </span>
           <span class="option-text">{{ item.label }}</span>
+          <span
+            class="care-info"
+            tabindex="0"
+            role="button"
+            aria-label="Care type information"
+            @click.stop.prevent
+          >
+            i
+            <span class="care-tooltip">{{ getCareTypeDescription(item.value) }}</span>
+          </span>
         </label>
       </div>
 
@@ -33,17 +47,12 @@
 
       <div class="filter-section">
         <div class="distance-header">
-          <p class="filter-title">DISTANCE FILTER</p>
-          <label class="toggle-switch">
-            <input
-              type="checkbox"
-              :checked="localDistanceFilterEnabled"
-              @change="localDistanceFilterEnabled = $event.target.checked"
-            />
-            <span class="toggle-track"></span>
-          </label>
+          <button class="section-toggle" type="button" @click="toggleSection('distance')">
+            <span class="filter-title">DISTANCE FILTER</span>
+            <span class="section-toggle-icon" :class="{ open: sectionOpen.distance }"></span>
+          </button>
         </div>
-        <template v-if="localDistanceFilterEnabled">
+        <template v-if="sectionOpen.distance">
           <div class="distance-top">
             <span>Within</span>
             <strong>{{ localDistance }} km</strong>
@@ -66,8 +75,11 @@
       <hr class="filter-divider" />
 
       <div class="filter-section">
-        <div class="filter-title">LOCATION TYPE</div>
-        <select v-model="localRemoteness" class="filter-select">
+        <button class="section-toggle" type="button" @click="toggleSection('locationType')">
+          <span class="filter-title">LOCATION TYPE</span>
+          <span class="section-toggle-icon" :class="{ open: sectionOpen.locationType }"></span>
+        </button>
+        <select v-show="sectionOpen.locationType" v-model="localRemoteness" class="filter-select">
           <option value="">All</option>
           <option value="Major Cities">Major Cities</option>
           <option value="Inner Regional">Inner Regional</option>
@@ -80,8 +92,12 @@
       <hr class="filter-divider" />
 
       <div class="filter-section">
-        <div class="filter-title">MIN BEDS</div>
+        <button class="section-toggle" type="button" @click="toggleSection('minBeds')">
+          <span class="filter-title">MIN BEDS</span>
+          <span class="section-toggle-icon" :class="{ open: sectionOpen.minBeds }"></span>
+        </button>
         <input
+          v-show="sectionOpen.minBeds"
           type="number"
           v-model="localMinBeds"
           class="filter-input"
@@ -92,8 +108,12 @@
       <hr class="filter-divider" />
 
       <div class="filter-section">
-        <div class="filter-title">MAX BEDS</div>
+        <button class="section-toggle" type="button" @click="toggleSection('maxBeds')">
+          <span class="filter-title">MAX BEDS</span>
+          <span class="section-toggle-icon" :class="{ open: sectionOpen.maxBeds }"></span>
+        </button>
         <input
+          v-show="sectionOpen.maxBeds"
           type="number"
           v-model="localMaxBeds"
           class="filter-input"
@@ -136,10 +156,39 @@ const localMaxBeds = ref(props.maxBeds)
 const localDistance = ref(props.distance)
 const localDistanceFilterEnabled = ref(props.distanceFilterEnabled)
 const filtersOpen = ref(window.innerWidth > 768)
+const sectionOpen = ref({
+  careType: false,
+  distance: false,
+  locationType: false,
+  minBeds: false,
+  maxBeds: false
+})
+
+const careTypeDescriptions = {
+  Residential:
+    'Permanent live-in aged care for older people who can no longer live independently. Includes accommodation, meals, personal care, and 24/7 nursing support.',
+  'Transition Care':
+    'Short-term care after a hospital stay to help older people recover, regain confidence, and decide whether they can return home or need longer-term care.',
+  'Short-Term Restorative Care (STRC)':
+    'Time-limited restorative care focused on improving independence and daily function so older people can continue living at home.',
+  'Multi-Purpose Service':
+    'Flexible care services for regional and remote communities where aged care, health care, and community support may be delivered together.',
+  'National Aboriginal and Torres Strait Islander Aged Care Program':
+    'Culturally appropriate aged care for Aboriginal and Torres Strait Islander older people, often delivered by community-based providers.'
+}
 
 function toggleFilters() {
   if (window.innerWidth <= 768) {
     filtersOpen.value = !filtersOpen.value
+  }
+}
+
+function toggleSection(section) {
+  const nextValue = !sectionOpen.value[section]
+  sectionOpen.value[section] = nextValue
+
+  if (section === 'distance') {
+    localDistanceFilterEnabled.value = nextValue
   }
 }
 
@@ -154,6 +203,10 @@ function toggleCareType(value) {
   localCareTypes.value = localCareTypes.value.includes(value)
     ? localCareTypes.value.filter(item => item !== value)
     : [...localCareTypes.value, value]
+}
+
+function getCareTypeDescription(value) {
+  return careTypeDescriptions[value] || 'Care services available under this care type.'
 }
 
 function toNullableNumber(value) {
@@ -251,13 +304,42 @@ const rangeStyle = computed(() => {
   text-align: left;
 }
 
+.section-toggle {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+
+.section-toggle-icon {
+  width: 11px;
+  height: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1.75px solid #22332e;
+  border-bottom: 1.75px solid #22332e;
+  transform: rotate(45deg);
+  transition: transform 0.16s ease;
+}
+
+.section-toggle-icon.open {
+  transform: rotate(225deg);
+}
+
 .filter-option {
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-columns: 24px minmax(0, 1fr) 20px;
   align-items: center;
   column-gap: 14px;
-  min-height: 54px;
-  padding: 0 12px;
+  min-height: 44px;
+  padding: 0 10px;
   border-radius: 8px;
   border: 1px solid transparent;
   cursor: pointer;
@@ -291,14 +373,79 @@ const rangeStyle = computed(() => {
 }
 
 .option-text {
-  font-size: 16px;
-  line-height: 1.4;
+  font-size: 15px;
+  line-height: 1.3;
   font-weight: 500;
   color: #40534d;
   text-align: left;
   white-space: normal;
   word-break: normal;
   overflow-wrap: anywhere;
+}
+
+.care-info {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #6f9181;
+  border-radius: 999px;
+  color: #4f6f67;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: help;
+  background: #ffffff;
+}
+
+.care-info:hover,
+.care-info:focus {
+  background: #edf5ef;
+  outline: none;
+}
+
+.care-tooltip {
+  position: absolute;
+  left: calc(100% + 14px);
+  top: 50%;
+  z-index: 30;
+  width: 460px;
+  max-width: min(460px, calc(100vw - 48px));
+  padding: 16px 18px;
+  border: 1px solid #e3ded5;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 8px 22px rgba(31, 45, 42, 0.16);
+  color: #2b3633;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.7;
+  text-align: left;
+  white-space: normal;
+  transform: translateY(-50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.care-tooltip::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+  border-left: 1px solid #e3ded5;
+  border-bottom: 1px solid #e3ded5;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.care-info:hover .care-tooltip,
+.care-info:focus .care-tooltip {
+  opacity: 1;
 }
 
 .funding-option { grid-template-columns: 28px 1fr; }
@@ -446,5 +593,20 @@ const rangeStyle = computed(() => {
 @media (max-width: 768px) {
   .toggle-icon { display: inline; }
   .filters-body.collapsed { display: none; }
+
+  .care-tooltip {
+    left: auto;
+    right: 0;
+    top: calc(100% + 10px);
+    width: min(280px, calc(100vw - 48px));
+    transform: none;
+  }
+
+  .care-tooltip::before {
+    left: auto;
+    right: 5px;
+    top: -7px;
+    transform: rotate(135deg);
+  }
 }
 </style>

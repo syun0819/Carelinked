@@ -27,7 +27,10 @@
           class="search-suggestion"
           @mousedown.prevent="selectSuggestion(suggestion)"
         >
-          <span class="suggestion-value">{{ suggestion.value }}</span>
+          <span class="suggestion-main">
+            <span class="suggestion-icon" aria-hidden="true">{{ getSuggestionIcon(suggestion.type) }}</span>
+            <span class="suggestion-value">{{ suggestion.value }}</span>
+          </span>
           <span class="suggestion-type">{{ suggestion.type }}</span>
         </li>
       </ul>
@@ -207,6 +210,15 @@ function getSearchParamType(type) {
   return 'keyword'
 }
 
+function getSuggestionIcon(type) {
+  const normalizedType = String(type).toLowerCase()
+  if (normalizedType === 'facility') return '⌂'
+  if (normalizedType === 'suburb') return '⌖'
+  if (normalizedType === 'postcode') return '#'
+  if (normalizedType === 'region') return '□'
+  return '⌕'
+}
+
 function handleSearch() {
   clearTimeout(autocompleteTimer)
   if (autocompleteController) {
@@ -241,6 +253,8 @@ function hideSuggestions() {
   padding: 0 24px;
   display: flex;
   justify-content: center;
+  position: relative;
+  z-index: 2000;
 }
 
 .search-bar {
@@ -294,7 +308,7 @@ function hideSuggestions() {
   top: calc(100% + 6px);
   left: 0;
   right: 0;
-  z-index: 20;
+  z-index: 3000;
   margin: 0;
   padding: 6px 0;
   list-style: none;
@@ -318,6 +332,27 @@ function hideSuggestions() {
 
 .search-suggestion:hover {
   background: #f7f4ee;
+}
+
+.suggestion-main {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.suggestion-icon {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #dfece5;
+  color: #34594f;
+  font-size: 17px;
+  font-weight: 800;
 }
 
 .suggestion-value {
