@@ -4,7 +4,7 @@
       <img :src="logo" alt="CareLink logo" class="logo-img" />
       <div class="logo-text">
         <div class="brand">CareLink</div>
-        <div class="sub">VICTORIA</div>
+        <div class="sub">AUSTRALIA</div>
       </div>
     </router-link>
 
@@ -15,7 +15,7 @@
         Find Care
       </router-link>
       <button class="nav-item nav-link-btn" @click="goToSection('#how-it-works')">
-        How It Works
+        Guide
       </button>
     </nav>
 

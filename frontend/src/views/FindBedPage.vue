@@ -42,12 +42,7 @@
         :care-type-options="careTypeOptions"
         :min-distance="minDistance"
         :max-distance="maxDistance"
-        @update:selectedCareTypes="selectedCareTypes = $event"
-        @update:selectedRemoteness="selectedRemoteness = $event"
-        @update:minBeds="minBeds = $event"
-        @update:maxBeds="maxBeds = $event"
-        @update:distance="distance = $event"
-        @update:distanceFilterEnabled="distanceFilterEnabled = $event"
+        @apply="applyFilters"
         @reset="resetFilters"
       />
 
@@ -256,6 +251,15 @@ function resetFilters() {
   syncStateToQuery()
 }
 
+function applyFilters(filters) {
+  selectedCareTypes.value = filters.selectedCareTypes
+  selectedRemoteness.value = filters.selectedRemoteness
+  minBeds.value = filters.minBeds
+  maxBeds.value = filters.maxBeds
+  distance.value = filters.distance
+  distanceFilterEnabled.value = filters.distanceFilterEnabled
+}
+
 function getDistanceValue(facility) {
   return facility.distanceKm ?? facility.distance ?? Number.MAX_SAFE_INTEGER
 }
@@ -265,7 +269,13 @@ const filteredFacilities = computed(() => facilities.value)
 watch(
   () => route.query.careType,
   (newCareType) => {
-    selectedCareTypes.value = normalizeCareTypes(newCareType)
+    const nextCareTypes = normalizeCareTypes(newCareType)
+
+    if (arraysEqual(nextCareTypes, selectedCareTypes.value)) {
+      return
+    }
+
+    selectedCareTypes.value = nextCareTypes
     currentPage.value = 1
   },
   { immediate: true }
@@ -345,6 +355,11 @@ function normalizeSearchType(value) {
   return ''
 }
 
+function arraysEqual(a, b) {
+  if (a.length !== b.length) return false
+  return a.every((item, index) => item === b[index])
+}
+
 function normalizeCareTypes(value) {
   if (!value) return []
 
@@ -378,8 +393,21 @@ onMounted(async () => {
 .search-page {
   background: #f7f4ee;
   min-height: 100vh;
-  padding: 0px 0 60px;
+  padding: 0;
   color: #1f2d2a;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.search-top {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto 30px;
+  padding: 0 16px;
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .page-title {
@@ -409,11 +437,12 @@ onMounted(async () => {
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 16px;
   display: grid;
   grid-template-columns: 350px 1fr;
   gap: 26px;
   align-items: start;
+  box-sizing: border-box;
 }
 
 .results-main {

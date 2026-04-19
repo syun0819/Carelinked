@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import FindBedPage from '../views/FindBedPage.vue'
 import FacilityDetailPage from '../views/FacilityDetailPage.vue'
+import PasswordPage from '../views/PasswordPage.vue'
 
 const routes = [
   { path: '/', component: Home },
@@ -11,10 +12,32 @@ const routes = [
     name: 'FacilityDetail',
     component: FacilityDetailPage,
     props: true
-  }
+  },
+  { path: '/password', component: PasswordPage }
 ]
 
-export default createRouter({
+function scrollToHashTarget(hash, behavior = 'auto') {
+  const target = document.querySelector(hash)
+  if (!target) return
+
+  const top = target.getBoundingClientRect().top + window.scrollY - 110
+  window.scrollTo({
+    top,
+    behavior
+  })
+}
+
+function keepHashTargetAligned(hash) {
+  const delays = [0, 100, 300, 700, 1200, 2000]
+
+  delays.forEach((delay, index) => {
+    setTimeout(() => {
+      scrollToHashTarget(hash, index === delays.length - 1 ? 'smooth' : 'auto')
+    }, delay)
+  })
+}
+
+const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
@@ -23,13 +46,26 @@ export default createRouter({
     }
 
     if (to.hash) {
-      return {
-        el: to.hash,
-        top: 110,
-        behavior: 'smooth'
-      }
+      return false
     }
 
     return { top: 0 }
   }
 })
+
+router.afterEach((to) => {
+  if (to.hash) {
+    keepHashTargetAligned(to.hash)
+  }
+})
+
+router.beforeEach((to, _from, next) => {
+  const isAuthenticated = localStorage.getItem('authenticated')
+  if (!isAuthenticated && to.path !== '/password') {
+    next('/password')
+  } else {
+    next()
+  }
+})
+
+export default router

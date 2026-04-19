@@ -268,7 +268,7 @@ const availabilityClass = computed(() => {
 }
 
 .availability-potential {
-  color: #c9a200;
+color: #c9a200;
 }
 
 .availability-constrained {

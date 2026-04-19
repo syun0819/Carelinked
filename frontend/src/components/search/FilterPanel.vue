@@ -1,10 +1,10 @@
 <template>
   <aside class="filters-panel">
-    <div class="filters-header">
+    <div class="filters-header" @click="toggleFilters">
       <h2>Filters</h2>
       <div class="filters-header-right">
         <button class="reset-btn" @click.stop="$emit('reset')">Reset all</button>
-        <span class="toggle-icon" @click="toggleFilters">{{ filtersOpen ? '▲' : '▼' }}</span>
+        <span class="toggle-icon">{{ filtersOpen ? '▲' : '▼' }}</span>
       </div>
     </div>
 
@@ -15,15 +15,15 @@
           v-for="item in careTypeOptions"
           :key="item.value"
           class="filter-option"
-          :class="{ selected: selectedCareTypes.includes(item.value) }"
+          :class="{ selected: localCareTypes.includes(item.value) }"
         >
           <input
             type="checkbox"
-            :checked="selectedCareTypes.includes(item.value)"
+            :checked="localCareTypes.includes(item.value)"
             @change="toggleCareType(item.value)"
           />
           <span class="custom-checkbox">
-            <span v-if="selectedCareTypes.includes(item.value)">✓</span>
+            <span v-if="localCareTypes.includes(item.value)">✓</span>
           </span>
           <span class="option-text">{{ item.label }}</span>
         </label>
@@ -37,16 +37,16 @@
           <label class="toggle-switch">
             <input
               type="checkbox"
-              :checked="distanceFilterEnabled"
-              @change="$emit('update:distanceFilterEnabled', $event.target.checked)"
+              :checked="localDistanceFilterEnabled"
+              @change="localDistanceFilterEnabled = $event.target.checked"
             />
             <span class="toggle-track"></span>
           </label>
         </div>
-        <template v-if="distanceFilterEnabled">
+        <template v-if="localDistanceFilterEnabled">
           <div class="distance-top">
             <span>Within</span>
-            <strong>{{ distance }} km</strong>
+            <strong>{{ localDistance }} km</strong>
           </div>
           <div class="range-wrap">
             <input
@@ -54,9 +54,9 @@
               type="range"
               :min="minDistance"
               :max="maxDistance"
-              :value="distance"
+              :value="localDistance"
               :style="rangeStyle"
-              @input="$emit('update:distance', Number($event.target.value))"
+              @input="localDistance = Number($event.target.value)"
             />
           </div>
           <p v-if="distanceWarning" class="distance-warning-hint">{{ distanceWarning }}</p>
@@ -100,6 +100,10 @@
           placeholder="e.g. 100"
         />
       </div>
+
+      <button class="apply-btn" @click="applyFilters">
+        Apply filters
+      </button>
     </div>
   </aside>
 </template>
@@ -121,18 +125,16 @@ const props = defineProps({
 })
 
 const emit = defineEmits([
-  'update:selectedCareTypes',
-  'update:distance',
-  'update:selectedRemoteness',
-  'update:minBeds',
-  'update:maxBeds',
-  'update:distanceFilterEnabled',
+  'apply',
   'reset'
 ])
 
+const localCareTypes = ref([...props.selectedCareTypes])
 const localRemoteness = ref(props.selectedRemoteness || '')
 const localMinBeds = ref(props.minBeds)
 const localMaxBeds = ref(props.maxBeds)
+const localDistance = ref(props.distance)
+const localDistanceFilterEnabled = ref(props.distanceFilterEnabled)
 const filtersOpen = ref(window.innerWidth > 768)
 
 function toggleFilters() {
@@ -141,23 +143,37 @@ function toggleFilters() {
   }
 }
 
-watch(localRemoteness, (val) => emit('update:selectedRemoteness', val))
-watch(localMinBeds, (val) => emit('update:minBeds', val === '' ? null : Number(val)))
-watch(localMaxBeds, (val) => emit('update:maxBeds', val === '' ? null : Number(val)))
+watch(() => props.selectedCareTypes, (val) => { localCareTypes.value = [...val] })
 watch(() => props.selectedRemoteness, (val) => { localRemoteness.value = val || '' })
 watch(() => props.minBeds, (val) => { localMinBeds.value = val })
 watch(() => props.maxBeds, (val) => { localMaxBeds.value = val })
+watch(() => props.distance, (val) => { localDistance.value = val })
+watch(() => props.distanceFilterEnabled, (val) => { localDistanceFilterEnabled.value = val })
 
 function toggleCareType(value) {
-  const next = props.selectedCareTypes.includes(value)
-    ? props.selectedCareTypes.filter(item => item !== value)
-    : [...props.selectedCareTypes, value]
-  emit('update:selectedCareTypes', next)
+  localCareTypes.value = localCareTypes.value.includes(value)
+    ? localCareTypes.value.filter(item => item !== value)
+    : [...localCareTypes.value, value]
+}
+
+function toNullableNumber(value) {
+  return value === '' || value == null ? null : Number(value)
+}
+
+function applyFilters() {
+  emit('apply', {
+    selectedCareTypes: [...localCareTypes.value],
+    selectedRemoteness: localRemoteness.value,
+    minBeds: toNullableNumber(localMinBeds.value),
+    maxBeds: toNullableNumber(localMaxBeds.value),
+    distance: localDistance.value,
+    distanceFilterEnabled: localDistanceFilterEnabled.value
+  })
 }
 
 const rangeStyle = computed(() => {
   const percentage =
-    ((props.distance - props.minDistance) / (props.maxDistance - props.minDistance)) * 100
+    ((localDistance.value - props.minDistance) / (props.maxDistance - props.minDistance)) * 100
   return {
     background: `linear-gradient(to right, #4f7d6f 0%, #4f7d6f ${percentage}%, #dbd8d4 ${percentage}%, #dbd8d4 100%)`
   }
@@ -396,6 +412,23 @@ const rangeStyle = computed(() => {
 }
 
 .filter-input::placeholder { color: #a8b0ab; }
+
+.apply-btn {
+  width: 100%;
+  border: none;
+  border-radius: 6px;
+  padding: 11px 16px;
+  background: #4f6f67;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-sans);
+}
+
+.apply-btn:hover {
+  background: #3f5c55;
+}
 
 .filter-select {
   appearance: none;

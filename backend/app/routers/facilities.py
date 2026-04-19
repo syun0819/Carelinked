@@ -1,7 +1,9 @@
 import re
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -16,6 +18,7 @@ from app.services.facility_service import (
 from app.services import location_service
 
 router = APIRouter(prefix="/api/v1/facilities", tags=["facilities"])
+limiter = Limiter(key_func=get_remote_address)
 
 VALID_SORT_OPTIONS = {"name", "beds_desc", "beds_asc", "distance"}
 VALID_REMOTENESS = {"Major Cities", "Inner Regional", "Outer Regional", "Remote", "Very Remote"}
@@ -56,7 +59,9 @@ def validate_postcode(postcode: Optional[str]) -> Optional[str]:
 
 
 @router.get("/search", response_model=FacilitySearchResponse)
+@limiter.limit("30/minute")
 async def search(
+    request: Request,
     suburb: Optional[str] = Query(None),
     postcode: Optional[str] = Query(None),
     region: Optional[str] = Query(None),
@@ -73,32 +78,21 @@ async def search(
     user_lng: Optional[float] = Query(None, ge=-180, le=180),
     db: AsyncSession = Depends(get_db),
 ):
-    # Validate text inputs
     suburb = validate_text_input(suburb, "Suburb")
     region = validate_text_input(region, "Region")
     keyword = validate_text_input(keyword, "Keyword")
     postcode = validate_postcode(postcode)
 
-<<<<<<< Updated upstream
-    # Validate sort_by
-=======
-    if sort_by == "closest":
+if sort_by == "closest":
         sort_by = "distance"
->>>>>>> Stashed changes
     if sort_by and sort_by not in VALID_SORT_OPTIONS:
         raise HTTPException(status_code=400, detail=f"Invalid sort_by value. Must be one of: {', '.join(VALID_SORT_OPTIONS)}")
-
-    # Validate remoteness
     if abs_remoteness and abs_remoteness not in VALID_REMOTENESS:
         raise HTTPException(status_code=400, detail=f"Invalid remoteness value.")
-
-    # Validate care types
     if care_type:
         for ct in care_type:
             if ct not in VALID_CARE_TYPES:
                 raise HTTPException(status_code=400, detail=f"Invalid care type: {ct}")
-
-    # Validate min/max beds
     if min_beds is not None and max_beds is not None and min_beds > max_beds:
         raise HTTPException(status_code=400, detail="min_beds cannot be greater than max_beds.")
 
@@ -160,12 +154,10 @@ async def get_map(
     max_distance_km: Optional[float] = Query(None, ge=0, le=500),
     db: AsyncSession = Depends(get_db),
 ):
-    # Validate text inputs
     suburb = validate_text_input(suburb, "Suburb")
     region = validate_text_input(region, "Region")
     postcode = validate_postcode(postcode)
 
-    # Validate care types
     if care_type:
         for ct in care_type:
             if ct not in VALID_CARE_TYPES:

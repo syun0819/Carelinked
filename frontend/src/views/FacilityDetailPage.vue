@@ -24,7 +24,6 @@
               <h1 class="facility-title">{{ facility.name }}</h1>
               <span class="recommend-badge">Recommended</span>
             </div>
-
             <p class="facility-address">📍 {{ facility.address }}</p>
             <div class="care-tag-wrapper">
               <span class="care-tag">{{ facility.careType }}</span>
@@ -36,7 +35,6 @@
               <div class="summary-value availability-text">{{ facility.bedAvailability }}</div>
               <div class="summary-label">BED AVAILABILITY ESTIMATION</div>
             </div>
-
             <div class="summary-card">
               <div class="summary-value">{{ facility.totalBeds }}</div>
               <div class="summary-label">TOTAL BEDS</div>
@@ -45,7 +43,6 @@
 
           <div class="info-card">
             <h2 class="section-title">Aged Care Details</h2>
-
             <div class="detail-table">
               <div class="detail-row">
                 <span class="detail-label">Physical Suburb</span>
@@ -73,43 +70,27 @@
               </div>
             </div>
           </div>
-
-          <div class="similar-section">
-            <h2 class="section-title">Similar Facilities Nearby</h2>
-            <div class="similar-grid">
-              <FacilityCard
-                v-for="item in similarFacilities"
-                :key="item.id"
-                :facility="item"
-              />
-            </div>
-          </div>
         </div>
 
         <aside class="detail-sidebar">
           <div class="sidebar-card">
             <h3 class="sidebar-title">Location</h3>
-
             <div v-if="hasCoordinates" ref="mapEl" class="detail-map"></div>
             <div v-else class="map-placeholder">Location unavailable</div>
-
             <button class="sidebar-btn" @click="goToMapSearch">Find with Map</button>
           </div>
 
           <div class="sidebar-card provider-card">
             <h3 class="sidebar-title">About the Provider</h3>
-
             <div class="provider-top">
               <p class="provider-name">{{ facility.provider }}</p>
               <p class="provider-sub">{{ facility.providerType }}</p>
             </div>
-
             <div class="provider-info">
               <div class="provider-row">
                 <span class="provider-label">ABS Remoteness</span>
                 <span class="provider-value">{{ facility.remoteness }}</span>
               </div>
-
               <div class="provider-row">
                 <span class="provider-label">Aged Care Planning Region (ACPR)</span>
                 <span class="provider-value">{{ facility.acpr }}</span>
@@ -124,6 +105,17 @@
             <button class="action-btn" @click="goBack">Back to Search Results</button>
           </div>
         </aside>
+
+        <div class="similar-section">
+          <h2 class="section-title">Similar Facilities Nearby</h2>
+          <div class="similar-grid">
+            <FacilityCard
+              v-for="item in similarFacilities"
+              :key="item.id"
+              :facility="item"
+            />
+          </div>
+        </div>
       </div>
     </div>
 
@@ -206,7 +198,6 @@ async function fetchFacilityDetail() {
 
   try {
     const id = route.params.id
-
     const detailData = await getFacilityDetail(id)
     facility.value = mapFacilityDetail(detailData)
 
@@ -236,12 +227,8 @@ onBeforeUnmount(() => {
 
 const goBack = () => {
   const hasSearchState = Object.keys(route.query).length > 0
-
   if (hasSearchState) {
-    router.push({
-      path: '/find-bed',
-      query: route.query
-    })
+    router.push({ path: '/find-bed', query: route.query })
   } else {
     router.back()
   }
@@ -255,16 +242,10 @@ const goToMapSearch = () => {
   if (facility.value?.suburb) {
     router.push({
       path: '/find-bed',
-      query: {
-        ...route.query,
-        suburb: facility.value.suburb
-      }
+      query: { ...route.query, suburb: facility.value.suburb }
     })
   } else {
-    router.push({
-      path: '/find-bed',
-      query: route.query
-    })
+    router.push({ path: '/find-bed', query: route.query })
   }
 }
 
@@ -284,8 +265,9 @@ const copyAddress = async () => {
 .detail-page {
   background: #f7f4ee;
   min-height: 100vh;
-  padding: 0 0 0px;
+  padding: 0;
   color: #22332e;
+  overflow-x: hidden;
 }
 
 .detail-container {
@@ -317,15 +299,31 @@ const copyAddress = async () => {
 .detail-layout {
   display: grid;
   grid-template-columns: minmax(0, 2.15fr) minmax(320px, 1fr);
+  grid-template-rows: auto auto;
   gap: 24px;
   align-items: start;
 }
 
-.detail-main,
+.detail-main {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  grid-column: 1;
+  grid-row: 1;
+}
+
 .detail-sidebar {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.similar-section {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin-top: 2px;
 }
 
 .detail-image-wrapper {
@@ -392,7 +390,6 @@ const copyAddress = async () => {
   display: inline-flex;
   align-items: center;
   width: fit-content;
-  align-self: flex-start;
   padding: 2px 10px;
   border-radius: 999px;
   background: #e6f0e8;
@@ -416,7 +413,7 @@ const copyAddress = async () => {
   text-align: center;
   display: flex;
   flex-direction: column;
-  align-items: center; 
+  align-items: center;
   justify-content: center;
 }
 
@@ -514,7 +511,6 @@ const copyAddress = async () => {
   margin-bottom: 14px;
 }
 
-
 .sidebar-btn {
   width: 138px;
   height: 42px;
@@ -588,12 +584,6 @@ const copyAddress = async () => {
   text-align: right;
 }
 
-.action-card .sidebar-title,
-.action-section-title {
-  padding-bottom: 14px;
-  border-bottom: 1px solid #e4ddd3;
-}
-
 .action-btn {
   width: 100%;
   background: #fff;
@@ -604,10 +594,6 @@ const copyAddress = async () => {
   cursor: pointer;
   font-size: 14px;
   margin-top: 12px;
-}
-
-.similar-section {
-  margin-top: 2px;
 }
 
 .similar-section .section-title {
@@ -623,7 +609,23 @@ const copyAddress = async () => {
 
 @media (max-width: 1100px) {
   .detail-layout {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .detail-main {
+    order: 1;
+    width: 100%;
+  }
+
+  .detail-sidebar {
+    order: 2;
+    width: 100%;
+  }
+
+  .similar-section {
+    order: 3;
+    width: 100%;
   }
 
   .similar-grid {
@@ -633,15 +635,15 @@ const copyAddress = async () => {
 
 @media (max-width: 768px) {
   .detail-container {
-    padding: 16px;
+    padding: 80px 16px 16px;
   }
 
   .detail-image {
-    height: 250px;
+    height: 220px;
   }
 
   .facility-title {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   .detail-row,
@@ -652,6 +654,16 @@ const copyAddress = async () => {
   .detail-value,
   .provider-value {
     text-align: left;
+  }
+
+  .summary-cards {
+    flex-wrap: wrap;
+  }
+
+  .summary-card {
+    flex: 1;
+    min-width: 120px;
+    max-width: 100%;
   }
 }
 </style>

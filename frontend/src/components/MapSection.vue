@@ -108,10 +108,9 @@ function buildParams() {
 }
 
 function getMarkerColor(availability) {
-  if (availability === 'Likely Available') return '#4f7a62'
+ if (availability === 'Likely Available') return '#4f7a62'
   if (availability === 'Potentially Available') return '#f5c518'
-  if (availability === 'Constrained by Market') return '#d9822b'
-  if (availability === 'Constrained by Size') return '#d9822b'
+  if (availability === 'Constrained by Market' || availability === 'Constrained by Size') return '#d9822b'
   if (availability === 'Highly Constrained') return '#d64545'
   if (availability === 'Does Not Provide This Service') return '#9e9e9e'
   return '#9e9e9e'
