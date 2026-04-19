@@ -14,15 +14,13 @@ async def get_location_center(
     if postcode:
         query = (
             select(LocationGeo)
-            .where(LocationGeo.postcode == postcode)
-            .where(LocationGeo.state == "VIC")
+            .where(LocationGeo.postcode == postcode.strip())
             .limit(1)
         )
     elif suburb:
         query = (
             select(LocationGeo)
-            .where(LocationGeo.suburb.ilike(f"%{suburb}%"))
-            .where(LocationGeo.state == "VIC")
+            .where(LocationGeo.suburb.ilike(f"%{suburb.strip()}%"))
             .limit(1)
         )
     else:

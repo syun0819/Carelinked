@@ -62,12 +62,13 @@
           @update:sortBy="sortBy = $event"
         />
 
-        <div v-if="loading" class="status-message">Loading facilities...</div>
-        <div v-else-if="error" class="status-message error">{{ error }}</div>
-        <div v-else-if="activeView === 'list' && totalResults === 0 && searchMessage" class="status-message">{{ searchMessage }}</div>
+        <div v-if="error" class="status-message error">{{ error }}</div>
+        <div v-else-if="activeView === 'list' && !loading && totalResults === 0 && searchMessage" class="status-message">{{ searchMessage }}</div>
+
+        <FacilityCardSkeleton v-if="loading && activeView === 'list'" />
 
         <ListSection
-          v-if="activeView === 'list'"
+          v-else-if="activeView === 'list'"
           :facilities="filteredFacilities"
         />
 
@@ -110,6 +111,7 @@ import SearchBar from '../components/search/SearchBar.vue'
 import FilterPanel from '../components/search/FilterPanel.vue'
 import ResultsHeader from '../components/search/ResultsHeader.vue'
 import ListSection from '../components/search/ListSection.vue'
+import FacilityCardSkeleton from '../components/FacilityCardSkeleton.vue'
 import MapSection from '../components/MapSection.vue'
 import PaginationBar from '../components/search/PaginationBar.vue'
 import FooterSection from '../components/FooterSection.vue'

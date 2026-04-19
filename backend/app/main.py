@@ -27,7 +27,15 @@ app.include_router(autocomplete.router)
 
 app.add_middleware(
     CORSMiddleware,
+<<<<<<< Updated upstream
     allow_origins=["*"],
+=======
+    allow_origins=[
+        "http://localhost:5175",
+        "https://fit-5120-te-04-main-project.vercel.app",
+        "https://www.carelink.page"
+    ],
+>>>>>>> Stashed changes
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -2,7 +2,15 @@
   <div class="map-section">
     <div v-if="loading" class="map-state">Loading map...</div>
     <div v-else-if="error" class="map-state error">{{ error }}</div>
-    <div v-show="!loading && !error" ref="mapEl" class="map-container"></div>
+    <div v-show="!loading && !error" class="map-wrapper">
+      <div
+        v-if="!loading && !error && markers.length === 0 && hasSearched"
+        class="map-no-results"
+      >
+        No facilities found. Try adjusting filters.
+      </div>
+      <div ref="mapEl" class="map-container"></div>
+    </div>
   </div>
 </template>
 
@@ -46,6 +54,7 @@ const props = defineProps({
 const mapEl = ref(null)
 const loading = ref(false)
 const error = ref('')
+const hasSearched = ref(false)
 const markers = ref([])
 
 let map = null
@@ -99,10 +108,30 @@ function buildParams() {
 }
 
 function getMarkerColor(availability) {
+<<<<<<< Updated upstream
   if (availability === 'High') return '#4f7a62'
   if (availability === 'Medium') return '#d9822b'
   if (availability === 'Low') return '#d64545'
   return '#7a6fd6'
+=======
+  const colorMap = {
+    'Likely Available': '#4f7a62',
+    '1': '#4f7a62',
+
+    'Potentially Available': '#f2c94c',
+    '2': '#f2c94c',
+
+    'Constrained by Market': '#d9822b',
+    'Constrained by Size': '#d9822b',
+    '3': '#d9822b',
+    '4': '#d9822b',
+
+    'Highly Constrained': '#d64545',
+    '5': '#d64545'
+  }
+
+  return colorMap[availability] || '#7a6fd6'
+>>>>>>> Stashed changes
 }
 
 function createCustomIcon(color) {
@@ -286,6 +315,7 @@ async function fetchMarkers() {
     }
 
     markers.value = rawResults.map(mapFacilityMarker)
+    hasSearched.value = params.suburb || params.postcode || params.region ? true : false
 
     emit('update:count', markers.value.length)
 
@@ -348,6 +378,28 @@ onBeforeUnmount(() => {
 <style scoped>
 .map-section {
   width: 100%;
+}
+
+.map-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.map-no-results {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #ddd8cf;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 14px;
+  color: #5e706a;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .map-container {

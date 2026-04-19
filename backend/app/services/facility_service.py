@@ -37,16 +37,11 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 
 def get_ml_availability_group(
     ml_record: Optional[FacilityAvailabilityML],
-    care_type: Optional[str],
+    care_type: Optional[str] = None,  # noqa: ARG001
 ) -> Optional[str]:
     if ml_record is None:
         return None
-    if care_type == "Home Care":
-        label = ml_record.home_care_label_name
-    elif care_type in ("Short-Term Restorative Care (STRC)", "Transition Care"):
-        label = ml_record.restorative_care_label_name
-    else:
-        label = ml_record.residential_label_name
+    label = ml_record.residential_label_name
     return label if label else None
 
 
@@ -287,7 +282,14 @@ _CARE_TYPE_SORT_FIELD = {
 }
 
 
-async def get_recommended_facilities(db: AsyncSession) -> List[FacilityCard]:
+async def get_recommended_facilities(
+    db: AsyncSession,
+    user_lat: Optional[float] = None,
+    user_lng: Optional[float] = None,
+) -> List[FacilityCard]:
+    if user_lat is not None and user_lng is not None:
+        return await get_nearest_facilities(db, user_lat, user_lng, limit=6)
+
     results: List[FacilityCard] = []
     for care_type, sort_field in _CARE_TYPE_SORT_FIELD.items():
         query = (

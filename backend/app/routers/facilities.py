@@ -9,7 +9,6 @@ from app.schemas.aged_care import FacilityCard, FacilityDetail, FacilityMapRespo
 from app.services.facility_service import (
     get_facilities_for_map,
     get_facility_by_id,
-    get_nearest_facilities,
     get_recommended_facilities,
     get_similar_facilities,
     search_facilities,
@@ -18,7 +17,7 @@ from app.services import location_service
 
 router = APIRouter(prefix="/api/v1/facilities", tags=["facilities"])
 
-VALID_SORT_OPTIONS = {"name", "beds_desc", "beds_asc", "distance", "closest"}
+VALID_SORT_OPTIONS = {"name", "beds_desc", "beds_asc", "distance"}
 VALID_REMOTENESS = {"Major Cities", "Inner Regional", "Outer Regional", "Remote", "Very Remote"}
 VALID_CARE_TYPES = {
     "Residential",
@@ -80,7 +79,12 @@ async def search(
     keyword = validate_text_input(keyword, "Keyword")
     postcode = validate_postcode(postcode)
 
+<<<<<<< Updated upstream
     # Validate sort_by
+=======
+    if sort_by == "closest":
+        sort_by = "distance"
+>>>>>>> Stashed changes
     if sort_by and sort_by not in VALID_SORT_OPTIONS:
         raise HTTPException(status_code=400, detail=f"Invalid sort_by value. Must be one of: {', '.join(VALID_SORT_OPTIONS)}")
 
@@ -141,13 +145,9 @@ async def search(
 async def recommended(
     user_lat: Optional[float] = Query(None, ge=-90, le=90),
     user_lng: Optional[float] = Query(None, ge=-180, le=180),
-    limit: int = Query(6, ge=1, le=50),
     db: AsyncSession = Depends(get_db),
 ):
-    if user_lat is not None and user_lng is not None:
-        results = await get_nearest_facilities(db, user_lat, user_lng, limit=limit)
-    else:
-        results = await get_recommended_facilities(db)
+    results = await get_recommended_facilities(db, user_lat=user_lat, user_lng=user_lng)
     return FacilitySearchResponse(total=len(results), results=results)
 
 
