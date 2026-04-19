@@ -2,7 +2,15 @@
   <div class="map-section">
     <div v-if="loading" class="map-state">Loading map...</div>
     <div v-else-if="error" class="map-state error">{{ error }}</div>
-    <div v-show="!loading && !error" ref="mapEl" class="map-container"></div>
+    <div v-show="!loading && !error" class="map-wrapper">
+      <div
+        v-if="!loading && !error && markers.length === 0 && hasSearched"
+        class="map-no-results"
+      >
+        No facilities found. Try adjusting filters.
+      </div>
+      <div ref="mapEl" class="map-container"></div>
+    </div>
   </div>
 </template>
 
@@ -46,6 +54,7 @@ const props = defineProps({
 const mapEl = ref(null)
 const loading = ref(false)
 const error = ref('')
+const hasSearched = ref(false)
 const markers = ref([])
 
 let map = null
@@ -99,16 +108,12 @@ function buildParams() {
 }
 
 function getMarkerColor(availability) {
-  if (availability === 'Likely Available' || availability === '1') return '#4f7a62'
-  if (availability === 'Potentially Available' || availability === '2') return '#f2c94c'
-  if (
-    availability === 'Constrained by Market' ||
-    availability === 'Constrained by Size' ||
-    availability === '3' ||
-    availability === '4'
-  ) return '#d9822b'
-  if (availability === 'Highly Constrained' || availability === '5') return '#d64545'
-  return '#7a6fd6'
+ if (availability === 'Likely Available') return '#4f7a62'
+  if (availability === 'Potentially Available') return '#f5c518'
+  if (availability === 'Constrained by Market' || availability === 'Constrained by Size') return '#d9822b'
+  if (availability === 'Highly Constrained') return '#d64545'
+  if (availability === 'Does Not Provide This Service') return '#9e9e9e'
+  return '#9e9e9e'
 }
 
 function createCustomIcon(color) {
@@ -292,6 +297,7 @@ async function fetchMarkers() {
     }
 
     markers.value = rawResults.map(mapFacilityMarker)
+    hasSearched.value = params.suburb || params.postcode || params.region ? true : false
 
     emit('update:count', markers.value.length)
 
@@ -354,6 +360,28 @@ onBeforeUnmount(() => {
 <style scoped>
 .map-section {
   width: 100%;
+}
+
+.map-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.map-no-results {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #ddd8cf;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 14px;
+  color: #5e706a;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .map-container {

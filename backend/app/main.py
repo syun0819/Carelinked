@@ -32,11 +32,19 @@ app.include_router(autocomplete.router)
 
 app.add_middleware(
     CORSMiddleware,
+app.add_middleware(
+    CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
         "https://fit-5120-te-04-main-project.vercel.app",
         "https://www.carelink.page"
     ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

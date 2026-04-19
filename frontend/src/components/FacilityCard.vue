@@ -106,23 +106,12 @@ const careTypeClass = computed(() => {
 })
 
 const availabilityClass = computed(() => {
-  if (availabilityLevel.value === 'Likely Available' || availabilityLevel.value === '1') {
-    return 'availability-likely'
-  }
-  if (availabilityLevel.value === 'Potentially Available' || availabilityLevel.value === '2') {
-    return 'availability-potential'
-  }
-  if (
-    availabilityLevel.value === 'Constrained by Market' ||
-    availabilityLevel.value === 'Constrained by Size' ||
-    availabilityLevel.value === '3' ||
-    availabilityLevel.value === '4'
-  ) {
-    return 'availability-constrained'
-  }
-  if (availabilityLevel.value === 'Highly Constrained' || availabilityLevel.value === '5') {
-    return 'availability-highly-constrained'
-  }
+  const v = availabilityLevel.value
+  if (v === 'Likely Available') return 'availability-likely'
+  if (v === 'Potentially Available') return 'availability-potential'
+  if (v === 'Constrained by Market' || v === 'Constrained by Size') return 'availability-constrained'
+  if (v === 'Highly Constrained') return 'availability-highly-constrained'
+  if (v === 'Does Not Provide This Service') return 'availability-none'
   return 'availability-default'
 })
 </script>
@@ -279,7 +268,7 @@ const availabilityClass = computed(() => {
 }
 
 .availability-potential {
-  color: #f2c94c;
+color: #c9a200;
 }
 
 .availability-constrained {
@@ -288,6 +277,10 @@ const availabilityClass = computed(() => {
 
 .availability-highly-constrained {
   color: #c53b2c;
+}
+
+.availability-none {
+  color: #9e9e9e;
 }
 
 .availability-default {

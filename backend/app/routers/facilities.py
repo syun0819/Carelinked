@@ -11,7 +11,6 @@ from app.schemas.aged_care import FacilityCard, FacilityDetail, FacilityMapRespo
 from app.services.facility_service import (
     get_facilities_for_map,
     get_facility_by_id,
-    get_nearest_facilities,
     get_recommended_facilities,
     get_similar_facilities,
     search_facilities,
@@ -21,7 +20,7 @@ from app.services import location_service
 router = APIRouter(prefix="/api/v1/facilities", tags=["facilities"])
 limiter = Limiter(key_func=get_remote_address)
 
-VALID_SORT_OPTIONS = {"name", "beds_desc", "beds_asc", "distance", "closest"}
+VALID_SORT_OPTIONS = {"name", "beds_desc", "beds_asc", "distance"}
 VALID_REMOTENESS = {"Major Cities", "Inner Regional", "Outer Regional", "Remote", "Very Remote"}
 VALID_CARE_TYPES = {
     "Residential",
@@ -84,17 +83,16 @@ async def search(
     keyword = validate_text_input(keyword, "Keyword")
     postcode = validate_postcode(postcode)
 
+if sort_by == "closest":
+        sort_by = "distance"
     if sort_by and sort_by not in VALID_SORT_OPTIONS:
         raise HTTPException(status_code=400, detail=f"Invalid sort_by value. Must be one of: {', '.join(VALID_SORT_OPTIONS)}")
-
     if abs_remoteness and abs_remoteness not in VALID_REMOTENESS:
         raise HTTPException(status_code=400, detail=f"Invalid remoteness value.")
-
     if care_type:
         for ct in care_type:
             if ct not in VALID_CARE_TYPES:
                 raise HTTPException(status_code=400, detail=f"Invalid care type: {ct}")
-
     if min_beds is not None and max_beds is not None and min_beds > max_beds:
         raise HTTPException(status_code=400, detail="min_beds cannot be greater than max_beds.")
 
@@ -141,13 +139,9 @@ async def search(
 async def recommended(
     user_lat: Optional[float] = Query(None, ge=-90, le=90),
     user_lng: Optional[float] = Query(None, ge=-180, le=180),
-    limit: int = Query(6, ge=1, le=50),
     db: AsyncSession = Depends(get_db),
 ):
-    if user_lat is not None and user_lng is not None:
-        results = await get_nearest_facilities(db, user_lat, user_lng, limit=limit)
-    else:
-        results = await get_recommended_facilities(db)
+    results = await get_recommended_facilities(db, user_lat=user_lat, user_lng=user_lng)
     return FacilitySearchResponse(total=len(results), results=results)
 
 
