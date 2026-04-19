@@ -10,6 +10,29 @@
         No facilities found. Try adjusting filters.
       </div>
       <div ref="mapEl" class="map-container"></div>
+      <div class="map-legend" aria-label="Availability legend">
+        <div class="legend-title">Availability</div>
+        <div class="legend-item">
+          <span class="legend-dot legend-likely"></span>
+          <span>Likely Available</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot legend-potential"></span>
+          <span>Potentially Available</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot legend-constrained"></span>
+          <span>Constrained</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot legend-highly-constrained"></span>
+          <span>Highly Constrained</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot legend-unavailable"></span>
+          <span>Not Provided / Unknown</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -38,6 +61,14 @@ const props = defineProps({
     default: null
   },
   userLng: {
+    type: Number,
+    default: null
+  },
+  focusLat: {
+    type: Number,
+    default: null
+  },
+  focusLng: {
     type: Number,
     default: null
   },
@@ -154,6 +185,15 @@ function invalidateMapSize() {
   })
 }
 
+function hasFocusCoordinates() {
+  return Number.isFinite(props.focusLat) && Number.isFinite(props.focusLng)
+}
+
+function focusMapOnSelectedFacility() {
+  if (!map || !hasFocusCoordinates()) return
+  map.setView([props.focusLat, props.focusLng], 15)
+}
+
 function clearMarkers() {
   if (markersLayer) {
     markersLayer.clearLayers()
@@ -234,7 +274,9 @@ function renderMarkers() {
     markersLayer.clearLayers()
 
     const params = buildParams()
-    if (params.postcode || params.suburb) {
+    if (hasFocusCoordinates()) {
+      focusMapOnSelectedFacility()
+    } else if (params.postcode || params.suburb) {
       // 保持当前地图位置不变，不重置到 Melbourne
     } else {
       map.setView([-37.8136, 144.9631], 12)
@@ -275,6 +317,7 @@ function renderMarkers() {
   )
   const group = L.featureGroup(leafletMarkers)
   map.fitBounds(group.getBounds().pad(0.2))
+  focusMapOnSelectedFacility()
 
   invalidateMapSize()
 }
@@ -323,7 +366,7 @@ onMounted(async () => {
 })
 
 watch(
-  () => [props.searchQuery, props.selectedCareTypes, props.distance],
+  () => [props.searchQuery, props.selectedCareTypes, props.distance, props.focusLat, props.focusLng],
   async () => {
     await fetchMarkers()
   },
@@ -393,6 +436,67 @@ onBeforeUnmount(() => {
   background: #f5f5f5;
 }
 
+.map-legend {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 800;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #ddd8cf;
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 22px rgba(31, 45, 42, 0.12);
+  color: #253631;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.legend-title {
+  margin-bottom: 7px;
+  font-weight: 700;
+  color: #22332e;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.legend-item + .legend-item {
+  margin-top: 5px;
+}
+
+.legend-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(31, 45, 42, 0.16);
+  flex: 0 0 auto;
+}
+
+.legend-likely {
+  background: #4f7a62;
+}
+
+.legend-potential {
+  background: #f5c518;
+}
+
+.legend-constrained {
+  background: #d9822b;
+}
+
+.legend-highly-constrained {
+  background: #d64545;
+}
+
+.legend-unavailable {
+  background: #9e9e9e;
+}
+
 .map-state {
   height: 430px;
   border-radius: 14px;
@@ -407,6 +511,26 @@ onBeforeUnmount(() => {
 
 .error {
   color: #d64545;
+}
+
+@media (max-width: 640px) {
+  .map-legend {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px 10px;
+  }
+
+  .legend-title {
+    grid-column: 1 / -1;
+    margin-bottom: 2px;
+  }
+
+  .legend-item + .legend-item {
+    margin-top: 0;
+  }
 }
 </style>
 

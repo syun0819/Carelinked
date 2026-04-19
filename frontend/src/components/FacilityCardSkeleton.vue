@@ -42,8 +42,8 @@
 }
 
 .skeleton-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
 }
 
@@ -129,6 +129,10 @@
 }
 
 @media (max-width: 768px) {
+  .skeleton-list {
+    grid-template-columns: 1fr;
+  }
+
   .skeleton-image {
     height: 180px;
   }

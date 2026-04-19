@@ -3,11 +3,13 @@
     <Header />
 
     <div v-if="facility" class="detail-container">
-      <div class="breadcrumb">
-        <span class="breadcrumb-link" @click="goBack">← Back to results</span>
-        <span class="breadcrumb-separator">|</span>
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <button class="breadcrumb-link" @click="goHome">Home</button>
+        <span class="breadcrumb-separator">&gt;</span>
+        <button class="breadcrumb-link" @click="goToFindBed">Find a Bed</button>
+        <span class="breadcrumb-separator">&gt;</span>
         <span class="breadcrumb-current">{{ facility.name }}</span>
-      </div>
+      </nav>
 
       <div class="detail-layout">
         <div class="detail-main">
@@ -24,7 +26,13 @@
               <h1 class="facility-title">{{ facility.name }}</h1>
               <span class="recommend-badge">Recommended</span>
             </div>
-            <p class="facility-address">📍 {{ facility.address }}</p>
+            <p class="facility-address">
+              <svg class="address-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 21s7-6.1 7-12A7 7 0 0 0 5 9c0 5.9 7 12 7 12Z" />
+                <circle cx="12" cy="9" r="2.5" />
+              </svg>
+              <span>{{ facility.address }}</span>
+            </p>
             <div class="care-tag-wrapper">
               <span class="care-tag">{{ facility.careType }}</span>
             </div>
@@ -32,7 +40,9 @@
 
           <div class="summary-cards">
             <div class="summary-card">
-              <div class="summary-value availability-text">{{ facility.bedAvailability }}</div>
+              <div class="summary-value availability-text" :class="availabilityClass">
+                {{ facility.bedAvailability }}
+              </div>
               <div class="summary-label">BED AVAILABILITY ESTIMATION</div>
             </div>
             <div class="summary-card">
@@ -78,24 +88,6 @@
             <div v-if="hasCoordinates" ref="mapEl" class="detail-map"></div>
             <div v-else class="map-placeholder">Location unavailable</div>
             <button class="sidebar-btn" @click="goToMapSearch">Find with Map</button>
-          </div>
-
-          <div class="sidebar-card provider-card">
-            <h3 class="sidebar-title">About the Provider</h3>
-            <div class="provider-top">
-              <p class="provider-name">{{ facility.provider }}</p>
-              <p class="provider-sub">{{ facility.providerType }}</p>
-            </div>
-            <div class="provider-info">
-              <div class="provider-row">
-                <span class="provider-label">ABS Remoteness</span>
-                <span class="provider-value">{{ facility.remoteness }}</span>
-              </div>
-              <div class="provider-row">
-                <span class="provider-label">Aged Care Planning Region (ACPR)</span>
-                <span class="provider-value">{{ facility.acpr }}</span>
-              </div>
-            </div>
           </div>
 
           <div class="sidebar-card">
@@ -158,6 +150,16 @@ const hasCoordinates = computed(() => {
     facility.value.latitude != null &&
     facility.value.longitude != null
   )
+})
+
+const availabilityClass = computed(() => {
+  const value = facility.value?.bedAvailability
+  if (value === 'Likely Available') return 'availability-likely'
+  if (value === 'Potentially Available') return 'availability-potential'
+  if (value === 'Constrained by Market' || value === 'Constrained by Size') return 'availability-constrained'
+  if (value === 'Highly Constrained') return 'availability-highly-constrained'
+  if (value === 'Does Not Provide This Service') return 'availability-none'
+  return 'availability-default'
 })
 
 function initMap() {
@@ -238,15 +240,28 @@ const goHome = () => {
   router.push('/')
 }
 
+const goToFindBed = () => {
+  router.push({ path: '/find-bed', query: route.query })
+}
+
 const goToMapSearch = () => {
-  if (facility.value?.suburb) {
-    router.push({
-      path: '/find-bed',
-      query: { ...route.query, suburb: facility.value.suburb }
-    })
-  } else {
-    router.push({ path: '/find-bed', query: route.query })
+  const query = {
+    ...route.query,
+    view: 'map',
+    page: undefined
   }
+
+  if (facility.value?.suburb) {
+    query.search = facility.value.suburb
+    query.searchType = 'suburb'
+  }
+
+  if (hasCoordinates.value) {
+    query.focusLat = String(facility.value.latitude)
+    query.focusLng = String(facility.value.longitude)
+  }
+
+  router.push({ path: '/find-bed', query })
 }
 
 const printPage = () => {
@@ -273,7 +288,7 @@ const copyAddress = async () => {
 .detail-container {
   max-width: 1360px;
   margin: 0 auto;
-  padding: 18px 32px 0;
+  padding: 96px 32px 0;
   width: 100%;
   box-sizing: border-box;
 }
@@ -285,10 +300,26 @@ const copyAddress = async () => {
   font-size: 13px;
   color: #98a39d;
   margin: 18px 0 18px;
+  flex-wrap: wrap;
 }
 
 .breadcrumb-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: #6d7f79;
+  font: inherit;
   cursor: pointer;
+}
+
+.breadcrumb-link:hover {
+  color: #2f5d50;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.breadcrumb-separator {
+  color: #b1bbb6;
 }
 
 .breadcrumb-current {
@@ -379,6 +410,23 @@ const copyAddress = async () => {
   font-size: 14px;
   color: #87a098;
   text-align: left;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.5;
+}
+
+.address-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: #6f9181;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .care-tag-wrapper {
@@ -399,17 +447,18 @@ const copyAddress = async () => {
 }
 
 .summary-cards {
-  display: flex;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 4px;
 }
 
 .summary-card {
-  min-width: 114px;
-  max-width: 100px;
   background: #fff;
   border: 1px solid #ddd5ca;
   border-radius: 10px;
-  padding: 14px 16px 12px;
+  min-height: 72px;
+  padding: 16px 18px 14px;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -418,7 +467,7 @@ const copyAddress = async () => {
 }
 
 .summary-value {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   line-height: 1.15;
   color: #22332e;
@@ -428,13 +477,38 @@ const copyAddress = async () => {
   color: #4f7a62;
 }
 
+.availability-likely {
+  color: #4f7a62;
+}
+
+.availability-potential {
+  color: #c9a200;
+}
+
+.availability-constrained {
+  color: #d9822b;
+}
+
+.availability-highly-constrained {
+  color: #c53b2c;
+}
+
+.availability-none {
+  color: #9e9e9e;
+}
+
+.availability-default {
+  color: #4f6a63;
+}
+
 .summary-label {
-  margin-top: 4px;
-  font-size: 10px;
+  margin-top: 6px;
+  font-size: 9px;
   line-height: 1.35;
   color: #7f8d87;
   text-transform: uppercase;
   text-align: center;
+  letter-spacing: 0;
 }
 
 .info-card,
@@ -443,6 +517,10 @@ const copyAddress = async () => {
   border: 1px solid #ddd5ca;
   border-radius: 12px;
   padding: 18px 18px 16px;
+}
+
+.info-card {
+  margin-top: 2px;
 }
 
 .section-title,
@@ -525,65 +603,6 @@ const copyAddress = async () => {
   margin: 0 auto;
 }
 
-.provider-card {
-  padding: 18px 18px 16px;
-  text-align: left;
-}
-
-.provider-card .sidebar-title {
-  padding-bottom: 14px;
-  border-bottom: 1px solid #e4ddd3;
-}
-
-.provider-top {
-  padding: 12px 0 14px;
-  border-bottom: 1px solid #e4ddd3;
-}
-
-.provider-name {
-  margin: 0 0 6px;
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 700;
-  color: #22332e;
-  line-height: 1.35;
-}
-
-.provider-sub {
-  margin: 0;
-  font-size: 13px;
-  color: #6c8077;
-  line-height: 1.35;
-}
-
-.provider-info {
-  padding-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.provider-row {
-  display: grid;
-  grid-template-columns: 1.35fr 1fr;
-  gap: 14px;
-  align-items: start;
-}
-
-.provider-label {
-  font-size: 13px;
-  color: #6c8077;
-  line-height: 1.4;
-}
-
-.provider-value {
-  font-size: 13px;
-  font-weight: 700;
-  color: #202020;
-  line-height: 1.4;
-  text-align: right;
-}
-
 .action-btn {
   width: 100%;
   background: #fff;
@@ -646,24 +665,20 @@ const copyAddress = async () => {
     font-size: 22px;
   }
 
-  .detail-row,
-  .provider-row {
+  .detail-row {
     grid-template-columns: 1fr;
   }
 
-  .detail-value,
-  .provider-value {
+  .detail-value {
     text-align: left;
   }
 
   .summary-cards {
-    flex-wrap: wrap;
+    grid-template-columns: 1fr;
   }
 
   .summary-card {
-    flex: 1;
-    min-width: 120px;
-    max-width: 100%;
+    min-height: 68px;
   }
 }
 </style>
