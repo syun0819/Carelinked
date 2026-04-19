@@ -106,10 +106,13 @@ const careTypeClass = computed(() => {
 })
 
 const availabilityClass = computed(() => {
-  if (availabilityLevel.value === 'High') return 'availability-high'
-  if (availabilityLevel.value === 'Medium') return 'availability-medium'
-  if (availabilityLevel.value === 'Low') return 'availability-low'
-  return ''
+  const v = availabilityLevel.value
+  if (v === 'Likely Available') return 'availability-likely'
+  if (v === 'Potentially Available') return 'availability-potential'
+  if (v === 'Constrained by Market' || v === 'Constrained by Size') return 'availability-constrained'
+  if (v === 'Highly Constrained') return 'availability-highly-constrained'
+  if (v === 'Does Not Provide This Service') return 'availability-none'
+  return 'availability-default'
 })
 </script>
 
@@ -260,16 +263,24 @@ const availabilityClass = computed(() => {
   font-weight: 600;
 }
 
-.availability-high {
+.availability-likely {
   color: #4f7a62;
 }
 
-.availability-medium {
+.availability-potential {
+  color: #c9a200;
+}
+
+.availability-constrained {
   color: #d9822b;
 }
 
-.availability-low {
+.availability-highly-constrained {
   color: #c53b2c;
+}
+
+.availability-none {
+  color: #9e9e9e;
 }
 
 .availability-default {

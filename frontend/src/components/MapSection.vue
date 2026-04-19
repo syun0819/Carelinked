@@ -108,30 +108,13 @@ function buildParams() {
 }
 
 function getMarkerColor(availability) {
-<<<<<<< Updated upstream
-  if (availability === 'High') return '#4f7a62'
-  if (availability === 'Medium') return '#d9822b'
-  if (availability === 'Low') return '#d64545'
-  return '#7a6fd6'
-=======
-  const colorMap = {
-    'Likely Available': '#4f7a62',
-    '1': '#4f7a62',
-
-    'Potentially Available': '#f2c94c',
-    '2': '#f2c94c',
-
-    'Constrained by Market': '#d9822b',
-    'Constrained by Size': '#d9822b',
-    '3': '#d9822b',
-    '4': '#d9822b',
-
-    'Highly Constrained': '#d64545',
-    '5': '#d64545'
-  }
-
-  return colorMap[availability] || '#7a6fd6'
->>>>>>> Stashed changes
+  if (availability === 'Likely Available') return '#4f7a62'
+  if (availability === 'Potentially Available') return '#f5c518'
+  if (availability === 'Constrained by Market') return '#d9822b'
+  if (availability === 'Constrained by Size') return '#d9822b'
+  if (availability === 'Highly Constrained') return '#d64545'
+  if (availability === 'Does Not Provide This Service') return '#9e9e9e'
+  return '#9e9e9e'
 }
 
 function createCustomIcon(color) {
