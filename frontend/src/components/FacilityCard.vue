@@ -6,7 +6,6 @@
         :alt="facility.name"
         class="facility-image"
       />
-      <span v-if="showRecommended" class="recommended-badge">Recommended</span>
     </div>
 
     <div class="facility-body">
