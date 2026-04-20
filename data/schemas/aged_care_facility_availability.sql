@@ -1,5 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
+DROP TABLE IF EXISTS aged_care_facility_availability;
 CREATE TABLE IF NOT EXISTS aged_care_facility_availability (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
