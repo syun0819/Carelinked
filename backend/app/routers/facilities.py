@@ -83,8 +83,8 @@ async def search(
     keyword = validate_text_input(keyword, "Keyword")
     postcode = validate_postcode(postcode)
 
-if sort_by == "closest":
-        sort_by = "distance"
+    if sort_by == "closest":
+            sort_by = "distance"
     if sort_by and sort_by not in VALID_SORT_OPTIONS:
         raise HTTPException(status_code=400, detail=f"Invalid sort_by value. Must be one of: {', '.join(VALID_SORT_OPTIONS)}")
     if abs_remoteness and abs_remoteness not in VALID_REMOTENESS:
