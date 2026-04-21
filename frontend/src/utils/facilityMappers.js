@@ -27,6 +27,7 @@ export function mapFacilityDetail(item) {
     name: item.service_name || '',
     address: item.physical_address || '',
     suburb: item.physical_suburb || '',
+    state: item.physical_state || '',
     postcode: item.physical_post_code || '',
     careType: item.care_type || '',
     provider: item.provider_name || '',

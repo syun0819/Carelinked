@@ -10,6 +10,7 @@ class FacilityCard(BaseModel):
     service_name: Optional[str] = None
     physical_address: Optional[str] = None
     physical_suburb: Optional[str] = None
+    physical_state: Optional[str] = None
     physical_post_code: Optional[str] = None
     aged_care_planning_region: Optional[str] = None
     care_type: Optional[str] = None

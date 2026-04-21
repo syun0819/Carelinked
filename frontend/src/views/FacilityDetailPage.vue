@@ -24,7 +24,6 @@
           <div class="facility-header">
             <div class="facility-title-row">
               <h1 class="facility-title">{{ facility.name }}</h1>
-              <span class="recommend-badge">Recommended</span>
             </div>
             <p class="facility-address">
               <svg class="address-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -53,30 +52,68 @@
 
           <div class="info-card">
             <h2 class="section-title">Aged Care Details</h2>
-            <div class="detail-table">
-              <div class="detail-row">
-                <span class="detail-label">Physical Suburb</span>
-                <span class="detail-value">{{ facility.suburb }}</span>
+            <div class="detail-overview">
+              <div class="detail-overview-top">
+                <section class="detail-tile detail-location-tile">
+                  <div class="detail-tile-heading">
+                    <svg class="detail-tile-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 21s7-6.1 7-12A7 7 0 0 0 5 9c0 5.9 7 12 7 12Z" />
+                      <circle cx="12" cy="9" r="2.5" />
+                    </svg>
+                    <span>Location</span>
+                  </div>
+                  <div class="detail-location-grid">
+                    <div class="detail-stat">
+                      <span class="detail-stat-label">Suburbs</span>
+                      <span class="detail-stat-value">{{ facility.suburb || 'N/A' }}</span>
+                    </div>
+                    <div class="detail-stat">
+                      <span class="detail-stat-label">State</span>
+                      <span class="detail-stat-value">{{ stateAbbreviation }}</span>
+                    </div>
+                    <div class="detail-stat">
+                      <span class="detail-stat-label">Postcode</span>
+                      <span class="detail-stat-value">{{ facility.postcode || 'N/A' }}</span>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="detail-tile detail-funding-tile">
+                  <div class="detail-tile-heading">
+                    <svg class="detail-tile-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <rect x="3.5" y="6.5" width="17" height="11" rx="2.5" />
+                      <circle cx="12" cy="12" r="2.2" />
+                    </svg>
+                    <span>Gov. Funding</span>
+                  </div>
+                  <div class="detail-funding-value">{{ formattedFunding }}</div>
+                </section>
               </div>
-              <div class="detail-row">
-                <span class="detail-label">State</span>
-                <span class="detail-value">Victoria</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Postcode</span>
-                <span class="detail-value">{{ facility.postcode }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Care Type</span>
-                <span class="detail-value">{{ facility.careType }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Organisation Type</span>
-                <span class="detail-value">{{ facility.organisationType }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Government Funding</span>
-                <span class="detail-value">${{ facility.governmentFunding }}</span>
+
+              <div class="detail-overview-bottom">
+                <section class="detail-tile detail-meta-tile">
+                  <div class="detail-tile-heading">
+                    <svg class="detail-tile-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 21s-6-3.8-8-8.6A5.2 5.2 0 0 1 12 5a5.2 5.2 0 0 1 8 7.4C18 17.2 12 21 12 21Z" />
+                      <path d="M9.5 12.5 11.2 14 14.8 10" />
+                    </svg>
+                    <span>Care Type</span>
+                  </div>
+                  <div class="detail-meta-value">{{ facility.careType || 'N/A' }}</div>
+                </section>
+
+                <section class="detail-tile detail-meta-tile">
+                  <div class="detail-tile-heading">
+                    <svg class="detail-tile-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 20V8.5h12V20" />
+                      <path d="M4 20h16" />
+                      <path d="M9 8.5V5h6v3.5" />
+                      <path d="M9 12h.01M15 12h.01M9 15.5h.01M15 15.5h.01" />
+                    </svg>
+                    <span>Organisation</span>
+                  </div>
+                  <div class="detail-meta-value">{{ facility.organisationType || 'N/A' }}</div>
+                </section>
               </div>
             </div>
           </div>
@@ -160,6 +197,38 @@ const availabilityClass = computed(() => {
   if (value === 'Highly Constrained') return 'availability-highly-constrained'
   if (value === 'Does Not Provide This Service') return 'availability-none'
   return 'availability-default'
+})
+
+const stateAbbreviation = computed(() => {
+  const state = facility.value?.state?.trim()
+  if (!state) return 'N/A'
+
+  const stateMap = {
+    'New South Wales': 'NSW',
+    Victoria: 'VIC',
+    Queensland: 'QLD',
+    'South Australia': 'SA',
+    'Western Australia': 'WA',
+    Tasmania: 'TAS',
+    'Northern Territory': 'NT',
+    'Australian Capital Territory': 'ACT'
+  }
+
+  return stateMap[state] || state.toUpperCase()
+})
+
+const formattedFunding = computed(() => {
+  const funding = facility.value?.governmentFunding
+  if (funding == null || funding === '') return 'N/A'
+
+  const numericFunding = Number(funding)
+  if (Number.isNaN(numericFunding)) return String(funding)
+
+  return new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD',
+    maximumFractionDigits: 0
+  }).format(numericFunding)
 })
 
 function initMap() {
@@ -392,19 +461,6 @@ const copyAddress = async () => {
   color: #22332e;
 }
 
-.recommend-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 7px 12px;
-  border-radius: 999px;
-  background: #e6f0e8;
-  color: #7ea08a;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
 .facility-address {
   margin: 10px 0 10px;
   font-size: 14px;
@@ -467,7 +523,7 @@ const copyAddress = async () => {
 }
 
 .summary-value {
-  font-size: 17px;
+  font-size: 21px;
   font-weight: 700;
   line-height: 1.15;
   color: #22332e;
@@ -503,7 +559,7 @@ const copyAddress = async () => {
 
 .summary-label {
   margin-top: 6px;
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.35;
   color: #7f8d87;
   text-transform: uppercase;
@@ -527,44 +583,147 @@ const copyAddress = async () => {
 .sidebar-title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
   color: #22332e;
 }
 
 .info-card .section-title {
-  padding-bottom: 14px;
-  border-bottom: 1px solid #e4ddd3;
+  margin-bottom: 16px;
 }
 
-.detail-table {
-  margin-top: 2px;
+.detail-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.detail-row {
+.detail-overview-top {
   display: grid;
-  grid-template-columns: 1.25fr 1fr;
+  grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr);
+  gap: 12px;
+}
+
+.detail-overview-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 12px;
+}
+
+.detail-tile {
+  border: 1px solid #e3ddd3;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px 16px;
+}
+
+.detail-location-tile {
+  background: #f3f0ea;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 22px;
+  padding-right: 22px;
+}
+
+.detail-funding-tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 18px;
-  padding: 14px 0;
-  border-bottom: 1px solid #ebe4da;
+  text-align: center;
+  background: #f3f0ea;
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
-.detail-row:last-child {
-  border-bottom: none;
+.detail-tile-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+  color: #8a9791;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
-.detail-label {
-  font-size: 14px;
-  color: #687a73;
+.detail-tile-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.detail-location-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 10px;
+}
+
+.detail-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-location-grid .detail-stat:first-child {
+  align-items: flex-start;
+  text-align: left;
+  padding-left: 12px;
+}
+
+.detail-location-grid .detail-stat:not(:first-child) {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.detail-location-grid .detail-stat:last-child {
+  align-items: center;
+  text-align: center;
+}
+
+.detail-location-grid .detail-stat:last-child {
+  padding-right: 16px;
+}
+
+.detail-stat-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #7b8882;
+  text-transform: uppercase;
+}
+
+.detail-stat-value,
+.detail-meta-value {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #22332e;
+}
+
+.detail-meta-value {
+  margin-top: 14px;
+  text-wrap: balance;
   text-align: left;
 }
 
-.detail-value {
-  font-size: 14px;
-  color: #2b2b2b;
-  font-weight: 600;
-  text-align: right;
+.detail-funding-value {
+  margin-top: 10px;
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 800;
+  color: #22332e;
+}
+
+.detail-funding-tile .detail-tile-heading {
+  font-size: 20px;
+  justify-content: center;
 }
 
 .detail-map {
@@ -665,20 +824,41 @@ const copyAddress = async () => {
     font-size: 22px;
   }
 
-  .detail-row {
-    grid-template-columns: 1fr;
-  }
-
-  .detail-value {
-    text-align: left;
-  }
-
   .summary-cards {
     grid-template-columns: 1fr;
   }
 
   .summary-card {
     min-height: 68px;
+  }
+
+  .detail-overview-top,
+  .detail-overview-bottom,
+  .detail-location-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-overview-bottom {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-location-grid .detail-stat:not(:first-child) {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .detail-location-grid .detail-stat:last-child {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .detail-funding-value {
+    font-size: 20px;
+  }
+
+  .detail-stat-value,
+  .detail-meta-value {
+    font-size: 16px;
   }
 }
 </style>

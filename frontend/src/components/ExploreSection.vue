@@ -27,7 +27,6 @@
         v-for="facility in displayFacilities"
         :key="facility.id"
         :facility="facility"
-        show-recommended
       />
     </div>
 

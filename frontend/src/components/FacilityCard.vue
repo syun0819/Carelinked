@@ -54,6 +54,7 @@
 
         <button class="details-btn" @click.stop="goToDetail">
           <span>View details</span>
+          <span class="details-arrow" aria-hidden="true">→</span>
         </button>
       </div>
     </div>
@@ -68,10 +69,6 @@ const props = defineProps({
   facility: {
     type: Object,
     required: true
-  },
-  showRecommended: {
-    type: Boolean,
-    default: false
   }
 })
 
@@ -213,19 +210,6 @@ const availabilityClass = computed(() => {
   stroke-linejoin: round;
 }
 
-.recommended-badge {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  background: #eaf4ec;
-  color: #537764;
-  padding: 7px 14px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
 .tag-row {
   display: flex;
   gap: 10px;
@@ -291,7 +275,7 @@ const availabilityClass = computed(() => {
 
 .metric-block {
   min-height: 62px;
-  padding: 6px 8px 5px;
+  padding: 12px 8px 3px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -301,7 +285,7 @@ const availabilityClass = computed(() => {
 }
 
 .metric-block.availability {
-  padding-top: 6px;
+  padding-top: 12px;
 }
 
 .metric-block + .metric-block {
@@ -329,7 +313,7 @@ const availabilityClass = computed(() => {
 }
 
 .metric-caption {
-  margin-top: 3px;
+  margin-top: 2px;
   font-size: 9px;
   color: #4f655d;
   letter-spacing: 0.02em;
@@ -405,8 +389,9 @@ color: #c9a200;
 }
 
 .details-arrow {
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1;
+  transform: translateY(-1px);
 }
 
 @media (max-width: 768px) {
