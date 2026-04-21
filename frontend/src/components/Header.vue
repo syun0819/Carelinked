@@ -72,7 +72,7 @@ function goToSectionMobile(hash) {
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
-  z-index: 1000;
+  z-index: 3000;
   border-bottom: 1px solid #f0ece4;
 }
 

@@ -235,6 +235,8 @@ const rangeStyle = computed(() => {
 
 <style scoped>
 .filters-panel {
+  position: relative;
+  z-index: 2000;
   background: #ffffff;
   border: 1.5px solid #ddd5ca;
   border-radius: 8px;
@@ -410,7 +412,7 @@ const rangeStyle = computed(() => {
   position: absolute;
   left: calc(100% + 14px);
   top: 50%;
-  z-index: 30;
+  z-index: 2100;
   width: 460px;
   max-width: min(460px, calc(100vw - 48px));
   padding: 16px 18px;

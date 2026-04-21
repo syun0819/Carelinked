@@ -478,6 +478,8 @@ onMounted(async () => {
 .filters-column {
   grid-column: 1;
   grid-row: 2;
+  position: relative;
+  z-index: 2000;
 }
 
 .pagination-row {
