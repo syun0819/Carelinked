@@ -2,11 +2,11 @@ import re
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi_cache.decorator import cache
 
 from app.core.database import get_db
+from app.core.limiter import limiter
 from app.schemas.aged_care import FacilityCard, FacilityDetail, FacilityMapResponse, FacilitySearchResponse
 from app.services.facility_service import (
     get_facilities_for_map,
@@ -18,7 +18,6 @@ from app.services.facility_service import (
 from app.services import location_service
 
 router = APIRouter(prefix="/api/v1/facilities", tags=["facilities"])
-limiter = Limiter(key_func=get_remote_address)
 
 VALID_SORT_OPTIONS = {"name", "beds_desc", "beds_asc", "distance"}
 VALID_REMOTENESS = {"Major Cities", "Inner Regional", "Outer Regional", "Remote", "Very Remote"}
@@ -84,15 +83,19 @@ async def search(
     postcode = validate_postcode(postcode)
 
     if sort_by == "closest":
-            sort_by = "distance"
+        sort_by = "distance"
+
     if sort_by and sort_by not in VALID_SORT_OPTIONS:
         raise HTTPException(status_code=400, detail=f"Invalid sort_by value. Must be one of: {', '.join(VALID_SORT_OPTIONS)}")
+
     if abs_remoteness and abs_remoteness not in VALID_REMOTENESS:
         raise HTTPException(status_code=400, detail=f"Invalid remoteness value.")
+
     if care_type:
         for ct in care_type:
             if ct not in VALID_CARE_TYPES:
                 raise HTTPException(status_code=400, detail=f"Invalid care type: {ct}")
+
     if min_beds is not None and max_beds is not None and min_beds > max_beds:
         raise HTTPException(status_code=400, detail="min_beds cannot be greater than max_beds.")
 
@@ -136,7 +139,10 @@ async def search(
 
 
 @router.get("/recommended", response_model=FacilitySearchResponse)
+@limiter.limit("30/minute")
+@cache(expire=600)
 async def recommended(
+    request: Request,
     user_lat: Optional[float] = Query(None, ge=-90, le=90),
     user_lng: Optional[float] = Query(None, ge=-180, le=180),
     db: AsyncSession = Depends(get_db),
@@ -146,7 +152,10 @@ async def recommended(
 
 
 @router.get("/map", response_model=FacilityMapResponse)
+@limiter.limit("30/minute")
+@cache(expire=300)
 async def get_map(
+    request: Request,
     suburb: Optional[str] = Query(None),
     postcode: Optional[str] = Query(None),
     region: Optional[str] = Query(None),
@@ -202,7 +211,10 @@ async def get_map(
 
 
 @router.get("/{facility_id}/similar", response_model=FacilitySearchResponse)
+@limiter.limit("30/minute")
+@cache(expire=600)
 async def similar(
+    request: Request,
     facility_id: str,
     limit: int = Query(4, ge=1, le=20),
     db: AsyncSession = Depends(get_db),
@@ -215,7 +227,10 @@ async def similar(
 
 
 @router.get("/{facility_id}", response_model=FacilityDetail)
+@limiter.limit("60/minute")
+@cache(expire=600)
 async def get_facility(
+    request: Request,
     facility_id: str,
     db: AsyncSession = Depends(get_db),
 ):
