@@ -54,7 +54,6 @@
 
         <button class="details-btn" @click.stop="goToDetail">
           <span>View details</span>
-          <span class="details-arrow" aria-hidden="true">→</span>
         </button>
       </div>
     </div>
