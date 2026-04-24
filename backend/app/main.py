@@ -39,7 +39,7 @@ app.add_middleware(
         "http://localhost:5175",
         "http://localhost:5173",
         "https://fit-5120-te-04-main-project.vercel.app",
-        "https://www.carelink.page",
+        "https://www.carelinked.page",
     ],
     allow_credentials=True,
     allow_methods=["*"],
