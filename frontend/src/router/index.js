@@ -13,7 +13,8 @@ const routes = [
     component: FacilityDetailPage,
     props: true
   },
-  { path: '/password', component: PasswordPage }
+  { path: '/password', component: PasswordPage },
+  { path: '/compare', component: () => import('../views/ComparePage.vue') }
 ]
 
 function scrollToHashTarget(hash, behavior = 'auto') {
