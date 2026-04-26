@@ -231,6 +231,16 @@ const formattedFunding = computed(() => {
   }).format(numericFunding)
 })
 
+function escapeHtml(str) {
+  if (str == null) return ''
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 function initMap() {
   if (!hasCoordinates.value || !mapEl.value) return
 
@@ -251,8 +261,8 @@ function initMap() {
 
   marker.bindPopup(`
     <div>
-      <strong>${facility.value.name}</strong><br />
-      ${facility.value.address || ''}
+      <strong>${escapeHtml(facility.value.name)}</strong><br />
+      ${escapeHtml(facility.value.address)}
     </div>
   `)
 
