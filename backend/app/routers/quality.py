@@ -6,7 +6,7 @@ from fastapi_cache.decorator import cache
 from app.core.database import get_db
 from app.core.limiter import limiter
 from app.schemas.quality import QualityRating, QualityCompareResponse
-from app.services.quality_service import get_quality_by_facility_id, get_quality_by_facility_ids
+from app.services.quality_service import get_quality_by_facility_ids
 
 router = APIRouter(prefix="/api/v1/quality", tags=["quality"])
 
@@ -53,9 +53,11 @@ def build_quality_rating(row, facility_id: str) -> QualityRating:
 @cache(expire=300)
 async def compare_quality(
     request: Request,
-    facility_ids: List[str] = Query(..., min_length=2, max_length=3),
+    facility_ids: List[str] = Query(...),
     db: AsyncSession = Depends(get_db),
 ):
+    if len(facility_ids) < 2 or len(facility_ids) > 3:
+        raise HTTPException(status_code=400, detail="Please provide 2 or 3 facility_ids.")
     rows = await get_quality_by_facility_ids(db, facility_ids)
     row_map = {str(row.service_id): row for row in rows}
     results = []
@@ -63,17 +65,3 @@ async def compare_quality(
         if fid in row_map:
             results.append(build_quality_rating(row_map[fid], fid))
     return QualityCompareResponse(results=results)
-
-
-@router.get("/{facility_id}", response_model=QualityRating)
-@limiter.limit("60/minute")
-@cache(expire=600)
-async def get_quality(
-    request: Request,
-    facility_id: str,
-    db: AsyncSession = Depends(get_db),
-):
-    row = await get_quality_by_facility_id(db, facility_id)
-    if not row:
-        raise HTTPException(status_code=404, detail="Quality data not found for this facility.")
-    return build_quality_rating(row, facility_id)

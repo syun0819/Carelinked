@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.aged_care import AgedCareService
 from app.models.availability import FacilityAvailabilityML
+from app.models.quality import StarRating
 from app.schemas.aged_care import FacilityCard, FacilityDetail, FacilityMapMarker
 from app.services import location_service
 
@@ -270,6 +271,43 @@ async def get_facility_by_id(
     ml_map = await _fetch_ml_records_bulk(db, [facility_id])
     detail = FacilityDetail.model_validate(row)
     detail.availability_group, detail.data_source = resolve_availability(ml_map, row)
+
+    try:
+        quality_result = await db.execute(
+            select(StarRating)
+            .where(StarRating.service_id == facility_id)
+            .limit(1)
+        )
+        quality_row = quality_result.scalar_one_or_none()
+        if quality_row:
+            detail.overall_star_rating = quality_row.overall_star_rating
+            detail.residents_experience_rating = quality_row.residents_experience_rating
+            detail.compliance_rating = quality_row.compliance_rating
+            detail.staffing_rating = quality_row.staffing_rating
+            detail.quality_measures_rating = quality_row.quality_measures_rating
+            detail.re_food_score = float(quality_row.re_food_score) if quality_row.re_food_score else None
+            detail.re_safety_score = float(quality_row.re_safety_score) if quality_row.re_safety_score else None
+            detail.re_respect_score = float(quality_row.re_respect_score) if quality_row.re_respect_score else None
+            detail.re_caring_score = float(quality_row.re_caring_score) if quality_row.re_caring_score else None
+            detail.re_home_score = float(quality_row.re_home_score) if quality_row.re_home_score else None
+            detail.re_voice_score = float(quality_row.re_voice_score) if quality_row.re_voice_score else None
+            detail.re_explain_score = float(quality_row.re_explain_score) if quality_row.re_explain_score else None
+            detail.re_follow_up_score = float(quality_row.re_follow_up_score) if quality_row.re_follow_up_score else None
+            detail.re_independent_score = float(quality_row.re_independent_score) if quality_row.re_independent_score else None
+            detail.re_competent_score = float(quality_row.re_competent_score) if quality_row.re_competent_score else None
+            detail.re_care_need_score = float(quality_row.re_care_need_score) if quality_row.re_care_need_score else None
+            detail.re_operation_score = float(quality_row.re_operation_score) if quality_row.re_operation_score else None
+            detail.s_rn_care_minutes_target = float(quality_row.s_rn_care_minutes_target) if quality_row.s_rn_care_minutes_target else None
+            detail.s_rn_care_minutes_actual = float(quality_row.s_rn_care_minutes_actual) if quality_row.s_rn_care_minutes_actual else None
+            detail.s_total_care_minutes_target = float(quality_row.s_total_care_minutes_target) if quality_row.s_total_care_minutes_target else None
+            detail.s_total_care_minutes_actual = float(quality_row.s_total_care_minutes_actual) if quality_row.s_total_care_minutes_actual else None
+            if quality_row.s_rn_care_minutes_actual is not None and quality_row.s_rn_care_minutes_target is not None:
+                detail.rn_minutes_met = float(quality_row.s_rn_care_minutes_actual) >= float(quality_row.s_rn_care_minutes_target)
+            if quality_row.s_total_care_minutes_actual is not None and quality_row.s_total_care_minutes_target is not None:
+                detail.total_minutes_met = float(quality_row.s_total_care_minutes_actual) >= float(quality_row.s_total_care_minutes_target)
+    except Exception:
+        pass
+
     return detail
 
 
