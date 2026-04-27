@@ -12,11 +12,12 @@
     <nav class="nav">
       <router-link to="/" class="nav-item" active-class="active">Home</router-link>
       <router-link to="/find-bed" class="nav-item" active-class="active">
-        Find a Bed
+        Find Care
       </router-link>
       <button class="nav-item nav-link-btn" @click="goToSection('#how-it-works')">
         How It Works
       </button>
+      <router-link to="/compare" class="nav-item" active-class="active">Compare</router-link>
     </nav>
 
     <!-- Mobile hamburger -->
@@ -34,8 +35,9 @@
       </div>
       <nav class="drawer-nav">
         <router-link to="/" class="drawer-item" @click="menuOpen = false">Home</router-link>
-        <router-link to="/find-bed" class="drawer-item" @click="menuOpen = false">Find a Bed</router-link>
+        <router-link to="/find-bed" class="drawer-item" @click="menuOpen = false">Find Care</router-link>
         <button class="drawer-item drawer-btn" @click="goToSectionMobile('#how-it-works')">How It Works</button>
+        <router-link to="/compare" class="drawer-item" @click="menuOpen = false">Compare</router-link>
       </nav>
     </div>
 
