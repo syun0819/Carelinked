@@ -54,6 +54,9 @@
 
         <button class="details-btn" @click.stop="goToDetail">
           <span>View details</span>
+          <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6"/>
+          </svg>
         </button>
       </div>
     </div>
@@ -160,7 +163,7 @@ const availabilityClass = computed(() => {
 
 .facility-top-row {
   display: flex;
-  min-height: 150px;
+  flex: 1;
   padding-bottom: 24px;
   box-sizing: border-box;
 }
@@ -266,7 +269,7 @@ const availabilityClass = computed(() => {
 .metrics-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  margin-top: 0;
+  margin-top: auto;
   padding: 0;
   border-top: 1px solid #ece7dd;
   border-bottom: 1px solid #ece7dd;
@@ -373,7 +376,7 @@ color: #c9a200;
   background: #557067;
   color: white;
   border-radius: 999px;
-  padding: 7px 24px;
+  padding: 10px 28px;
   font-weight: 600;
   font-size: 15px;
   cursor: pointer;
@@ -381,6 +384,12 @@ color: #c9a200;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+.btn-arrow {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .details-btn:hover {
@@ -410,11 +419,6 @@ color: #c9a200;
   .facility-footer {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .details-btn {
-    width: 100%;
-    margin-left: 0;
   }
 }
 </style>

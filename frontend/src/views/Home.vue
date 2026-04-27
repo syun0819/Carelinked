@@ -200,20 +200,62 @@ onMounted(async () => {
 }
 
 @media (max-width: 1024px) {
+  .mode-switch-section {
+    height: auto;
+    background: linear-gradient(to bottom, #dfe8e3 55%, #f7f4ee 55%);
+  }
+
+  .stats-wrapper {
+    transform: translateY(0);
+    padding-top: 20px;
+    padding-bottom: 0;
+  }
+
   .stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  .stats-card {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 16px 10px;
+    gap: 6px;
+    min-height: 90px;
+  }
+
+  .stats-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .stats-content {
+    align-items: center;
+  }
+
+  .stats-number {
+    font-size: 18px;
+    text-align: center;
+  }
+
+  .stats-text {
+    font-size: 11px;
+    text-align: center;
   }
 }
 
 @media (max-width: 640px) {
+  .mode-switch-section {
+    background: #f7f4ee;
+  }
+
   .stats-wrapper {
-    padding: 0 16px;
-    transform: translateY(0);
-    margin-top: 24px;
+    padding: 16px 16px 24px;
   }
 
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
   }
 
