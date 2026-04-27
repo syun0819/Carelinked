@@ -200,20 +200,48 @@ onMounted(async () => {
 }
 
 @media (max-width: 1024px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .mode-switch-section {
+    height: auto;
+    background: linear-gradient(to bottom, #dfe8e3 50%, #f7f4ee 50%);
+  }
+
+  .stats-wrapper {
+    transform: translateY(0);
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
+  .stats-card {
+    padding: 12px 14px;
+    gap: 10px;
+    min-height: 70px;
+  }
+
+  .stats-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .stats-number {
+    font-size: 18px;
+  }
+
+  .stats-text {
+    font-size: 11px;
   }
 }
 
 @media (max-width: 640px) {
+  .mode-switch-section {
+    background: #f7f4ee;
+  }
+
   .stats-wrapper {
-    padding: 0 16px;
-    transform: translateY(0);
-    margin-top: 24px;
+    padding: 16px 16px 24px;
   }
 
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
   }
 
