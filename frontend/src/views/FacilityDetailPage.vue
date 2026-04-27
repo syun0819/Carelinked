@@ -123,7 +123,7 @@
                 v-if="activeSection === 'summary'"
                 :facility="facility"
               />
-              <QualityRatingsSection v-else-if="activeSection === 'quality'" />
+              <QualityRatingsSection v-else-if="activeSection === 'quality'" :facility="facility" />
               <StaffingSection v-else-if="activeSection === 'staffing'" />
               <ResidentExperienceSection v-else-if="activeSection === 'resident'" />
             </div>
@@ -235,10 +235,11 @@ const hasCoordinates = computed(() => {
 
 const starDisplay = computed(() => {
   if (!facility.value) return null
-  const rating = facility.value.rating
-  const num = rating ? parseFloat(rating) : 3.0
-  const full = Math.round(isNaN(num) ? 3 : num)
-  return { full: Math.max(0, Math.min(5, full)), empty: 5 - Math.max(0, Math.min(5, full)), value: (isNaN(num) ? 3 : num).toFixed(1) }
+  const raw = facility.value.overallStarRating
+  const num = raw != null ? raw : null
+  if (num == null) return null
+  const full = Math.max(0, Math.min(5, Math.round(num)))
+  return { full, empty: 5 - full, value: num.toFixed(1) }
 })
 
 function escapeHtml(str) {
