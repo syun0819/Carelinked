@@ -38,7 +38,7 @@ const error = ref(false)
 const inputEl = ref(null)
 
 function submit() {
-  if (password.value === 'carelink04') {
+  if (password.value === import.meta.env.VITE_ACCESS_PASSWORD) {
     localStorage.setItem('authenticated', 'true')
     router.push('/')
   } else {

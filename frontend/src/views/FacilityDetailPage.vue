@@ -241,6 +241,16 @@ const starDisplay = computed(() => {
   return { full: Math.max(0, Math.min(5, full)), empty: 5 - Math.max(0, Math.min(5, full)), value: (isNaN(num) ? 3 : num).toFixed(1) }
 })
 
+function escapeHtml(str) {
+  if (str == null) return ''
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 function initMap() {
   if (!hasCoordinates.value || !mapEl.value) return
 
@@ -261,8 +271,8 @@ function initMap() {
 
   marker.bindPopup(`
     <div>
-      <strong>${facility.value.name}</strong><br />
-      ${facility.value.address || ''}
+      <strong>${escapeHtml(facility.value.name)}</strong><br />
+      ${escapeHtml(facility.value.address)}
     </div>
   `)
 

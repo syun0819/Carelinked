@@ -94,6 +94,16 @@ let userMarker = null
 
 const defaultCenter = [-37.8136, 144.9631]
 const defaultZoom = 12
+function escapeHtml(str) {
+  if (str == null) return ''
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 const emit = defineEmits(['update:count'])
 
 const careTypeMap = {
@@ -293,14 +303,13 @@ function renderMarkers() {
 
     marker.bindPopup(`
       <div class="facility-popup">
-        <div class="popup-title">${item.name || 'Unnamed facility'}</div>
-        <div class="popup-line">${(item.suburb || '')} ${(item.postcode || '')}</div>
-        <div class="popup-line">${item.careType || ''}</div>
+        <div class="popup-title">${escapeHtml(item.name) || 'Unnamed facility'}</div>
+        <div class="popup-line">${escapeHtml(item.suburb)} ${escapeHtml(item.postcode)}</div>
+        <div class="popup-line">${escapeHtml(item.careType)}</div>
         <div class="popup-line">Beds: ${item.totalBeds ?? 'N/A'}</div>
         <div class="popup-line">
-          ${item.availability ? `Availability: ${item.availability}` : 'Availability: Unknown'}
+          ${item.availability ? `Availability: ${escapeHtml(item.availability)}` : 'Availability: Unknown'}
         </div>
-
         <div class="popup-actions">
           <a class="popup-detail-btn" href="/facility/${item.id}">
             SHOW DETAIL
