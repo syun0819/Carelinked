@@ -254,7 +254,7 @@ function hideSuggestions() {
   display: flex;
   justify-content: center;
   position: relative;
-  z-index: 10;
+  z-index: 2200;
 }
 
 .search-bar {
