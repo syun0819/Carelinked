@@ -202,32 +202,46 @@ onMounted(async () => {
 @media (max-width: 1024px) {
   .mode-switch-section {
     height: auto;
-    background: linear-gradient(to bottom, #dfe8e3 50%, #f7f4ee 50%);
+    background: linear-gradient(to bottom, #dfe8e3 55%, #f7f4ee 55%);
   }
 
   .stats-wrapper {
     transform: translateY(0);
-    padding-top: 24px;
-    padding-bottom: 24px;
+    padding-top: 20px;
+    padding-bottom: 0;
+  }
+
+  .stats-grid {
+    align-items: stretch;
   }
 
   .stats-card {
-    padding: 12px 14px;
-    gap: 10px;
-    min-height: 70px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 16px 10px;
+    gap: 6px;
+    min-height: 90px;
   }
 
   .stats-icon {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
+  }
+
+  .stats-content {
+    align-items: center;
   }
 
   .stats-number {
     font-size: 18px;
+    text-align: center;
   }
 
   .stats-text {
     font-size: 11px;
+    text-align: center;
   }
 }
 
