@@ -7,28 +7,45 @@
       <h2 class="section-title">Resident Experience</h2>
     </div>
 
-    <div class="resident-grid">
+    <div v-if="hasData" class="resident-grid">
       <div v-for="metric in metrics" :key="metric.label" class="resident-metric">
         <div class="resident-metric-header">
           <span class="resident-metric-label">{{ metric.label }}</span>
-          <span class="resident-metric-pct">{{ metric.pct }}%</span>
+          <span class="resident-metric-pct">{{ metric.pct != null ? metric.pct + '%' : 'N/A' }}</span>
         </div>
         <div class="resident-bar-track">
-          <div class="resident-bar-fill" :style="{ width: metric.pct + '%' }"></div>
+          <div class="resident-bar-fill" :style="{ width: (metric.pct ?? 0) + '%' }"></div>
         </div>
       </div>
+    </div>
+
+    <div v-else class="no-data-msg">
+      No resident experience data available for this facility.
     </div>
   </div>
 </template>
 
 <script setup>
-const metrics = [
-  { label: 'Food',            pct: 65 },
-  { label: 'Safety',          pct: 72 },
-  { label: 'Respect',         pct: 70 },
-  { label: 'Caring',          pct: 75 },
-  { label: 'Feeling at Home', pct: 64 },
-]
+import { computed } from 'vue'
+
+const props = defineProps({
+  facility: { type: Object, required: true }
+})
+
+function toPct(val) {
+  if (val == null) return null
+  return Math.round((val / 5) * 100)
+}
+
+const metrics = computed(() => [
+  { label: 'Food',            pct: toPct(props.facility?.reFoodScore) },
+  { label: 'Safety',          pct: toPct(props.facility?.reSafetyScore) },
+  { label: 'Respect',         pct: toPct(props.facility?.reRespectScore) },
+  { label: 'Caring',          pct: toPct(props.facility?.reCaringScore) },
+  { label: 'Feeling at Home', pct: toPct(props.facility?.reHomeScore) },
+])
+
+const hasData = computed(() => metrics.value.some(m => m.pct != null))
 </script>
 
 <style scoped>
@@ -97,6 +114,12 @@ const metrics = [
   background: #3d6b59;
   border-radius: 999px;
   transition: width 0.4s ease;
+}
+
+.no-data-msg {
+  font-size: 14px;
+  color: #a0a8a4;
+  padding: 8px 0;
 }
 
 @media (max-width: 768px) {

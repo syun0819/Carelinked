@@ -7,47 +7,97 @@
       <h2 class="section-title">Staffing &amp; Compliance</h2>
     </div>
 
-    <div v-for="metric in metrics" :key="metric.label" class="staffing-metric">
-      <div class="staffing-metric-header">
-        <span class="staffing-metric-label">{{ metric.label }}</span>
-        <span class="staffing-badge badge-unmet">
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
+    <div v-if="hasData">
+      <div v-for="metric in metrics" :key="metric.label" class="staffing-metric">
+        <div class="staffing-metric-header">
+          <span class="staffing-metric-label">{{ metric.label }}</span>
+          <span v-if="metric.met" class="staffing-badge badge-met">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Target met
+          </span>
+          <span v-else class="staffing-badge badge-unmet">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Target not met
+          </span>
+        </div>
+        <div class="staffing-bar-track">
+          <div class="staffing-bar-fill" :class="metric.met ? 'bar-met' : 'bar-unmet'" :style="{ width: Math.min(metric.percent, 100) + '%' }"></div>
+        </div>
+        <div class="staffing-metric-footer">
+          <span>Actual: {{ metric.actual }}</span>
+          <span>Target: {{ metric.target }}</span>
+        </div>
+      </div>
+
+      <div class="staffing-compliance-row">
+        <div class="staffing-compliance-left">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" :stroke="complianceColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
-          Target not met
-        </span>
-      </div>
-      <div class="staffing-bar-track">
-        <div class="staffing-bar-fill" :style="{ width: metric.percent + '%' }"></div>
-      </div>
-      <div class="staffing-metric-footer">
-        <span>Actual: {{ metric.actual }}</span>
-        <span>Target: {{ metric.target }}</span>
+          <span class="staffing-compliance-label">Compliance status</span>
+        </div>
+        <span class="staffing-badge" :class="complianceBadgeClass">{{ complianceLabel }}</span>
       </div>
     </div>
 
-    <div class="staffing-compliance-row">
-      <div class="staffing-compliance-left">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#c07a40" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/>
-          <line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-        <span class="staffing-compliance-label">Compliance status</span>
-      </div>
-      <span class="staffing-badge badge-action">Action taken</span>
+    <div v-else class="no-data-msg">
+      No staffing data available for this facility.
     </div>
-    <p class="staffing-compliance-note">Compliance notice issued; remediation underway.</p>
   </div>
 </template>
 
 <script setup>
-const metrics = [
-  { label: 'Registered Nurse care minutes', actual: '36 mins/day', target: '44 mins/day', percent: 81 },
-  { label: 'Total care minutes',            actual: '195 mins/day', target: '215 mins/day', percent: 91 },
-]
+import { computed } from 'vue'
+
+const props = defineProps({
+  facility: { type: Object, required: true }
+})
+
+const hasData = computed(() =>
+  props.facility?.sRnCareMinutesActual != null ||
+  props.facility?.sTotalCareMinutesActual != null
+)
+
+function fmtMins(val) {
+  if (val == null) return 'N/A'
+  return `${Math.round(val)} mins/day`
+}
+
+function pct(actual, target) {
+  if (!actual || !target) return 0
+  return Math.round((actual / target) * 100)
+}
+
+const metrics = computed(() => [
+  {
+    label: 'Registered Nurse care minutes',
+    actual: fmtMins(props.facility?.sRnCareMinutesActual),
+    target: fmtMins(props.facility?.sRnCareMinutesTarget),
+    percent: pct(props.facility?.sRnCareMinutesActual, props.facility?.sRnCareMinutesTarget),
+    met: props.facility?.rnMinutesMet === true,
+  },
+  {
+    label: 'Total care minutes',
+    actual: fmtMins(props.facility?.sTotalCareMinutesActual),
+    target: fmtMins(props.facility?.sTotalCareMinutesTarget),
+    percent: pct(props.facility?.sTotalCareMinutesActual, props.facility?.sTotalCareMinutesTarget),
+    met: props.facility?.totalMinutesMet === true,
+  },
+])
+
+const allMet = computed(() =>
+  props.facility?.rnMinutesMet === true && props.facility?.totalMinutesMet === true
+)
+
+const complianceLabel = computed(() => allMet.value ? 'Compliant' : 'Action taken')
+const complianceBadgeClass = computed(() => allMet.value ? 'badge-compliant' : 'badge-action')
+const complianceColor = computed(() => allMet.value ? '#3d6b59' : '#c07a40')
 </script>
 
 <style scoped>
@@ -99,8 +149,10 @@ const metrics = [
   white-space: nowrap;
 }
 
-.badge-unmet { background: #fdecea; color: #c0392b; }
-.badge-action { background: #fef3e2; color: #c07a40; }
+.badge-unmet   { background: #fdecea; color: #c0392b; }
+.badge-met     { background: #e6f4ed; color: #2e7d5a; }
+.badge-action  { background: #fef3e2; color: #c07a40; }
+.badge-compliant { background: #e6f4ed; color: #2e7d5a; }
 
 .staffing-bar-track {
   width: 100%;
@@ -112,10 +164,12 @@ const metrics = [
 
 .staffing-bar-fill {
   height: 100%;
-  background: #3d6b59;
   border-radius: 999px;
   transition: width 0.4s ease;
 }
+
+.bar-met   { background: #3d6b59; }
+.bar-unmet { background: #c0392b; }
 
 .staffing-metric-footer {
   display: flex;
@@ -137,5 +191,9 @@ const metrics = [
 
 .staffing-compliance-label { font-size: 14px; font-weight: 600; color: #3a4e47; }
 
-.staffing-compliance-note { margin: 0; font-size: 13px; color: #7f8d87; }
+.no-data-msg {
+  font-size: 14px;
+  color: #a0a8a4;
+  padding: 8px 0;
+}
 </style>

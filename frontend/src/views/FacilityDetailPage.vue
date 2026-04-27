@@ -124,8 +124,8 @@
                 :facility="facility"
               />
               <QualityRatingsSection v-else-if="activeSection === 'quality'" :facility="facility" />
-              <StaffingSection v-else-if="activeSection === 'staffing'" />
-              <ResidentExperienceSection v-else-if="activeSection === 'resident'" />
+              <StaffingSection v-else-if="activeSection === 'staffing'" :facility="facility" />
+              <ResidentExperienceSection v-else-if="activeSection === 'resident'" :facility="facility" />
             </div>
           </div>
         </div>
@@ -187,8 +187,13 @@
       </div>
     </div>
 
+    <div v-else-if="loading" class="detail-container loading-container">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Loading facility details...</p>
+    </div>
+
     <div v-else class="detail-container">
-      <p>Facility not found.</p>
+      <p class="not-found-text">Facility not found.</p>
     </div>
 
     <FooterSection />
@@ -771,6 +776,41 @@ const addToCompare = () => {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
+}
+
+/* ── Loading / Not found ── */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  gap: 16px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #ddd5ca;
+  border-top-color: #3d6b59;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 15px;
+  color: #7f8d87;
+}
+
+.not-found-text {
+  font-size: 15px;
+  color: #7f8d87;
+  padding: 60px 0;
+  text-align: center;
 }
 
 /* ── Responsive ── */
