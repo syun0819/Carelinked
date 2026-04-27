@@ -1,9 +1,9 @@
 <template>
   <header class="header">
     <router-link to="/" class="logo">
-      <img :src="logo" alt="CareLink logo" class="logo-img" />
+      <img :src="logo" alt="CareLinked logo" class="logo-img" />
       <div class="logo-text">
-        <div class="brand">CareLink</div>
+        <div class="brand">CareLinked</div>
         <div class="sub">AUSTRALIA</div>
       </div>
     </router-link>
