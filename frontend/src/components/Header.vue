@@ -1,9 +1,9 @@
 <template>
   <header class="header">
     <router-link to="/" class="logo">
-      <img :src="logo" alt="CareLink logo" class="logo-img" />
+      <img :src="logo" alt="CareLinked logo" class="logo-img" />
       <div class="logo-text">
-        <div class="brand">CareLink</div>
+        <div class="brand">CareLinked</div>
         <div class="sub">AUSTRALIA</div>
       </div>
     </router-link>
@@ -12,11 +12,12 @@
     <nav class="nav">
       <router-link to="/" class="nav-item" active-class="active">Home</router-link>
       <router-link to="/find-bed" class="nav-item" active-class="active">
-        Find a Bed
+        Find Care
       </router-link>
       <button class="nav-item nav-link-btn" @click="goToSection('#how-it-works')">
         How It Works
       </button>
+      <router-link :to="{ path: '/compare', query: { mode: 'select' } }" class="nav-item" active-class="active">Compare</router-link>
     </nav>
 
     <!-- Mobile hamburger -->
@@ -34,8 +35,9 @@
       </div>
       <nav class="drawer-nav">
         <router-link to="/" class="drawer-item" @click="menuOpen = false">Home</router-link>
-        <router-link to="/find-bed" class="drawer-item" @click="menuOpen = false">Find a Bed</router-link>
+        <router-link to="/find-bed" class="drawer-item" @click="menuOpen = false">Find Care</router-link>
         <button class="drawer-item drawer-btn" @click="goToSectionMobile('#how-it-works')">How It Works</button>
+        <router-link :to="{ path: '/compare', query: { mode: 'select' } }" class="drawer-item" @click="menuOpen = false">Compare</router-link>
       </nav>
     </div>
 

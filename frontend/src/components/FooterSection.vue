@@ -3,7 +3,7 @@
     <div class="footer-container">
       <div class="footer-top">
         <div class="footer-brand">
-          <h3>CareLink</h3>
+          <h3>CareLinked</h3>
           <span class="footer-location">AUSTRALIA</span>
           <p>
             Helping Australians find aged care beds faster.<br />
@@ -26,7 +26,7 @@
           Powered by open data from AIHW · GEN Aged Care Data
         </p>
         <p class="footer-copy">
-          © 2025 CareLinkTE04. All rights reserved.
+          © 2025 CareLinkedTE04. All rights reserved.
         </p>
       </div>
     </div>

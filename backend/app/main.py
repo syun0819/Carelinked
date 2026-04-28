@@ -35,6 +35,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.include_router(facilities.router)
 app.include_router(autocomplete.router)
+app.include_router(quality.router)
 
 app.include_router(quality.router)
 app.include_router(waittime.router)

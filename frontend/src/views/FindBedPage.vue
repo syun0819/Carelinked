@@ -97,6 +97,7 @@
     </section>
 
     <FooterSection />
+    <CompareBar ref="compareBarRef" />
   </div>
 </template>
 
@@ -114,6 +115,9 @@ import FacilityCardSkeleton from '../components/FacilityCardSkeleton.vue'
 import MapSection from '../components/MapSection.vue'
 import PaginationBar from '../components/search/PaginationBar.vue'
 import FooterSection from '../components/FooterSection.vue'
+import CompareBar from '../components/CompareBar.vue'
+
+const compareBarRef = ref(null)
 
 const route = useRoute()
 const router = useRouter()
