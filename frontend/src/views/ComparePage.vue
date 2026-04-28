@@ -106,14 +106,17 @@
           </div>
 
           <p class="picker-hint">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
-            Select at least 2 facilities to start comparing
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 9l9-6 9 6"/><path d="M6 9L3 18a3 3 0 0 0 6 0L6 9z"/><path d="M18 9l-3 9a3 3 0 0 0 6 0L18 9z"/><line x1="3" y1="21" x2="21" y2="21"/></svg>
+            {{ facilities.length === 1 ? 'Add 1 more facility to start comparing' : 'Select at least 2 facilities to start comparing' }}
           </p>
 
           <div class="picker-actions">
             <button class="browse-btn" @click="goBack">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
               Browse all facilities
+            </button>
+            <button v-if="facilities.length > 0" class="clear-selection-btn" @click="clearSelection">
+              Clear selection
             </button>
           </div>
 
@@ -255,19 +258,19 @@
                 </td>
               </tr>
 
-              <!-- Estimated wait time -->
+              <!-- Availability -->
               <tr v-if="visibleSections.has('waitTime')" class="compare-row">
                 <td class="label-cell">
                   <span class="label-with-help">
-                    <span>Estimated wait time</span>
-                    <button class="info-dot" type="button" :aria-label="fieldInfo.estimatedWaitTime">
+                    <span>Availability</span>
+                    <button class="info-dot" type="button" :aria-label="fieldInfo.availability">
                       i
-                      <span class="info-tooltip" role="tooltip">{{ fieldInfo.estimatedWaitTime }}</span>
+                      <span class="info-tooltip" role="tooltip">{{ fieldInfo.availability }}</span>
                     </button>
                   </span>
                 </td>
                 <td v-for="f in facilities" :key="f.id" class="data-cell">
-                  <span class="na-text">Unknown</span>
+                  <span class="value-text" :class="availabilityClass(f.bedAvailability)">{{ f.bedAvailability || 'Unknown' }}</span>
                 </td>
               </tr>
 
@@ -570,7 +573,7 @@ const comparisonStarted = ref(shouldShowResults.value)
 
 const sections = [
   { key: 'overview',           label: 'Overview' },
-  { key: 'waitTime',           label: 'Wait Time' },
+  { key: 'waitTime',           label: 'Availability' },
   { key: 'qualityRatings',     label: 'Quality Ratings' },
   { key: 'staffing',           label: 'Staffing' },
   { key: 'compliance',         label: 'Compliance' },
@@ -580,7 +583,7 @@ const sections = [
 
 const fieldInfo = {
   careType: 'The type of aged care service offered, such as residential care.',
-  estimatedWaitTime: 'An estimated placement wait time. Unknown means no reliable wait estimate is available for this facility.',
+  availability: 'Bed availability estimation based on current occupancy data. Indicates how likely a place is available at this facility.',
   overallRating: 'The overall star rating summarising quality, care, staffing and compliance signals.',
   residentExperienceRating: 'A rating based on resident experience feedback, including how residents feel about daily life and care.',
   staffingRating: 'A star rating that reflects staffing performance and care minute information.',
@@ -714,6 +717,15 @@ watch(() => [route.query.mode, route.query.keepSelection], async ([mode, keepSel
   showAddPanel.value = false
 })
 
+function availabilityClass(val) {
+  if (val === 'Likely Available') return 'avail-likely'
+  if (val === 'Potentially Available') return 'avail-potential'
+  if (val === 'Constrained by Market' || val === 'Constrained by Size') return 'avail-constrained'
+  if (val === 'Highly Constrained') return 'avail-highly-constrained'
+  if (val === 'Does Not Provide This Service') return 'avail-none'
+  return ''
+}
+
 function starsFor(val) {
   const full = Math.max(0, Math.min(5, Math.round(val ?? 0)))
   return { full, empty: 5 - full }
@@ -735,6 +747,18 @@ function formatFunding(val) {
 function removeFacility(id) {
   compareStore.remove(id)
   facilities.value = facilities.value.filter(f => f.id !== id)
+}
+
+function clearSelection() {
+  compareStore.clear()
+  facilities.value = []
+  comparisonStarted.value = false
+  showAddPanel.value = false
+  slots.forEach(slot => {
+    slot.query = ''
+    slot.results = []
+    slot.loading = false
+  })
 }
 
 function clearAll() {
@@ -1144,7 +1168,7 @@ function goToDetail(id) {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 14px;
+  gap: 32px;
   flex-wrap: wrap;
 }
 
@@ -1163,6 +1187,18 @@ function goToDetail(id) {
   transition: background 0.15s;
 }
 .browse-btn:hover { background: #f0ece4; }
+
+.clear-selection-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #7f8d87;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.clear-selection-btn:hover { color: #22332e; }
 
 /* ── COMPARE TABLE HEADER ── */
 .compare-header {
@@ -1408,6 +1444,10 @@ col.col-label { width: 160px; }
   border-bottom: 1px solid #ece9e3;
 }
 
+.facility-header-row th.label-cell {
+  background: #f7f7f6;
+}
+
 .label-cell {
   padding: 0 14px;
   font-size: 14px;
@@ -1586,6 +1626,12 @@ col.col-label { width: 160px; }
 .data-cell:last-child { border-right: none; }
 
 .value-text { font-weight: 600; color: #22332e; }
+
+.avail-likely              { color: #4f7a62; }
+.avail-potential           { color: #c9a200; }
+.avail-constrained         { color: #d9822b; }
+.avail-highly-constrained  { color: #c53b2c; }
+.avail-none                { color: #9e9e9e; }
 .na-text { color: #b0bdb8; font-size: 13px; }
 
 /* ── Stars ── */
