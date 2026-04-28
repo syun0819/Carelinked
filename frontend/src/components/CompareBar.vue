@@ -10,7 +10,7 @@
           </svg>
           <span class="compare-bar-label">
             Compare ({{ compareStore.count }})
-            <span v-if="compareStore.count < 2" class="compare-bar-hint">· Select at least 2 facilities</span>
+            <span v-if="compareStore.count < compareStore.initialSelectionLimit" class="compare-bar-hint">· Select 2 facilities</span>
           </span>
         </div>
 
@@ -25,8 +25,8 @@
           <button class="clear-btn" @click="compareStore.clear()">Clear all</button>
           <button
             class="go-btn"
-            :class="{ disabled: compareStore.count < 2 }"
-            :disabled="compareStore.count < 2"
+            :class="{ disabled: compareStore.count < compareStore.initialSelectionLimit }"
+            :disabled="compareStore.count < compareStore.initialSelectionLimit"
             @click="goToCompare"
           >
             Compare
@@ -76,7 +76,7 @@ watch(() => compareStore.count, (newCount) => {
 })
 
 function goToCompare() {
-  router.push('/compare')
+  router.push({ path: '/compare', query: { mode: 'results' } })
 }
 </script>
 

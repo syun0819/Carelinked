@@ -2,10 +2,13 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 export const useCompareStore = defineStore('compare', () => {
+  const maxItems = 3
+  const initialSelectionLimit = 2
   const items = ref(JSON.parse(localStorage.getItem('compareItems') || '[]'))
 
   const count = computed(() => items.value.length)
-  const isFull = computed(() => items.value.length >= 2)
+  const isFull = computed(() => items.value.length >= maxItems)
+  const isInitialSelectionFull = computed(() => items.value.length >= initialSelectionLimit)
   const facilityIds = computed(() => items.value.map(i => i.id))
 
   function add(id, name) {
@@ -37,5 +40,18 @@ export const useCompareStore = defineStore('compare', () => {
     localStorage.setItem('compareItems', JSON.stringify(items.value))
   }
 
-  return { items, count, isFull, facilityIds, add, remove, toggle, clear, has }
+  return {
+    items,
+    count,
+    isFull,
+    isInitialSelectionFull,
+    maxItems,
+    initialSelectionLimit,
+    facilityIds,
+    add,
+    remove,
+    toggle,
+    clear,
+    has
+  }
 })

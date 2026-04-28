@@ -11,7 +11,7 @@
         :class="{ selected: isInCompare }"
         @click.stop="toggleCompare"
         :disabled="!isInCompare && compareStore.isFull"
-        :title="isInCompare ? 'Remove from compare' : compareStore.isFull ? 'Compare list is full' : 'Add to compare'"
+        :title="isInCompare ? 'Remove from compare' : compareStore.isFull ? 'Compare list full (max 3)' : 'Add to compare'"
       >
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline v-if="isInCompare" points="20 6 9 17 4 12"/>
