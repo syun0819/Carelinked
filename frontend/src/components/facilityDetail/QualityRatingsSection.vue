@@ -2,14 +2,14 @@
   <div class="info-card">
     <div class="quality-header">
       <h2 class="section-title">Quality Ratings</h2>
-      <div class="quality-overall">
-        <span class="star filled">★</span>
-        <span class="star filled">★</span>
-        <span class="star filled">★</span>
-        <span class="star empty">★</span>
-        <span class="star empty">★</span>
-        <span class="rating-value">3.0</span>
+      <div v-if="overallRating != null" class="quality-overall">
+        <span v-for="i in overallFull" :key="'f'+i" class="star filled">★</span>
+        <span v-for="i in (5 - overallFull)" :key="'e'+i" class="star empty">★</span>
+        <span class="rating-value">{{ overallRating.toFixed(1) }}</span>
         <span class="overall-badge">OVERALL</span>
+      </div>
+      <div v-else class="quality-overall">
+        <span class="no-data-text">No rating data</span>
       </div>
     </div>
 
@@ -17,9 +17,12 @@
       <div v-for="item in ratingItems" :key="item.label" class="quality-item">
         <span class="quality-label">{{ item.label }}</span>
         <div class="quality-stars">
-          <span v-for="i in item.full" :key="'f'+i" class="star filled">★</span>
-          <span v-for="i in item.empty" :key="'e'+i" class="star empty">★</span>
-          <span class="quality-num">{{ item.value }}</span>
+          <template v-if="item.value != null">
+            <span v-for="i in item.full" :key="'f'+i" class="star filled">★</span>
+            <span v-for="i in item.empty" :key="'e'+i" class="star empty">★</span>
+            <span class="quality-num">{{ item.value.toFixed(1) }}</span>
+          </template>
+          <span v-else class="no-data-text">N/A</span>
         </div>
       </div>
     </div>
@@ -27,12 +30,27 @@
 </template>
 
 <script setup>
-const ratingItems = [
-  { label: 'Resident Experience', full: 3, empty: 2, value: '3.0' },
-  { label: 'Staffing',            full: 3, empty: 2, value: '3.0' },
-  { label: 'Compliance',          full: 3, empty: 2, value: '3.0' },
-  { label: 'Quality Measures',    full: 3, empty: 2, value: '3.0' },
-]
+import { computed } from 'vue'
+
+const props = defineProps({
+  facility: { type: Object, required: true }
+})
+
+const overallRating = computed(() => props.facility?.overallStarRating ?? null)
+const overallFull = computed(() => overallRating.value != null ? Math.max(0, Math.min(5, Math.round(overallRating.value))) : 0)
+
+function toStars(val) {
+  if (val == null) return { full: 0, empty: 5, value: null }
+  const full = Math.max(0, Math.min(5, Math.round(val)))
+  return { full, empty: 5 - full, value: val }
+}
+
+const ratingItems = computed(() => [
+  { label: 'Resident Experience', ...toStars(props.facility?.residentsExperienceRating) },
+  { label: 'Staffing',            ...toStars(props.facility?.staffingRating) },
+  { label: 'Compliance',          ...toStars(props.facility?.complianceRating) },
+  { label: 'Quality Measures',    ...toStars(props.facility?.qualityMeasuresRating) },
+])
 </script>
 
 <style scoped>
@@ -133,6 +151,11 @@ const ratingItems = [
   font-size: 14px;
   font-weight: 700;
   color: #22332e;
+}
+
+.no-data-text {
+  font-size: 13px;
+  color: #a0a8a4;
 }
 
 @media (max-width: 768px) {
