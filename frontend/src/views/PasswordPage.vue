@@ -37,7 +37,8 @@ const password = ref('')
 const error = ref(false)
 const inputEl = ref(null)
 
-function submit() {
+
+function submit() { 
   if (password.value === "carelinked04") {
     localStorage.setItem('authenticated', 'true')
     router.push('/')
