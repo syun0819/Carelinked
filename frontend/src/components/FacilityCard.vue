@@ -6,6 +6,19 @@
         :alt="facility.name"
         class="facility-image"
       />
+      <button
+        class="compare-toggle"
+        :class="{ selected: isInCompare }"
+        @click.stop="toggleCompare"
+        :disabled="!isInCompare && compareStore.isFull"
+        :title="isInCompare ? 'Remove from compare' : compareStore.isFull ? 'Compare list is full' : 'Add to compare'"
+      >
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline v-if="isInCompare" points="20 6 9 17 4 12"/>
+          <g v-else><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></g>
+        </svg>
+        Compare
+      </button>
     </div>
 
     <div class="facility-body">
@@ -66,6 +79,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useCompareStore } from '../stores/compareStore'
 
 const props = defineProps({
   facility: {
@@ -76,7 +90,20 @@ const props = defineProps({
 
 const router = useRouter()
 const route = useRoute()
+const compareStore = useCompareStore()
 
+const isInCompare = computed(() => compareStore.has(props.facility.id))
+
+const emit = defineEmits(['compare-added'])
+
+function toggleCompare() {
+  if (isInCompare.value) {
+    compareStore.remove(props.facility.id)
+  } else {
+    compareStore.add(props.facility.id, props.facility.name)
+    emit('compare-added', props.facility.name)
+  }
+}
 
 const goToDetail = () => {
   router.push({
@@ -145,6 +172,42 @@ const availabilityClass = computed(() => {
   position: relative;
   height: 190px;
   overflow: hidden;
+}
+
+.compare-toggle {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255,255,255,0.92);
+  color: #4a5e57;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  backdrop-filter: blur(4px);
+  transition: background 0.15s, color 0.15s;
+  z-index: 1;
+}
+
+.compare-toggle:hover:not(:disabled) {
+  background: #e6f4ed;
+  color: #2e7d5a;
+}
+
+.compare-toggle.selected {
+  background: #3d6b59;
+  color: #fff;
+}
+
+.compare-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .facility-image {

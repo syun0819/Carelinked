@@ -216,6 +216,7 @@ import ResidentExperienceSection from '../components/facilityDetail/ResidentExpe
 
 import { getFacilityDetail, getSimilarFacilities } from '../services/facilitiesApi'
 import { mapFacilityCard, mapFacilityDetail } from '../utils/facilityMappers'
+import { useCompareStore } from '../stores/compareStore'
 
 const route = useRoute()
 const router = useRouter()
@@ -370,8 +371,20 @@ const copyAddress = async () => {
   }
 }
 
+const compareStore = useCompareStore()
+
 const addToCompare = () => {
-  alert('Add to Compare — coming soon')
+  if (!facility.value) return
+  if (compareStore.has(facility.value.id)) {
+    router.push('/compare')
+    return
+  }
+  if (compareStore.isFull) {
+    alert('You can only compare 2 facilities at a time. Remove one from the Compare page first.')
+    return
+  }
+  compareStore.add(facility.value.id, facility.value.name)
+  router.push('/compare')
 }
 </script>
 
