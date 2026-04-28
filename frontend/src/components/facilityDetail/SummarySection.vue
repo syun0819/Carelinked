@@ -8,12 +8,6 @@
         <div class="summary-label">BED AVAILABILITY ESTIMATION</div>
       </div>
       <div class="summary-card">
-        <div class="summary-value wait-text">
-          {{ facility.estimatedWait || 'Unknown' }}
-        </div>
-        <div class="summary-label">ESTIMATED WAIT</div>
-      </div>
-      <div class="summary-card">
         <div class="summary-value">{{ facility.totalBeds }}</div>
         <div class="summary-label">TOTAL BEDS</div>
       </div>
@@ -135,7 +129,7 @@ const formattedFunding = computed(() => {
 
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
 
