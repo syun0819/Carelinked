@@ -57,6 +57,7 @@
     <HowItWorksSection />
 
     <FooterSection />
+    <CompareBar />
   </div>
 </template>
 
@@ -67,6 +68,7 @@ import HeroSection from '../components/HeroSection.vue'
 import ExploreSection from '../components/ExploreSection.vue'
 import HowItWorksSection from '../components/HowItWorksSection.vue'
 import FooterSection from '../components/FooterSection.vue'
+import CompareBar from '../components/CompareBar.vue'
 
 import { useLocationStore } from '../stores/locationStore'
 

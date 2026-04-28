@@ -197,6 +197,7 @@
     </div>
 
     <FooterSection />
+    <CompareBar />
   </div>
 </template>
 
@@ -208,6 +209,7 @@ import 'leaflet/dist/leaflet.css'
 
 import Header from '../components/Header.vue'
 import FooterSection from '../components/FooterSection.vue'
+import CompareBar from '../components/CompareBar.vue'
 import FacilityCard from '../components/FacilityCard.vue'
 import SummarySection from '../components/facilityDetail/SummarySection.vue'
 import QualityRatingsSection from '../components/facilityDetail/QualityRatingsSection.vue'
@@ -216,6 +218,7 @@ import ResidentExperienceSection from '../components/facilityDetail/ResidentExpe
 
 import { getFacilityDetail, getSimilarFacilities } from '../services/facilitiesApi'
 import { mapFacilityCard, mapFacilityDetail } from '../utils/facilityMappers'
+import { useCompareStore } from '../stores/compareStore'
 
 const route = useRoute()
 const router = useRouter()
@@ -370,8 +373,18 @@ const copyAddress = async () => {
   }
 }
 
+const compareStore = useCompareStore()
+
 const addToCompare = () => {
-  alert('Add to Compare — coming soon')
+  if (!facility.value) return
+  if (compareStore.has(facility.value.id)) {
+    return
+  }
+  if (compareStore.isFull) {
+    alert('You can compare up to 3 facilities at a time. Remove one from the Compare page first.')
+    return
+  }
+  compareStore.add(facility.value.id, facility.value.name)
 }
 </script>
 
@@ -379,7 +392,7 @@ const addToCompare = () => {
 .detail-page {
   background: #f7f4ee;
   min-height: 100vh;
-  padding: 0;
+  padding: 0 0 76px;
   color: #22332e;
   overflow-x: hidden;
 }
