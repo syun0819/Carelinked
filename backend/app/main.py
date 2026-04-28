@@ -10,7 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.database import engine, Base
 from app.core.limiter import limiter
-from app.routers import autocomplete, facilities
+
+
+from app.routers import autocomplete, facilities, quality, waittime
+
 
 
 @asynccontextmanager
@@ -32,6 +35,10 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.include_router(facilities.router)
 app.include_router(autocomplete.router)
+
+app.include_router(quality.router)
+app.include_router(waittime.router)
+
 
 app.add_middleware(
     CORSMiddleware,
