@@ -2,7 +2,7 @@
   <div class="wait-page">
     <Header />
 
-    <main class="wait-main">
+    <main class="wait-main page-animate">
       <template v-if="!result">
         <section class="wait-intro">
           <div class="wait-kicker">
@@ -738,6 +738,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .wait-page {
   min-height: 100vh;
+  overflow: hidden;
   background: #f7f4ee;
   color: #22332e;
   overflow-x: hidden;
@@ -786,6 +787,7 @@ onBeforeUnmount(() => {
   margin: 18px 0 14px;
   font-family: var(--font-display);
   font-size: 44px;
+  font-weight: 800;
   line-height: 1.08;
   color: #1f2d2a;
 }

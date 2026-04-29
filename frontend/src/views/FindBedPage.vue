@@ -2,7 +2,7 @@
   <div class="search-page">
     <Header />
 
-    <section class="page-title">
+    <section class="page-title page-animate">
       <h1>Find a Bed</h1>
       <p>Get a personalised estimate of how long you may wait for an aged care placement.</p>
     </section>
@@ -407,6 +407,7 @@ onMounted(async () => {
 .search-page {
   background: #f7f4ee;
   min-height: 100vh;
+  overflow: hidden;
   padding: 0;
   color: #1f2d2a;
   overflow-x: hidden;

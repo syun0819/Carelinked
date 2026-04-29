@@ -10,7 +10,7 @@
           <div
             v-for="stat in highlightStats"
             :key="stat.label"
-            class="stats-card"
+            class="stats-card scroll-animate"
           >
             <div class="stats-icon" aria-hidden="true">
               <svg v-if="stat.icon === 'home-care'" viewBox="0 0 24 24" fill="none">
