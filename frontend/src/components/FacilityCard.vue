@@ -66,11 +66,8 @@
         </p>
 
         <button class="details-btn" @click.stop="goToDetail">
-          <span>View details</span>
-          <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M5 12h14M13 6l6 6-6 6"/>
-          </svg>
-        </button>
+  <span>View details</span>
+</button>
       </div>
     </div>
   </article>

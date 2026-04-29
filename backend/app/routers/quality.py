@@ -1,12 +1,20 @@
+import re
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi_cache.decorator import cache
 
 from app.core.database import get_db
 from app.core.limiter import limiter
 from app.schemas.quality import QualityRating, QualityCompareResponse
 from app.services.quality_service import get_quality_by_facility_ids
+
+def validate_facility_id(facility_id: str) -> str:
+    if not re.fullmatch(
+        r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+        facility_id.lower()
+    ):
+        raise HTTPException(status_code=400, detail="Invalid facility ID format.")
+    return facility_id
 
 router = APIRouter(prefix="/api/v1/quality", tags=["quality"])
 
@@ -50,12 +58,17 @@ def build_quality_rating(row, facility_id: str) -> QualityRating:
 
 @router.get("/compare", response_model=QualityCompareResponse)
 @limiter.limit("30/minute")
-@cache(expire=300)
 async def compare_quality(
     request: Request,
     facility_ids: List[str] = Query(...),
     db: AsyncSession = Depends(get_db),
 ):
+    for fid in facility_ids:
+        if not re.fullmatch(
+            r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+            fid.lower()
+        ):
+            raise HTTPException(status_code=400, detail="Invalid facility ID format.")
     if len(facility_ids) < 2 or len(facility_ids) > 3:
         raise HTTPException(status_code=400, detail="Please provide 2 or 3 facility_ids.")
     rows = await get_quality_by_facility_ids(db, facility_ids)
