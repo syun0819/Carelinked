@@ -14,6 +14,7 @@
         <div class="footer-links">
           <h4>Quick Links</h4>
           <router-link to="/find-bed">Find Care</router-link>
+          <router-link to="/wait-estimator">Wait Estimator</router-link>
           <a href="#how-it-works">How It Works</a>
           <a href="#">My Aged Care</a>
         </div>

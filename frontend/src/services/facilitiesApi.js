@@ -13,10 +13,20 @@ async function request(path, params = {}, options = {}) {
     }
   })
   const res = await fetch(url, {
-    signal: options.signal
+    signal: options.signal,
+    method: options.method || 'GET',
+    headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
+    body: options.body ? JSON.stringify(options.body) : undefined
   })
   if (!res.ok) {
-    throw new Error(`API request failed: ${res.status}`)
+    let detail = ''
+    try {
+      const errorBody = await res.json()
+      detail = errorBody.detail ? `: ${JSON.stringify(errorBody.detail)}` : ''
+    } catch {
+      detail = ''
+    }
+    throw new Error(`API request failed: ${res.status}${detail}`)
   }
   return res.json()
 }
@@ -43,4 +53,11 @@ export function getFacilityDetail(facilityId) {
 
 export function getSimilarFacilities(facilityId, limit = 4) {
   return request(`/api/v1/facilities/${facilityId}/similar`, { limit })
+}
+
+export function estimateWaitTime(body) {
+  return request('/api/v1/waittime/estimate', {}, {
+    method: 'POST',
+    body
+  })
 }
