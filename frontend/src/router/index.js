@@ -3,10 +3,12 @@ import Home from '../views/Home.vue'
 import FindBedPage from '../views/FindBedPage.vue'
 import FacilityDetailPage from '../views/FacilityDetailPage.vue'
 import PasswordPage from '../views/PasswordPage.vue'
+import WaitEstimatorPage from '../views/WaitEstimatorPage.vue'
 
 const routes = [
   { path: '/', component: Home },
   { path: '/find-bed', component: FindBedPage},
+  { path: '/wait-estimator', component: WaitEstimatorPage },
   {
     path: '/facility/:id',
     name: 'FacilityDetail',

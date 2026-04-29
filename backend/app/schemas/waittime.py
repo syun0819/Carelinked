@@ -3,11 +3,11 @@ from pydantic import BaseModel
 
 
 class WaitTimeEstimateRequest(BaseModel):
-    priority_level: str
-    age: str
-    assessment_location: str
-    dementia_status: str
-    living_arrangement: str
+    priority_level: Optional[str] = None
+    age: Optional[str] = None
+    assessment_location: Optional[str] = None
+    dementia_status: Optional[str] = None
+    living_arrangement: Optional[str] = None
     sex: Optional[str] = None
     first_nations_status: Optional[str] = None
     cald_status: Optional[str] = None

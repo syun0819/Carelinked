@@ -14,6 +14,9 @@
       <router-link to="/find-bed" class="nav-item" active-class="active">
         Find Care
       </router-link>
+      <router-link to="/wait-estimator" class="nav-item" active-class="active">
+        Wait Estimator
+      </router-link>
       <button class="nav-item nav-link-btn" @click="goToSection('#how-it-works')">
         How It Works
       </button>
@@ -36,6 +39,7 @@
       <nav class="drawer-nav">
         <router-link to="/" class="drawer-item" @click="menuOpen = false">Home</router-link>
         <router-link to="/find-bed" class="drawer-item" @click="menuOpen = false">Find Care</router-link>
+        <router-link to="/wait-estimator" class="drawer-item" @click="menuOpen = false">Wait Estimator</router-link>
         <button class="drawer-item drawer-btn" @click="goToSectionMobile('#how-it-works')">How It Works</button>
         <router-link :to="{ path: '/compare', query: { mode: 'select' } }" class="drawer-item" @click="menuOpen = false">Compare</router-link>
       </nav>
