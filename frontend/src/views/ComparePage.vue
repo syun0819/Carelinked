@@ -32,16 +32,14 @@
               <!-- ── Filled slot ── -->
               <template v-if="facilities[idx]">
                 <div class="slot-filled-inner">
-                  <button class="slot-remove-btn" @click="removeFacility(facilities[idx].id)" aria-label="Remove facility">×</button>
-                  <span class="slot-added-badge">
-                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    Added
-                  </span>
-                  <img :src="facilities[idx].image" :alt="facilities[idx].name" class="slot-thumb" />
-                  <div class="slot-name">{{ facilities[idx].name }}</div>
-                  <div class="slot-loc">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.1 7-12A7 7 0 0 0 5 9c0 5.9 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg>
-                    {{ facilities[idx].suburb }}, {{ facilities[idx].state }}
+                  <div class="slot-filled-img-wrap">
+                    <span class="slot-num-badge-filled">{{ idx + 1 }}</span>
+                    <button class="slot-remove-btn" @click="removeFacility(facilities[idx].id)" aria-label="Remove facility">×</button>
+                    <img :src="facilities[idx].image" :alt="facilities[idx].name" class="slot-thumb" />
+                  </div>
+                  <div class="slot-info">
+                    <div class="slot-name">{{ facilities[idx].name }}</div>
+                    <div class="slot-loc">{{ facilities[idx].suburb }}, {{ facilities[idx].state }}</div>
                   </div>
                 </div>
               </template>
@@ -886,9 +884,11 @@ function goToDetail(id) {
 }
 
 .slot-card.slot-card-filled {
-  border-color: #3d6b59;
+  border-color: #b8cec9;
   border-style: solid;
-  padding: 54px 32px 22px;
+  padding: 0;
+  overflow: hidden;
+  align-items: stretch;
 }
 
 /* Number badge */
@@ -1087,24 +1087,51 @@ function goToDetail(id) {
 
 /* Filled slot content */
 .slot-filled-inner {
-  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  height: 100%;
   width: 100%;
+}
+
+.slot-filled-img-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.slot-thumb {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 0;
+  display: block;
+}
+
+.slot-num-badge-filled {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #3d6b59;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(31, 45, 42, 0.28);
 }
 
 .slot-remove-btn {
   position: absolute;
-  top: -36px;
-  right: 0;
+  top: 12px;
+  right: 12px;
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  border: 1px solid #ddd5ca;
-  background: #fff;
+  border: 1px solid rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.85);
   cursor: pointer;
   font-size: 22px;
   line-height: 1;
@@ -1113,44 +1140,30 @@ function goToDetail(id) {
   justify-content: center;
   color: #7f8d87;
   transition: background 0.1s, color 0.1s;
+  z-index: 2;
 }
 .slot-remove-btn:hover { background: #fdecea; color: #c0392b; border-color: #f5c6c6; }
 
-.slot-added-badge {
-  display: inline-flex;
-  align-items: center;
+.slot-info {
+  padding: 18px 20px 22px;
+  display: flex;
+  flex-direction: column;
   gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #2e7d5a;
-  background: #e6f4ed;
-  border-radius: 999px;
-  padding: 6px 16px;
-  margin-bottom: 6px;
-}
-
-.slot-thumb {
-  width: 100%;
-  height: 104px;
-  object-fit: cover;
-  border-radius: 12px;
 }
 
 .slot-name {
   font-size: 17px;
   font-weight: 700;
   color: #22332e;
-  text-align: center;
+  text-align: left;
   line-height: 1.3;
 }
 
 .slot-loc {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   font-size: 13px;
   color: #a0a8a4;
   text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 /* Hint & browse */
