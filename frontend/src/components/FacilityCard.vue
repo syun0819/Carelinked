@@ -1,5 +1,5 @@
 <template>
-  <article class="facility-card">
+  <article class="facility-card" :class="{ 'card-selected': isInCompare }">
     <div class="facility-image-wrap">
       <img
         :src="facility.image"
@@ -13,10 +13,11 @@
         :disabled="!isInCompare && compareStore.isFull"
         :title="isInCompare ? 'Remove from compare' : compareStore.isFull ? 'Compare list full (max 3)' : 'Add to compare'"
       >
-        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline v-if="isInCompare" points="20 6 9 17 4 12"/>
-          <g v-else><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></g>
-        </svg>
+        <span class="compare-circle">
+          <svg v-if="isInCompare" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </span>
         Compare
       </button>
     </div>
@@ -177,29 +178,51 @@ const availabilityClass = computed(() => {
   left: 10px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
+  gap: 7px;
+  padding: 5px 12px 5px 6px;
   border-radius: 999px;
   border: none;
-  background: rgba(255,255,255,0.92);
-  color: #4a5e57;
+  background: rgba(255, 255, 255, 0.92);
+  color: #24332f;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-  backdrop-filter: blur(4px);
-  transition: background 0.15s, color 0.15s;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  transition: all 0.2s ease;
   z-index: 1;
 }
 
-.compare-toggle:hover:not(:disabled) {
-  background: #e6f4ed;
-  color: #2e7d5a;
+.compare-circle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #9bb5aa;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.compare-toggle:hover:not(:disabled) .compare-circle {
+  border-color: #3d6b59;
+}
+
+.compare-toggle:hover:not(:disabled):not(.selected) {
+  background: rgba(255, 255, 255, 1);
 }
 
 .compare-toggle.selected {
   background: #3d6b59;
   color: #fff;
+  box-shadow: 0 2px 8px rgba(61, 107, 89, 0.4);
+}
+
+.compare-toggle.selected .compare-circle {
+  border-color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.2);
 }
 
 .compare-toggle:disabled {
@@ -480,6 +503,25 @@ color: #c9a200;
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+.card-selected {
+  border-color: #3d6b59;
+  box-shadow: 0 0 0 2px #3d6b59, 0 0 18px rgba(61, 107, 89, 0.35);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.facility-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.facility-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(31, 45, 42, 0.15);
+}
+
+.facility-card.card-selected:hover {
+  box-shadow: 0 0 0 2px #3d6b59, 0 8px 24px rgba(61, 107, 89, 0.4);
 }
 </style>
 
