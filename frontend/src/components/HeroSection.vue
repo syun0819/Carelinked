@@ -1,5 +1,5 @@
 <template>
-    <section class="hero-section">
+    <section class="hero-section hero-animate">
       <div class="hero-content">
         <div class="hero-left">
         <h1>
@@ -243,6 +243,51 @@ function goToFindBedWithType(careType) {
   .hero-image-card {
     height: 260px;
     max-width: 100%;
+  }
+}
+
+.hero-animate {
+  animation: heroFadeIn 0.8s ease forwards;
+}
+
+@keyframes heroFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-animate .hero-left {
+  animation: heroSlideLeft 0.8s ease 0.1s both;
+}
+
+.hero-animate .hero-right {
+  animation: heroSlideRight 0.8s ease 0.2s both;
+}
+
+@keyframes heroSlideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes heroSlideRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 </style>

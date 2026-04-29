@@ -1,5 +1,5 @@
 <template>
-  <section id="how-it-works" class="how-it-works-section">
+  <section id="how-it-works" class="how-it-works-section scroll-animate">
     <div class="section-divider"></div>
 
     <div class="section-header">

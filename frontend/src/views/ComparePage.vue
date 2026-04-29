@@ -1,7 +1,7 @@
 <template>
   <div class="compare-page">
     <Header />
-    <div class="compare-container">
+    <div class="compare-container page-animate">
 
       <!-- Global loading (initial fetch when navigating with pre-filled store) -->
       <div v-if="loading" class="state-box">

@@ -1,5 +1,5 @@
 <template>
-  <footer class="footer">
+  <footer class="footer scroll-animate">
     <div class="footer-container">
       <div class="footer-top">
         <div class="footer-brand">
@@ -146,6 +146,14 @@
   line-height: 1.3;
   color: #72817c;
   font-family: var(--font-sans);
+}
+
+.footer.scroll-animate {
+  transform: translateY(8px);
+}
+
+.footer.scroll-animate.animate-in {
+  transform: translateY(0);
 }
 
 @media (max-width: 1024px) {
