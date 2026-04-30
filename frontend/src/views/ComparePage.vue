@@ -41,8 +41,8 @@ import FooterSection from '../components/FooterSection.vue'
 import ComparePicker from '../components/ComparePicker.vue'
 import CompareTable from '../components/CompareTable.vue'
 import { useCompareStore } from '../stores/compareStore'
-import { getFacilityDetail, searchFacilities } from '../services/facilitiesApi'
-import { mapFacilityDetail, mapFacilityCard } from '../utils/facilityMappers'
+import { getFacilityDetail, getAutocomplete } from '../services/facilitiesApi'
+import { mapFacilityDetail } from '../utils/facilityMappers'
 
 const router = useRouter()
 const route = useRoute()
@@ -68,18 +68,28 @@ const slotTimers = [null, null, null]
 function onSlotSearch(idx) {
   clearTimeout(slotTimers[idx])
   const q = slots[idx].query.trim()
-  if (!q) { slots[idx].results = []; return }
+  if (!q || q.length < 2) { slots[idx].results = []; return }
   slots[idx].loading = true
   slotTimers[idx] = setTimeout(async () => {
     try {
-      const data = await searchFacilities({ keyword: q, limit: 6 })
-      slots[idx].results = (data.results || data.items || [])
-        .map(mapFacilityCard)
+      const data = await getAutocomplete(q)
+      const facilityResults = (data.facilities || [])
         .filter(r => !compareStore.has(r.id))
+        .map(r => ({
+          id: r.id,
+          name: r.name,
+          suburb: '',
+          state: '',
+          postcode: '',
+        }))
+      slots[idx].results = facilityResults
+    } catch (err) {
+      console.error('Autocomplete error:', err)
+      slots[idx].results = []
     } finally {
       slots[idx].loading = false
     }
-  }, 350)
+  }, 250)
 }
 
 async function addFromSlot(idx, r) {
