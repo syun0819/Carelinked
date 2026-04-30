@@ -39,6 +39,10 @@ export function getSearchAutocomplete(q, options = {}) {
   return request('/api/v1/search/autocomplete', { q }, options)
 }
 
+export function getAutocomplete(q) {
+  return request('/api/v1/search/autocomplete', { q })
+}
+
 export async function getRecommendedFacilities(params = {}) {
   return request('/api/v1/facilities/recommended', params)
 }
