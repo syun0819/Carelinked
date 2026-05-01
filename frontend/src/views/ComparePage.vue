@@ -78,9 +78,9 @@ function onSlotSearch(idx) {
         .map(r => ({
           id: r.id,
           name: r.name,
-          suburb: '',
-          state: '',
-          postcode: '',
+          suburb: r.suburb || '',
+          state: r.state || '',
+          postcode: r.postcode || '',
         }))
       slots[idx].results = facilityResults
     } catch (err) {
