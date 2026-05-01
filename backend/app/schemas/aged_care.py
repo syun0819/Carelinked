@@ -90,6 +90,8 @@ class FacilityAutoComplete(BaseModel):
     id: str
     name: str
     type: str = "facility"
+    suburb: Optional[str] = None
+    state: Optional[str] = None
 
 
 class SuburbAutoComplete(BaseModel):

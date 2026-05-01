@@ -24,13 +24,19 @@ async def get_autocomplete(db: AsyncSession, q: str) -> AutoCompleteResponse:
     if not is_numeric:
         # Facility search
         fac_result = await db.execute(
-            select(AgedCareService.id, AgedCareService.service_name)
+            select(AgedCareService.id, AgedCareService.service_name,
+                   AgedCareService.physical_suburb, AgedCareService.physical_state)
             .where(AgedCareService.service_name.ilike(f"%{q}%"))
             .order_by(AgedCareService.service_name)
             .limit(3)
         )
         facilities = [
-            FacilityAutoComplete(id=str(row.id), name=row.service_name)
+            FacilityAutoComplete(
+                id=str(row.id),
+                name=row.service_name,
+                suburb=row.physical_suburb,
+                state=row.physical_state,
+            )
             for row in fac_result
         ]
 
