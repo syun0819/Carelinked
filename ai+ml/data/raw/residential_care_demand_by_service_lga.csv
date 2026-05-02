@@ -1,0 +1,775 @@
+lga_code,lga_name,admission_type,people_count
+10050,Albury,Permanent,609
+10180,Armidale,Permanent,221
+10250,Ballina,Permanent,621
+10300,Balranald,Permanent,8
+10470,Bathurst,Permanent,478
+10500,Bayside (NSW),Permanent,1221
+10550,Bega Valley,Permanent,306
+10600,Bellingen,Permanent,103
+10650,Berrigan,Permanent,95
+10750,Blacktown,Permanent,1831
+10800,Bland,Permanent,59
+10850,Blayney,Permanent,43
+10900,Blue Mountains,Permanent,634
+11150,Bourke,Permanent,11
+11250,Broken Hill,Permanent,178
+11300,Burwood,Permanent,311
+11350,Byron,Permanent,238
+11400,Cabonne,Permanent,99
+11450,Camden,Permanent,888
+11500,Campbelltown (NSW),Permanent,825
+11520,Canada Bay,Permanent,638
+11570,Canterbury-Bankstown,Permanent,2454
+11600,Carrathool,Permanent,13
+11650,Central Coast (NSW),Permanent,3396
+11720,Cessnock,Permanent,463
+11730,Clarence Valley,Permanent,601
+11750,Cobar,Permanent,38
+11800,Coffs Harbour,Permanent,750
+12000,Coolamon,Permanent,30
+12150,Coonamble,Permanent,26
+12160,Cootamundra-Gundagai,Permanent,125
+12350,Cowra,Permanent,155
+12380,Cumberland,Permanent,1177
+12390,Dubbo,Permanent,551
+12700,Dungog,Permanent,59
+12730,Edward River,Permanent,99
+12750,Eurobodalla,Permanent,571
+12850,Fairfield,Permanent,1577
+12870,Federation,Permanent,108
+12900,Forbes,Permanent,92
+12930,Georges River,Permanent,1412
+12950,Gilgandra,Permanent,49
+13010,Glen Innes Severn,Permanent,112
+13310,Goulburn Mulwaree,Permanent,329
+13340,Greater Hume,Permanent,57
+13450,Griffith,Permanent,233
+13550,Gunnedah,Permanent,102
+13660,Gwydir,Permanent,56
+13800,Hawkesbury,Permanent,403
+13850,Hay,Permanent,19
+13910,Hilltops,Permanent,191
+14000,Hornsby,Permanent,1922
+14100,Hunters Hill,Permanent,456
+14170,Inner West,Permanent,1503
+14220,Inverell,Permanent,124
+14300,Junee,Permanent,29
+14350,Kempsey,Permanent,431
+14400,Kiama,Permanent,230
+14500,Ku-ring-gai,Permanent,1405
+14550,Kyogle,Permanent,63
+14600,Lachlan,Permanent,43
+14650,Lake Macquarie,Permanent,2159
+14700,Lane Cove,Permanent,262
+14750,Leeton,Permanent,117
+14850,Lismore,Permanent,310
+14870,Lithgow,Permanent,139
+14900,Liverpool,Permanent,1015
+14920,Liverpool Plains,Permanent,52
+14950,Lockhart,Permanent,46
+15050,Maitland,Permanent,633
+15240,Mid-Coast,Permanent,1252
+15270,Mid-Western,Permanent,212
+15300,Moree Plains,Permanent,55
+15350,Mosman,Permanent,260
+15520,Murray River,Permanent,97
+15560,Murrumbidgee,Permanent,15
+15650,Muswellbrook,Permanent,78
+15700,Nambucca Valley,Permanent,230
+15750,Narrabri,Permanent,96
+15800,Narrandera,Permanent,92
+15850,Narromine,Permanent,36
+15900,Newcastle,Permanent,1934
+15950,North Sydney,Permanent,227
+15990,Northern Beaches,Permanent,2076
+16100,Oberon,Permanent,54
+16150,Orange,Permanent,522
+16200,Parkes,Permanent,107
+16260,Parramatta,Permanent,1462
+16350,Penrith,Permanent,1254
+16380,Port Macquarie-Hastings,Permanent,1118
+16400,Port Stephens,Permanent,426
+16490,Queanbeyan-Palerang,Permanent,267
+16550,Randwick,Permanent,1003
+16610,Richmond Valley,Permanent,208
+16700,Ryde,Permanent,948
+16900,Shellharbour,Permanent,530
+16950,Shoalhaven,Permanent,1143
+17000,Singleton,Permanent,116
+17040,Snowy Monaro,Permanent,73
+17080,Snowy Valleys,Permanent,89
+17100,Strathfield,Permanent,175
+17150,Sutherland,Permanent,2386
+17200,Sydney,Permanent,647
+17310,Tamworth,Permanent,591
+17350,Temora,Permanent,60
+17400,Tenterfield,Permanent,61
+17420,The Hills,Permanent,1263
+17550,Tweed,Permanent,1218
+17620,Upper Hunter,Permanent,132
+17640,Upper Lachlan,Permanent,51
+17650,Uralla,Permanent,42
+17750,Wagga Wagga,Permanent,581
+17850,Walcha,Permanent,27
+18020,Warrumbungle,Permanent,54
+18050,Waverley,Permanent,404
+18200,Wentworth,Permanent,63
+18250,Willoughby,Permanent,554
+18350,Wingecarribee,Permanent,598
+18400,Wollondilly,Permanent,249
+18450,Wollongong,Permanent,1780
+18500,Woollahra,Permanent,483
+18710,Yass Valley,Permanent,129
+20110,Alpine,Permanent,74
+20260,Ararat,Permanent,128
+20570,Ballarat,Permanent,1136
+20660,Banyule,Permanent,1056
+20740,Bass Coast,Permanent,416
+20830,Baw Baw,Permanent,511
+20910,Bayside (Vic.),Permanent,1204
+21010,Benalla,Permanent,203
+21110,Boroondara,Permanent,1836
+21180,Brimbank,Permanent,1111
+21270,Buloke,Permanent,82
+21370,Campaspe,Permanent,484
+21450,Cardinia,Permanent,703
+21610,Casey,Permanent,1697
+21670,Central Goldfields,Permanent,217
+21750,Colac Otway,Permanent,206
+21830,Corangamite,Permanent,142
+21890,Darebin,Permanent,1292
+22110,East Gippsland,Permanent,453
+22170,Frankston,Permanent,1243
+22250,Gannawarra,Permanent,126
+22310,Glen Eira,Permanent,1413
+22410,Glenelg,Permanent,249
+22490,Golden Plains,Permanent,105
+22620,Greater Bendigo,Permanent,1150
+22670,Greater Dandenong,Permanent,1299
+22750,Greater Geelong,Permanent,2831
+22830,Greater Shepparton,Permanent,662
+22910,Hepburn,Permanent,219
+22980,Hindmarsh,Permanent,102
+23110,Hobsons Bay,Permanent,715
+23190,Horsham,Permanent,188
+23270,Hume,Permanent,784
+23350,Indigo,Permanent,178
+23430,Kingston (Vic.),Permanent,1276
+23670,Knox,Permanent,1399
+23810,Latrobe (Vic.),Permanent,873
+23940,Loddon,Permanent,51
+24130,Macedon Ranges,Permanent,507
+24210,Manningham,Permanent,1475
+24250,Mansfield,Permanent,57
+24330,Maribyrnong,Permanent,515
+24410,Maroondah,Permanent,1203
+24600,Melbourne,Permanent,651
+24650,Melton,Permanent,335
+24700,Merri-bek,Permanent,1219
+24780,Mildura,Permanent,539
+24850,Mitchell,Permanent,226
+24900,Moira,Permanent,370
+24970,Monash,Permanent,2093
+25060,Moonee Valley,Permanent,1115
+25150,Moorabool,Permanent,281
+25340,Mornington Peninsula,Permanent,2093
+25430,Mount Alexander,Permanent,215
+25490,Moyne,Permanent,113
+25620,Murrindindi,Permanent,94
+25710,Nillumbik,Permanent,448
+25810,Northern Grampians,Permanent,164
+25900,Port Phillip,Permanent,516
+25990,Pyrenees,Permanent,42
+26170,South Gippsland,Permanent,266
+26260,Southern Grampians,Permanent,205
+26350,Stonnington,Permanent,802
+26430,Strathbogie,Permanent,184
+26490,Surf Coast,Permanent,339
+26610,Swan Hill,Permanent,226
+26670,Towong,Permanent,40
+26700,Wangaratta,Permanent,318
+26730,Warrnambool,Permanent,406
+26810,Wellington,Permanent,396
+26890,West Wimmera,Permanent,54
+26980,Whitehorse,Permanent,1625
+27070,Whittlesea,Permanent,1451
+27170,Wodonga,Permanent,303
+27260,Wyndham,Permanent,1108
+27350,Yarra,Permanent,257
+27450,Yarra Ranges,Permanent,968
+27630,Yarriambiack,Permanent,109
+30300,Balonne,Permanent,15
+30370,Banana,Permanent,88
+31000,Brisbane,Permanent,9211
+31820,Bundaberg,Permanent,834
+31900,Burdekin,Permanent,139
+32080,Cairns,Permanent,1346
+32260,Cassowary Coast,Permanent,210
+32270,Central Highlands (Qld),Permanent,43
+32310,Charters Towers,Permanent,141
+32330,Cherbourg,Permanent,16
+32810,Douglas,Permanent,105
+33220,Fraser Coast,Permanent,1286
+33360,Gladstone,Permanent,213
+33430,Gold Coast,Permanent,4879
+33610,Goondiwindi,Permanent,62
+33620,Gympie,Permanent,386
+33800,Hinchinbrook,Permanent,149
+33830,Hope Vale,Permanent,6
+33960,Ipswich,Permanent,956
+34530,Livingstone,Permanent,191
+34580,Lockyer Valley,Permanent,197
+34590,Logan,Permanent,2164
+34710,Longreach,Permanent,51
+34770,Mackay,Permanent,798
+34860,Maranoa,Permanent,94
+34880,Mareeba,Permanent,87
+35010,Moreton Bay,Permanent,3976
+35300,Mount Isa,Permanent,46
+35600,Murweh,Permanent,27
+35740,Noosa,Permanent,633
+35760,North Burnett,Permanent,84
+36250,Redland,Permanent,1470
+36370,Rockhampton,Permanent,775
+36510,Scenic Rim,Permanent,347
+36580,Somerset,Permanent,106
+36630,South Burnett,Permanent,286
+36660,Southern Downs,Permanent,438
+36720,Sunshine Coast,Permanent,3770
+36820,Tablelands,Permanent,190
+36910,Toowoomba,Permanent,1888
+36950,Torres,Permanent,30
+37010,Townsville,Permanent,1178
+37310,Western Downs,Permanent,270
+37340,Whitsunday,Permanent,238
+37600,Yarrabah,Permanent,19
+40070,Adelaide,Permanent,131
+40120,Adelaide Hills,Permanent,264
+40220,Alexandrina,Permanent,304
+40310,Barossa,Permanent,267
+40430,Barunga West,Permanent,71
+40520,Berri Barmera,Permanent,113
+40700,Burnside,Permanent,453
+40910,Campbelltown (SA),Permanent,584
+41060,Charles Sturt,Permanent,1280
+41140,Clare and Gilbert Valleys,Permanent,89
+41560,Copper Coast,Permanent,196
+42030,Gawler,Permanent,332
+42110,Goyder,Permanent,24
+42250,Grant,Permanent,37
+42600,Holdfast Bay,Permanent,506
+43650,Light,Permanent,60
+43790,Loxton Waikerie,Permanent,108
+44060,Marion,Permanent,942
+44210,Mid Murray,Permanent,57
+44340,Mitcham,Permanent,807
+44550,Mount Barker,Permanent,278
+44620,Mount Gambier,Permanent,290
+44830,Mount Remarkable,Permanent,27
+45040,Murray Bridge,Permanent,234
+45090,Naracoorte Lucindale,Permanent,76
+45120,Northern Areas,Permanent,50
+45290,Norwood Payneham and St Peters,Permanent,373
+45340,Onkaparinga,Permanent,1544
+45400,Orroroo Carrieton,Permanent,20
+45540,Peterborough,Permanent,10
+45680,Playford,Permanent,719
+45890,Port Adelaide Enfield,Permanent,1079
+46090,Port Augusta,Permanent,99
+46300,Port Lincoln,Permanent,121
+46450,Port Pirie,Permanent,192
+46510,Prospect,Permanent,88
+46670,Renmark Paringa,Permanent,78
+47140,Salisbury,Permanent,1078
+47630,Tatiara,Permanent,62
+47700,Tea Tree Gully,Permanent,842
+47800,Coorong,Permanent,28
+47980,Unley,Permanent,918
+48050,Victor Harbor,Permanent,220
+48130,Wakefield,Permanent,102
+48260,Walkerville,Permanent,139
+48340,Wattle Range,Permanent,138
+48410,West Torrens,Permanent,788
+48540,Whyalla,Permanent,114
+48750,Yankalilla,Permanent,45
+48830,Yorke Peninsula,Permanent,120
+50080,Albany,Permanent,365
+50210,Armadale,Permanent,347
+50280,Augusta Margaret River,Permanent,46
+50350,Bassendean,Permanent,75
+50420,Bayswater,Permanent,660
+50490,Belmont,Permanent,495
+50840,Bridgetown-Greenbushes,Permanent,30
+50910,Brookton,Permanent,38
+50980,Broome,Permanent,29
+51190,Bunbury,Permanent,322
+51260,Busselton,Permanent,365
+51310,Cambridge,Permanent,322
+51330,Canning,Permanent,408
+51400,Capel,Permanent,117
+51750,Claremont,Permanent,278
+51820,Cockburn,Permanent,776
+51890,Collie,Permanent,57
+52170,Cottesloe,Permanent,126
+52660,Dardanup,Permanent,146
+52800,Derby-West Kimberley,Permanent,28
+52870,Donnybrook-Balingup,Permanent,39
+53150,East Fremantle,Permanent,125
+53290,Esperance,Permanent,99
+53430,Fremantle,Permanent,558
+53780,Gosnells,Permanent,706
+53800,Greater Geraldton,Permanent,276
+53920,Halls Creek,Permanent,17
+53990,Harvey,Permanent,66
+54170,Joondalup,Permanent,667
+54200,Kalamunda,Permanent,425
+54280,Kalgoorlie-Boulder,Permanent,100
+54310,Karratha,Permanent,16
+54340,Katanning,Permanent,25
+54410,Kellerberrin,Permanent,46
+54550,Kojonup,Permanent,21
+54830,Kwinana,Permanent,123
+55110,Mandurah,Permanent,795
+55180,Manjimup,Permanent,64
+55320,Melville,Permanent,1316
+55740,Mosman Park,Permanent,114
+56090,Mundaring,Permanent,166
+56230,Murray,Permanent,66
+56460,Narrogin,Permanent,80
+56580,Nedlands,Permanent,213
+56730,Northam,Permanent,73
+57080,Perth,Permanent,153
+57280,Port Hedland,Permanent,38
+57490,Rockingham,Permanent,728
+57700,Serpentine-Jarrahdale,Permanent,68
+57840,South Perth,Permanent,837
+57910,Stirling,Permanent,2116
+57980,Subiaco,Permanent,256
+58050,Swan,Permanent,670
+58510,Victoria Park,Permanent,722
+58570,Vincent,Permanent,537
+58610,Wagin,Permanent,10
+58760,Wanneroo,Permanent,1075
+58820,Waroona,Permanent,43
+59340,Wyndham-East Kimberley,Permanent,37
+59370,York,Permanent,25
+60210,Break O'Day,Permanent,45
+60410,Brighton,Permanent,65
+60610,Burnie,Permanent,160
+60810,Central Coast (Tas.),Permanent,231
+61210,Circular Head,Permanent,65
+61410,Clarence,Permanent,534
+61510,Derwent Valley,Permanent,80
+61610,Devonport,Permanent,282
+61810,Dorset,Permanent,51
+62010,Flinders (Tas.),Permanent,8
+62210,George Town,Permanent,52
+62410,Glamorgan-Spring Bay,Permanent,46
+62610,Glenorchy,Permanent,458
+62810,Hobart,Permanent,570
+63010,Huon Valley,Permanent,96
+63210,Kentish,Permanent,43
+63410,King Island,Permanent,13
+63610,Kingborough,Permanent,206
+63810,Latrobe (Tas.),Permanent,144
+64010,Launceston,Permanent,757
+64210,Meander Valley,Permanent,154
+64610,Northern Midlands,Permanent,45
+64810,Sorell,Permanent,63
+65010,Southern Midlands,Permanent,18
+65410,Waratah-Wynyard,Permanent,127
+65610,West Coast,Permanent,13
+65810,West Tamar,Permanent,210
+70200,Alice Springs,Permanent,148
+71000,Darwin,Permanent,239
+72200,Katherine,Permanent,43
+72800,Palmerston,Permanent,83
+89399,Unincorporated ACT,Permanent,2514
+10050,Albury,Respite,24
+10180,Armidale,Respite,10
+10250,Ballina,Respite,4
+10300,Balranald,Respite,4
+10470,Bathurst,Respite,15
+10500,Bayside (NSW),Respite,64
+10550,Bega Valley,Respite,9
+10600,Bellingen,Respite,1
+10650,Berrigan,Respite,13
+10750,Blacktown,Respite,88
+10800,Bland,Respite,1
+10850,Blayney,Respite,2
+10900,Blue Mountains,Respite,16
+11150,Bourke,Respite,0
+11250,Broken Hill,Respite,2
+11300,Burwood,Respite,19
+11350,Byron,Respite,9
+11400,Cabonne,Respite,8
+11450,Camden,Respite,44
+11500,Campbelltown (NSW),Respite,43
+11520,Canada Bay,Respite,34
+11570,Canterbury-Bankstown,Respite,136
+11600,Carrathool,Respite,3
+11650,Central Coast (NSW),Respite,152
+11720,Cessnock,Respite,11
+11730,Clarence Valley,Respite,23
+11750,Cobar,Respite,2
+11800,Coffs Harbour,Respite,27
+12000,Coolamon,Respite,0
+12150,Coonamble,Respite,2
+12160,Cootamundra-Gundagai,Respite,9
+12350,Cowra,Respite,8
+12380,Cumberland,Respite,64
+12390,Dubbo,Respite,25
+12700,Dungog,Respite,1
+12730,Edward River,Respite,7
+12750,Eurobodalla,Respite,28
+12850,Fairfield,Respite,67
+12870,Federation,Respite,3
+12900,Forbes,Respite,5
+12930,Georges River,Respite,75
+12950,Gilgandra,Respite,1
+13010,Glen Innes Severn,Respite,4
+13310,Goulburn Mulwaree,Respite,5
+13340,Greater Hume,Respite,1
+13450,Griffith,Respite,14
+13550,Gunnedah,Respite,5
+13660,Gwydir,Respite,0
+13800,Hawkesbury,Respite,9
+13850,Hay,Respite,3
+13910,Hilltops,Respite,11
+14000,Hornsby,Respite,99
+14100,Hunters Hill,Respite,24
+14170,Inner West,Respite,50
+14220,Inverell,Respite,8
+14300,Junee,Respite,0
+14350,Kempsey,Respite,28
+14400,Kiama,Respite,7
+14500,Ku-ring-gai,Respite,56
+14550,Kyogle,Respite,3
+14600,Lachlan,Respite,0
+14650,Lake Macquarie,Respite,48
+14700,Lane Cove,Respite,6
+14750,Leeton,Respite,6
+14850,Lismore,Respite,10
+14870,Lithgow,Respite,2
+14900,Liverpool,Respite,42
+14920,Liverpool Plains,Respite,0
+14950,Lockhart,Respite,2
+15050,Maitland,Respite,19
+15240,Mid-Coast,Respite,82
+15270,Mid-Western,Respite,8
+15300,Moree Plains,Respite,1
+15350,Mosman,Respite,5
+15520,Murray River,Respite,12
+15560,Murrumbidgee,Respite,2
+15650,Muswellbrook,Respite,0
+15700,Nambucca Valley,Respite,10
+15750,Narrabri,Respite,4
+15800,Narrandera,Respite,4
+15850,Narromine,Respite,8
+15900,Newcastle,Respite,57
+15950,North Sydney,Respite,12
+15990,Northern Beaches,Respite,72
+16100,Oberon,Respite,1
+16150,Orange,Respite,14
+16200,Parkes,Respite,2
+16260,Parramatta,Respite,54
+16350,Penrith,Respite,44
+16380,Port Macquarie-Hastings,Respite,116
+16400,Port Stephens,Respite,14
+16490,Queanbeyan-Palerang,Respite,4
+16550,Randwick,Respite,56
+16610,Richmond Valley,Respite,3
+16700,Ryde,Respite,36
+16900,Shellharbour,Respite,15
+16950,Shoalhaven,Respite,37
+17000,Singleton,Respite,1
+17040,Snowy Monaro,Respite,1
+17080,Snowy Valleys,Respite,6
+17100,Strathfield,Respite,2
+17150,Sutherland,Respite,107
+17200,Sydney,Respite,26
+17310,Tamworth,Respite,7
+17350,Temora,Respite,5
+17400,Tenterfield,Respite,13
+17420,The Hills,Respite,51
+17550,Tweed,Respite,27
+17620,Upper Hunter,Respite,2
+17640,Upper Lachlan,Respite,5
+17650,Uralla,Respite,3
+17750,Wagga Wagga,Respite,28
+17850,Walcha,Respite,2
+18020,Warrumbungle,Respite,11
+18050,Waverley,Respite,19
+18200,Wentworth,Respite,3
+18250,Willoughby,Respite,15
+18350,Wingecarribee,Respite,28
+18400,Wollondilly,Respite,11
+18450,Wollongong,Respite,41
+18500,Woollahra,Respite,28
+18710,Yass Valley,Respite,7
+20110,Alpine,Respite,1
+20260,Ararat,Respite,7
+20570,Ballarat,Respite,21
+20660,Banyule,Respite,50
+20740,Bass Coast,Respite,16
+20830,Baw Baw,Respite,15
+20910,Bayside (Vic.),Respite,71
+21010,Benalla,Respite,13
+21110,Boroondara,Respite,107
+21180,Brimbank,Respite,48
+21270,Buloke,Respite,6
+21370,Campaspe,Respite,19
+21450,Cardinia,Respite,17
+21610,Casey,Respite,58
+21670,Central Goldfields,Respite,2
+21750,Colac Otway,Respite,4
+21830,Corangamite,Respite,7
+21890,Darebin,Respite,71
+22110,East Gippsland,Respite,40
+22170,Frankston,Respite,51
+22250,Gannawarra,Respite,7
+22310,Glen Eira,Respite,56
+22410,Glenelg,Respite,18
+22490,Golden Plains,Respite,6
+22620,Greater Bendigo,Respite,19
+22670,Greater Dandenong,Respite,62
+22750,Greater Geelong,Respite,123
+22830,Greater Shepparton,Respite,25
+22910,Hepburn,Respite,26
+22980,Hindmarsh,Respite,3
+23110,Hobsons Bay,Respite,46
+23190,Horsham,Respite,5
+23270,Hume,Respite,26
+23350,Indigo,Respite,10
+23430,Kingston (Vic.),Respite,58
+23670,Knox,Respite,50
+23810,Latrobe (Vic.),Respite,44
+23940,Loddon,Respite,5
+24130,Macedon Ranges,Respite,30
+24210,Manningham,Respite,92
+24250,Mansfield,Respite,1
+24330,Maribyrnong,Respite,24
+24410,Maroondah,Respite,59
+24600,Melbourne,Respite,25
+24650,Melton,Respite,7
+24700,Merri-bek,Respite,86
+24780,Mildura,Respite,26
+24850,Mitchell,Respite,4
+24900,Moira,Respite,14
+24970,Monash,Respite,93
+25060,Moonee Valley,Respite,78
+25150,Moorabool,Respite,9
+25340,Mornington Peninsula,Respite,124
+25430,Mount Alexander,Respite,15
+25490,Moyne,Respite,7
+25620,Murrindindi,Respite,9
+25710,Nillumbik,Respite,36
+25810,Northern Grampians,Respite,4
+25900,Port Phillip,Respite,44
+25990,Pyrenees,Respite,5
+26170,South Gippsland,Respite,18
+26260,Southern Grampians,Respite,8
+26350,Stonnington,Respite,29
+26430,Strathbogie,Respite,11
+26490,Surf Coast,Respite,15
+26610,Swan Hill,Respite,12
+26670,Towong,Respite,4
+26700,Wangaratta,Respite,14
+26730,Warrnambool,Respite,6
+26810,Wellington,Respite,32
+26890,West Wimmera,Respite,3
+26980,Whitehorse,Respite,64
+27070,Whittlesea,Respite,105
+27170,Wodonga,Respite,16
+27260,Wyndham,Respite,55
+27350,Yarra,Respite,7
+27450,Yarra Ranges,Respite,57
+27630,Yarriambiack,Respite,4
+30300,Balonne,Respite,1
+30370,Banana,Respite,3
+31000,Brisbane,Respite,160
+31820,Bundaberg,Respite,10
+31900,Burdekin,Respite,4
+32080,Cairns,Respite,31
+32260,Cassowary Coast,Respite,7
+32270,Central Highlands (Qld),Respite,3
+32310,Charters Towers,Respite,8
+32330,Cherbourg,Respite,0
+32810,Douglas,Respite,7
+33220,Fraser Coast,Respite,44
+33360,Gladstone,Respite,0
+33430,Gold Coast,Respite,86
+33610,Goondiwindi,Respite,0
+33620,Gympie,Respite,17
+33800,Hinchinbrook,Respite,6
+33830,Hope Vale,Respite,0
+33960,Ipswich,Respite,10
+34530,Livingstone,Respite,11
+34580,Lockyer Valley,Respite,6
+34590,Logan,Respite,23
+34710,Longreach,Respite,2
+34770,Mackay,Respite,6
+34860,Maranoa,Respite,3
+34880,Mareeba,Respite,0
+35010,Moreton Bay,Respite,72
+35300,Mount Isa,Respite,1
+35600,Murweh,Respite,1
+35740,Noosa,Respite,25
+35760,North Burnett,Respite,4
+36250,Redland,Respite,40
+36370,Rockhampton,Respite,2
+36510,Scenic Rim,Respite,14
+36580,Somerset,Respite,2
+36630,South Burnett,Respite,6
+36660,Southern Downs,Respite,5
+36720,Sunshine Coast,Respite,105
+36820,Tablelands,Respite,9
+36910,Toowoomba,Respite,37
+36950,Torres,Respite,0
+37010,Townsville,Respite,9
+37310,Western Downs,Respite,9
+37340,Whitsunday,Respite,0
+37600,Yarrabah,Respite,2
+40070,Adelaide,Respite,5
+40120,Adelaide Hills,Respite,26
+40220,Alexandrina,Respite,29
+40310,Barossa,Respite,15
+40430,Barunga West,Respite,12
+40520,Berri Barmera,Respite,8
+40700,Burnside,Respite,19
+40910,Campbelltown (SA),Respite,26
+41060,Charles Sturt,Respite,65
+41140,Clare and Gilbert Valleys,Respite,6
+41560,Copper Coast,Respite,9
+42030,Gawler,Respite,21
+42110,Goyder,Respite,3
+42250,Grant,Respite,1
+42600,Holdfast Bay,Respite,21
+43650,Light,Respite,10
+43790,Loxton Waikerie,Respite,8
+44060,Marion,Respite,31
+44210,Mid Murray,Respite,0
+44340,Mitcham,Respite,29
+44550,Mount Barker,Respite,19
+44620,Mount Gambier,Respite,15
+44830,Mount Remarkable,Respite,3
+45040,Murray Bridge,Respite,4
+45090,Naracoorte Lucindale,Respite,6
+45120,Northern Areas,Respite,0
+45290,Norwood Payneham and St Peters,Respite,12
+45340,Onkaparinga,Respite,65
+45400,Orroroo Carrieton,Respite,3
+45540,Peterborough,Respite,0
+45680,Playford,Respite,30
+45890,Port Adelaide Enfield,Respite,63
+46090,Port Augusta,Respite,1
+46300,Port Lincoln,Respite,9
+46450,Port Pirie,Respite,5
+46510,Prospect,Respite,11
+46670,Renmark Paringa,Respite,5
+47140,Salisbury,Respite,64
+47630,Tatiara,Respite,2
+47700,Tea Tree Gully,Respite,53
+47800,Coorong,Respite,1
+47980,Unley,Respite,57
+48050,Victor Harbor,Respite,12
+48130,Wakefield,Respite,3
+48260,Walkerville,Respite,4
+48340,Wattle Range,Respite,5
+48410,West Torrens,Respite,52
+48540,Whyalla,Respite,1
+48750,Yankalilla,Respite,4
+48830,Yorke Peninsula,Respite,8
+50080,Albany,Respite,3
+50210,Armadale,Respite,3
+50280,Augusta Margaret River,Respite,0
+50350,Bassendean,Respite,0
+50420,Bayswater,Respite,7
+50490,Belmont,Respite,4
+50840,Bridgetown-Greenbushes,Respite,1
+50910,Brookton,Respite,2
+50980,Broome,Respite,4
+51190,Bunbury,Respite,3
+51260,Busselton,Respite,11
+51310,Cambridge,Respite,7
+51330,Canning,Respite,3
+51400,Capel,Respite,3
+51750,Claremont,Respite,3
+51820,Cockburn,Respite,20
+51890,Collie,Respite,3
+52170,Cottesloe,Respite,0
+52660,Dardanup,Respite,3
+52800,Derby-West Kimberley,Respite,0
+52870,Donnybrook-Balingup,Respite,1
+53150,East Fremantle,Respite,3
+53290,Esperance,Respite,1
+53430,Fremantle,Respite,24
+53780,Gosnells,Respite,1
+53800,Greater Geraldton,Respite,1
+53920,Halls Creek,Respite,0
+53990,Harvey,Respite,0
+54170,Joondalup,Respite,17
+54200,Kalamunda,Respite,5
+54280,Kalgoorlie-Boulder,Respite,3
+54310,Karratha,Respite,0
+54340,Katanning,Respite,1
+54410,Kellerberrin,Respite,1
+54550,Kojonup,Respite,0
+54830,Kwinana,Respite,0
+55110,Mandurah,Respite,15
+55180,Manjimup,Respite,0
+55320,Melville,Respite,25
+55740,Mosman Park,Respite,44
+56090,Mundaring,Respite,1
+56230,Murray,Respite,2
+56460,Narrogin,Respite,7
+56580,Nedlands,Respite,8
+56730,Northam,Respite,0
+57080,Perth,Respite,3
+57280,Port Hedland,Respite,0
+57490,Rockingham,Respite,6
+57700,Serpentine-Jarrahdale,Respite,0
+57840,South Perth,Respite,29
+57910,Stirling,Respite,11
+57980,Subiaco,Respite,9
+58050,Swan,Respite,2
+58510,Victoria Park,Respite,10
+58570,Vincent,Respite,11
+58610,Wagin,Respite,3
+58760,Wanneroo,Respite,11
+58820,Waroona,Respite,1
+59340,Wyndham-East Kimberley,Respite,1
+59370,York,Respite,0
+60210,Break O'Day,Respite,3
+60410,Brighton,Respite,6
+60610,Burnie,Respite,3
+60810,Central Coast (Tas.),Respite,8
+61210,Circular Head,Respite,2
+61410,Clarence,Respite,14
+61510,Derwent Valley,Respite,2
+61610,Devonport,Respite,6
+61810,Dorset,Respite,7
+62010,Flinders (Tas.),Respite,1
+62210,George Town,Respite,4
+62410,Glamorgan-Spring Bay,Respite,3
+62610,Glenorchy,Respite,19
+62810,Hobart,Respite,36
+63010,Huon Valley,Respite,5
+63210,Kentish,Respite,3
+63410,King Island,Respite,1
+63610,Kingborough,Respite,5
+63810,Latrobe (Tas.),Respite,1
+64010,Launceston,Respite,25
+64210,Meander Valley,Respite,4
+64610,Northern Midlands,Respite,5
+64810,Sorell,Respite,0
+65010,Southern Midlands,Respite,0
+65410,Waratah-Wynyard,Respite,3
+65610,West Coast,Respite,2
+65810,West Tamar,Respite,6
+70200,Alice Springs,Respite,4
+71000,Darwin,Respite,3
+72200,Katherine,Respite,9
+72800,Palmerston,Respite,0
+89399,Unincorporated ACT,Respite,24

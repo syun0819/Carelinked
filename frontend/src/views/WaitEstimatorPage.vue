@@ -222,7 +222,7 @@
           </button>
 
           <button
-            v-if="!isReviewStep"
+            v-if="!isReviewStep && !currentQuestion.required"
             class="skip-btn"
             type="button"
             @click="nextQuestion"
@@ -339,6 +339,7 @@ const questions = [
   {
     id: 'sex',
     field: 'sex',
+    required: true,
     section: 'ABOUT YOU',
     title: 'Gender',
     prompt: 'Which best describes you?',
@@ -346,13 +347,13 @@ const questions = [
     tooltip: 'AIHW uses sex recorded in assessment data as male or female. Records marked intersex, indeterminate or unknown were excluded from the AIHW model.',
     options: [
       { label: 'Woman', value: 'Women' },
-      { label: 'Man', value: 'Men' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'Man', value: 'Men' }
     ]
   },
   {
     id: 'age',
     field: 'age',
+    required: true,
     section: 'ABOUT YOU',
     title: 'Age group',
     prompt: 'What is your age range?',
@@ -362,8 +363,7 @@ const questions = [
       { label: '50-69 years', value: '50–69' },
       { label: '70-79 years', value: '70–79' },
       { label: '80-89 years', value: '80–89' },
-      { label: '90 years or older', value: '90+' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: '90 years or older', value: '90+' }
     ]
   },
   {
@@ -383,6 +383,7 @@ const questions = [
   {
     id: 'cald_status',
     field: 'cald_status',
+    required: true,
     section: 'ABOUT YOU',
     title: 'Cultural background',
     prompt: 'Do you identify as culturally and linguistically diverse?',
@@ -390,8 +391,7 @@ const questions = [
     tooltip: 'CALD means culturally and linguistically diverse. In AIHW data this is based on country of birth and preferred language recorded by the assessor.',
     options: [
       { label: 'CALD', value: 'CALD' },
-      { label: 'Non-CALD', value: 'Non-CALD' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'Non-CALD', value: 'Non-CALD' }
     ]
   },
   {
@@ -440,6 +440,7 @@ const questions = [
   {
     id: 'caring_arrangement',
     field: 'caring_arrangement',
+    required: true,
     section: 'CARE HISTORY',
     title: 'Informal carer',
     prompt: 'Do you have an informal carer, such as family or a friend?',
@@ -447,8 +448,7 @@ const questions = [
     tooltip: 'An informal carer is help from a carer, family member, friend or neighbour who is not a paid service provider, as recorded in the NSAF assessment.',
     options: [
       { label: 'Yes, I have an informal carer', value: 'Has an informal carer' },
-      { label: 'No, I do not have an informal carer', value: 'Does not have an informal carer' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'No, I do not have an informal carer', value: 'Does not have an informal carer' }
     ]
   },
   {
@@ -468,6 +468,7 @@ const questions = [
   {
     id: 'priority_level',
     field: 'priority_level',
+    required: true,
     section: 'ASSESSMENT',
     title: 'Priority level',
     prompt: 'What priority level was recorded for your aged care assessment?',
@@ -476,13 +477,13 @@ const questions = [
     options: [
       { label: 'Low', value: 'Low' },
       { label: 'Medium', value: 'Medium' },
-      { label: 'High', value: 'High' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'High', value: 'High' }
     ]
   },
   {
     id: 'assessment_location',
     field: 'assessment_location',
+    required: true,
     section: 'ASSESSMENT',
     title: 'Assessment location',
     prompt: 'Where was your assessment completed?',
@@ -490,8 +491,7 @@ const questions = [
     tooltip: 'Assessment location indicates whether the assessment setting was hospital, including public hospitals, private hospitals and clinics.',
     options: [
       { label: 'Assessed in hospital', value: 'Assessed in hospital' },
-      { label: 'Assessed outside hospital', value: 'Assessed outside hospital' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'Assessed outside hospital', value: 'Assessed outside hospital' }
     ]
   },
   {
@@ -607,6 +607,7 @@ function selectAnswer(questionId, value) {
 
 function handleAnswerSelect(question, value) {
   selectAnswer(question.id, value)
+  error.value = ''
 
   clearAutoAdvanceTimer()
 
@@ -662,7 +663,13 @@ function previousQuestion() {
 }
 
 function nextQuestion() {
+  if (currentQuestion.value.required && !isAnswered(currentQuestion.value.id)) {
+    error.value = `Please answer "${currentQuestion.value.title}" before continuing.`
+    return
+  }
+
   answerPreferNotToSay(currentQuestion.value)
+  error.value = ''
   advanceFromCurrentQuestion()
 }
 
