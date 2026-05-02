@@ -10,7 +10,7 @@
           </svg>
           <span class="compare-bar-label">
             Compare ({{ compareStore.count }})
-            <span v-if="compareStore.count < compareStore.initialSelectionLimit" class="compare-bar-hint">· Select 2 facilities</span>
+            <span v-if="compareStore.count < compareStore.initialSelectionLimit" class="compare-bar-hint">— select at least 2 facilities</span>
           </span>
         </div>
 
