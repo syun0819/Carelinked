@@ -20,7 +20,10 @@
       <button class="nav-item nav-link-btn" @click="goToSection('#how-it-works')">
         How It Works
       </button>
-      <router-link :to="{ path: '/compare', query: { mode: 'select' } }" class="nav-item" active-class="active">Compare</router-link>
+      <router-link :to="{ path: '/compare', query: { mode: 'select' } }" class="nav-item nav-compare" active-class="active">
+        Compare
+        <span v-if="compareStore.count > 0" class="compare-badge">{{ compareStore.count }}</span>
+      </router-link>
     </nav>
 
     <!-- Mobile hamburger -->
@@ -41,7 +44,10 @@
         <router-link to="/find-bed" class="drawer-item" @click="menuOpen = false">Find Care</router-link>
         <router-link to="/wait-estimator" class="drawer-item" @click="menuOpen = false">Wait Estimator</router-link>
         <button class="drawer-item drawer-btn" @click="goToSectionMobile('#how-it-works')">How It Works</button>
-        <router-link :to="{ path: '/compare', query: { mode: 'select' } }" class="drawer-item" @click="menuOpen = false">Compare</router-link>
+        <router-link :to="{ path: '/compare', query: { mode: 'select' } }" class="drawer-item" @click="menuOpen = false">
+          Compare
+          <span v-if="compareStore.count > 0" class="compare-badge">{{ compareStore.count }}</span>
+        </router-link>
       </nav>
     </div>
 
@@ -54,9 +60,11 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import logo from '../assets/CareLinkLogo.png'
+import { useCompareStore } from '../stores/compareStore'
 
 const router = useRouter()
 const menuOpen = ref(false)
+const compareStore = useCompareStore()
 
 function goToSection(hash) {
   router.push({ path: '/', hash })
@@ -140,6 +148,27 @@ function goToSectionMobile(hash) {
 .nav-link-btn:hover,
 .nav-item:hover {
   color: #2f4e44;
+}
+
+.nav-compare {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.compare-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #3d6b59;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 /* Hamburger */
