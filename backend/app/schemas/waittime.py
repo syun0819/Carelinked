@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 class WaitTimeEstimateRequest(BaseModel):
     priority_level: Optional[Literal["Low", "Medium", "High"]] = None
-    age: Optional[Literal["50-69", "70-79", "80-89", "90+"]] = None
+    age: Optional[Literal["50–69", "70–79", "80–89", "90+"]] = None
     assessment_location: Optional[Literal[
         "Assessed outside hospital",
         "Assessed in hospital"
@@ -38,14 +38,14 @@ class WaitTimeEstimateRequest(BaseModel):
     ]] = None
     morbidity: Optional[Literal[
         "Having no or 1 health conditions",
-        "Having 2-3 health conditions",
-        "Having 4-5 health conditions",
+        "Having 2–3 health conditions",
+        "Having 4–5 health conditions",
         "Having 6 health conditions or more"
     ]] = None
     remoteness: Optional[Literal[
         "Metropolitan (MM 1)",
         "Regional centres (MM 2)",
-        "Rural and remote (MM 3-7)"
+        "Rural and remote (MM 3–7)"
     ]] = None
 
 
