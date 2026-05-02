@@ -14,197 +14,157 @@
           </div>
           <h1>Answer a few questions</h1>
           <p>
-            Based on AIHW open data. Select an answer to continue, or skip any question you prefer not to answer.
+            Based on AIHW open data. Complete each section to build your personalised wait time estimate.
           </p>
-        </section>
-
-        <section class="insight-grid" aria-label="AIHW wait time context">
-          <article
-            v-for="insight in estimatorInsights"
-            :key="insight.title"
-            class="insight-card"
-            :class="`insight-${insight.tone}`"
-          >
-            <div class="insight-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <template v-if="insight.icon === 'clock'">
-                  <circle cx="12" cy="12" r="8" />
-                  <path d="M12 7v5l3 2" />
-                </template>
-                <template v-else-if="insight.icon === 'home'">
-                  <path d="M4 11 12 4l8 7v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9Z" />
-                  <path d="M9 21v-7h6v7" />
-                </template>
-                <template v-else-if="insight.icon === 'map'">
-                  <path d="M9 18 3 21V6l6-3 6 3 6-3v15l-6 3-6-3Z" />
-                  <path d="M9 3v15M15 6v15" />
-                </template>
-                <template v-else>
-                  <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" />
-                  <path d="M5 14l.8 2.2L8 17l-2.2.8L5 20l-.8-2.2L2 17l2.2-.8L5 14Z" />
-                </template>
-              </svg>
-            </div>
-            <div>
-              <h2>{{ insight.title }}</h2>
-              <p>{{ insight.copy }}</p>
-            </div>
-          </article>
         </section>
 
         <section class="progress-wrap" aria-label="Estimator progress">
           <div class="progress-text">
-            <template v-if="!isReviewStep">
-              Question {{ currentIndex + 1 }} of {{ questions.length }}
-            </template>
-            <template v-else>
-              Review your answers
-            </template>
-            <span v-if="answeredCount > 0">· {{ answeredCount }} answered</span>
+            Category {{ currentStep + 1 }} of {{ categories.length }}
+            <span>· {{ currentCategoryAnsweredCount }} of {{ currentCategory.questions.length }} answered</span>
           </div>
           <div class="progress-dots">
             <button
-              v-for="(question, index) in questions"
-              :key="question.id"
+              v-for="(category, index) in categorySteps"
+              :key="category.id"
               class="progress-dot"
               :class="{
-                active: index === currentIndex,
-                answered: isAnswered(question.id) && index !== currentIndex
+                active: index === currentStep,
+                answered: isCategoryComplete(category) && index !== currentStep
               }"
               type="button"
-              :aria-label="`Go to question ${index + 1}`"
-              @click="goToQuestion(index)"
+              :aria-label="`Go to category ${index + 1}`"
+              @click="goToCategory(index)"
             >
-              <svg v-if="isAnswered(question.id) && index !== currentIndex" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M20 6 9 17l-5-5" />
-              </svg>
+              <span class="progress-number">{{ index + 1 }}</span>
+              <span class="progress-label">{{ category.shortLabel }}</span>
             </button>
           </div>
         </section>
 
-        <section v-if="!isReviewStep" class="question-card">
-          <div class="question-header">
-            <div class="question-copy">
-              <div class="question-section">{{ currentQuestion.section }}</div>
-              <div class="question-title-row">
-                <div class="question-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24">
-                    <template v-if="currentQuestion.icon === 'user'">
-                      <circle cx="12" cy="8" r="3" />
-                      <path d="M6 20v-1a6 6 0 0 1 12 0v1" />
-                    </template>
-                    <template v-else-if="currentQuestion.icon === 'calendar'">
-                      <rect x="4" y="5" width="16" height="15" rx="2" />
-                      <path d="M8 3v4M16 3v4M4 10h16" />
-                    </template>
-                    <template v-else-if="currentQuestion.icon === 'people'">
-                      <circle cx="9" cy="8" r="3" />
-                      <path d="M3 20v-1a6 6 0 0 1 12 0v1" />
-                      <path d="M16 6.5a3 3 0 0 1 0 5" />
-                      <path d="M21 20v-1a5 5 0 0 0-3-4.6" />
-                    </template>
-                    <template v-else-if="currentQuestion.icon === 'globe'">
-                      <circle cx="12" cy="12" r="8" />
-                      <path d="M4 12h16M12 4a12 12 0 0 1 0 16M12 4a12 12 0 0 0 0 16" />
-                    </template>
-                    <template v-else-if="currentQuestion.icon === 'map'">
-                      <path d="M9 18 3 21V6l6-3 6 3 6-3v15l-6 3-6-3Z" />
-                      <path d="M9 3v15M15 6v15" />
-                    </template>
-                    <template v-else-if="currentQuestion.icon === 'list'">
-                      <path d="M9 6h11M9 12h11M9 18h11" />
-                      <path d="m4 6 1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" />
-                    </template>
-                    <template v-else-if="currentQuestion.icon === 'home'">
-                      <path d="M4 11 12 4l8 7v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9Z" />
-                      <path d="M9 21v-7h6v7" />
-                    </template>
-                    <template v-else-if="currentQuestion.icon === 'flag'">
-                      <path d="M6 21V4h11l-2 4 2 4H6" />
-                    </template>
-                    <template v-else-if="currentQuestion.icon === 'hospital'">
-                      <rect x="4" y="4" width="16" height="16" rx="2" />
-                      <path d="M12 8v8M8 12h8" />
-                    </template>
-                    <template v-else-if="currentQuestion.icon === 'health'">
-                      <path d="M12 21s-7-4.6-9-10a4.8 4.8 0 0 1 8-5 4.8 4.8 0 0 1 8 5c-2 5.4-9 10-9 10Z" />
-                    </template>
-                    <template v-else>
-                      <rect x="6" y="3" width="12" height="18" rx="2" />
-                      <path d="M9 8h6M9 12h6M9 16h3" />
-                    </template>
-                  </svg>
-                </div>
-                <div>
-                  <h2>{{ currentQuestion.title }}</h2>
-                  <p>{{ currentQuestion.prompt }}</p>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="tooltip-wrap"
-              @mouseenter="openTooltip = currentQuestion.id"
-              @mouseleave="closeTooltip"
-            >
-              <button
-                class="info-btn"
-                type="button"
-                :aria-expanded="openTooltip === currentQuestion.id"
-                :aria-label="`Why we ask about ${currentQuestion.title}`"
-                @click="toggleTooltip(currentQuestion.id)"
-              >
-                i
-              </button>
-              <div v-if="openTooltip === currentQuestion.id" class="tooltip-card">
-                <strong>Why we ask</strong>
-                <span>{{ currentQuestion.tooltip }}</span>
-              </div>
-            </div>
+        <section class="question-card category-card">
+          <div class="category-header">
+            <div class="question-section">{{ currentCategory.eyebrow }}</div>
+            <h2>{{ currentCategory.title }}</h2>
+            <p>{{ currentCategory.description }}</p>
           </div>
 
-          <div class="answer-list">
-            <button
-              v-for="option in currentQuestion.options"
-              :key="option.label"
-              class="answer-option"
-              :class="{ selected: isSelected(currentQuestion.id, option.value) }"
-              type="button"
-              @click="handleAnswerSelect(currentQuestion, option.value)"
-            >
-              <span :class="{ muted: option.value === null }">{{ option.label }}</span>
-              <span class="radio" aria-hidden="true">
-                <span v-if="isSelected(currentQuestion.id, option.value)"></span>
-              </span>
-            </button>
-          </div>
-        </section>
-
-        <section v-if="isReviewStep" class="review-card">
-          <div class="review-heading">
-            <div>
-              <div class="question-section">FINAL CHECK</div>
-              <h2>Review your answers</h2>
-              <p>Answers marked “Prefer not to say” are treated as neutral in the estimate.</p>
-            </div>
-          </div>
-
-          <div class="review-list">
-            <button
-              v-for="(question, index) in questions"
+          <div class="category-question-list">
+            <article
+              v-for="question in currentCategory.questions"
               :key="question.id"
-              class="review-row"
-              type="button"
-              @click="goToQuestion(index)"
+              class="category-question"
+              :class="{ invalid: shouldShowQuestionError(question.id) }"
             >
-              <span>
-                <strong>{{ question.title }}</strong>
-                <small>{{ displayAnswer(question) }}</small>
-              </span>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </button>
+              <div class="question-header">
+                <div class="question-copy">
+                  <div class="question-title-row">
+                    <div class="question-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24">
+                        <template v-if="question.icon === 'user'">
+                          <circle cx="12" cy="8" r="3" />
+                          <path d="M6 20v-1a6 6 0 0 1 12 0v1" />
+                        </template>
+                        <template v-else-if="question.icon === 'calendar'">
+                          <rect x="4" y="5" width="16" height="15" rx="2" />
+                          <path d="M8 3v4M16 3v4M4 10h16" />
+                        </template>
+                        <template v-else-if="question.icon === 'people'">
+                          <circle cx="9" cy="8" r="3" />
+                          <path d="M3 20v-1a6 6 0 0 1 12 0v1" />
+                          <path d="M16 6.5a3 3 0 0 1 0 5" />
+                          <path d="M21 20v-1a5 5 0 0 0-3-4.6" />
+                        </template>
+                        <template v-else-if="question.icon === 'globe'">
+                          <circle cx="12" cy="12" r="8" />
+                          <path d="M4 12h16M12 4a12 12 0 0 1 0 16M12 4a12 12 0 0 0 0 16" />
+                        </template>
+                        <template v-else-if="question.icon === 'map'">
+                          <path d="M9 18 3 21V6l6-3 6 3 6-3v15l-6 3-6-3Z" />
+                          <path d="M9 3v15M15 6v15" />
+                        </template>
+                        <template v-else-if="question.icon === 'list'">
+                          <path d="M9 6h11M9 12h11M9 18h11" />
+                          <path d="m4 6 1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" />
+                        </template>
+                        <template v-else-if="question.icon === 'home'">
+                          <path d="M4 11 12 4l8 7v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9Z" />
+                          <path d="M9 21v-7h6v7" />
+                        </template>
+                        <template v-else-if="question.icon === 'flag'">
+                          <path d="M6 21V4h11l-2 4 2 4H6" />
+                        </template>
+                        <template v-else-if="question.icon === 'hospital'">
+                          <rect x="4" y="4" width="16" height="16" rx="2" />
+                          <path d="M12 8v8M8 12h8" />
+                        </template>
+                        <template v-else-if="question.icon === 'health'">
+                          <path d="M12 21s-7-4.6-9-10a4.8 4.8 0 0 1 8-5 4.8 4.8 0 0 1 8 5c-2 5.4-9 10-9 10Z" />
+                        </template>
+                        <template v-else>
+                          <rect x="6" y="3" width="12" height="18" rx="2" />
+                          <path d="M9 8h6M9 12h6M9 16h3" />
+                        </template>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3>{{ question.title }}</h3>
+                      <p>{{ question.prompt }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  class="tooltip-wrap"
+                  @mouseenter="openTooltipFor(question.id)"
+                  @mouseleave="scheduleTooltipClose"
+                >
+                  <button
+                    class="info-btn"
+                    type="button"
+                    :aria-expanded="openTooltip === question.id"
+                    :aria-label="`Why we ask about ${question.title}`"
+                    @click="toggleTooltip(question.id)"
+                  >
+                    i
+                  </button>
+                  <div
+                    v-if="openTooltip === question.id"
+                    class="tooltip-card"
+                    @mouseenter="openTooltipFor(question.id)"
+                    @mouseleave="scheduleTooltipClose"
+                  >
+                    <strong>Why we ask</strong>
+                    <span>{{ question.tooltip }}</span>
+                    <a
+                      v-if="question.tooltipLink"
+                      class="tooltip-link"
+                      :href="question.tooltipLink.href"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {{ question.tooltipLink.label }}
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="answer-list">
+                <button
+                  v-for="option in question.options"
+                  :key="option.label"
+                  class="answer-option"
+                  :class="{ selected: isSelected(question.id, option.value) }"
+                  type="button"
+                  @click="handleAnswerSelect(question, option.value)"
+                >
+                  <span>{{ option.label }}</span>
+                  <span class="radio" aria-hidden="true">
+                    <span v-if="isSelected(question.id, option.value)"></span>
+                  </span>
+                </button>
+              </div>
+            </article>
           </div>
         </section>
 
@@ -212,7 +172,7 @@
           <button
             class="back-btn"
             type="button"
-            :disabled="!isReviewStep && currentIndex === 0"
+            :disabled="currentStep === 0"
             @click="previousQuestion"
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -222,32 +182,59 @@
           </button>
 
           <button
-            v-if="!isReviewStep"
-            class="skip-btn"
-            type="button"
-            @click="nextQuestion"
-          >
-            Skip
-          </button>
-
-          <button
-            v-else
             class="next-btn"
             type="button"
-            :disabled="!allAnswered || submitting"
-            @click="submitEstimate"
+            :disabled="submitting"
+            @click="nextQuestion"
           >
-            {{ submitting ? 'Calculating...' : 'See my estimate' }}
+            {{ currentStep === categories.length - 1 ? (submitting ? 'Calculating...' : 'See my estimate') : 'Next category' }}
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>
           </button>
         </section>
 
-        <p v-if="isReviewStep && !allAnswered" class="completion-hint">
-          Answer all questions to see your estimate. Tap a dot above to jump back.
-        </p>
         <p v-if="error" class="error-message">{{ error }}</p>
+
+        <section class="did-you-know" aria-label="AIHW wait time context">
+          <div class="did-you-know-header">
+            <div class="question-section">DID YOU KNOW?</div>
+            <h2>Helpful context before you compare options</h2>
+          </div>
+          <div class="insight-grid">
+            <article
+              v-for="insight in estimatorInsights"
+              :key="insight.title"
+              class="insight-card"
+              :class="`insight-${insight.tone}`"
+            >
+              <div class="insight-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <template v-if="insight.icon === 'clock'">
+                    <circle cx="12" cy="12" r="8" />
+                    <path d="M12 7v5l3 2" />
+                  </template>
+                  <template v-else-if="insight.icon === 'home'">
+                    <path d="M4 11 12 4l8 7v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9Z" />
+                    <path d="M9 21v-7h6v7" />
+                  </template>
+                  <template v-else-if="insight.icon === 'map'">
+                    <path d="M9 18 3 21V6l6-3 6 3 6-3v15l-6 3-6-3Z" />
+                    <path d="M9 3v15M15 6v15" />
+                  </template>
+                  <template v-else>
+                    <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" />
+                    <path d="M5 14l.8 2.2L8 17l-2.2.8L5 20l-.8-2.2L2 17l2.2-.8L5 14Z" />
+                  </template>
+                </svg>
+              </div>
+              <div>
+                <h3>{{ insight.title }}</h3>
+                <p>{{ insight.copy }}</p>
+              </div>
+            </article>
+          </div>
+        </section>
       </template>
 
       <section v-else class="result-view">
@@ -300,6 +287,46 @@
             </a>
           </p>
         </div>
+
+        <section class="did-you-know did-you-know-result" aria-label="AIHW wait time context">
+          <div class="did-you-know-header">
+            <div class="question-section">DID YOU KNOW?</div>
+            <h2>More context behind your estimate</h2>
+          </div>
+          <div class="insight-grid">
+            <article
+              v-for="insight in estimatorInsights"
+              :key="`result-${insight.title}`"
+              class="insight-card"
+              :class="`insight-${insight.tone}`"
+            >
+              <div class="insight-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <template v-if="insight.icon === 'clock'">
+                    <circle cx="12" cy="12" r="8" />
+                    <path d="M12 7v5l3 2" />
+                  </template>
+                  <template v-else-if="insight.icon === 'home'">
+                    <path d="M4 11 12 4l8 7v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9Z" />
+                    <path d="M9 21v-7h6v7" />
+                  </template>
+                  <template v-else-if="insight.icon === 'map'">
+                    <path d="M9 18 3 21V6l6-3 6 3 6-3v15l-6 3-6-3Z" />
+                    <path d="M9 3v15M15 6v15" />
+                  </template>
+                  <template v-else>
+                    <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" />
+                    <path d="M5 14l.8 2.2L8 17l-2.2.8L5 20l-.8-2.2L2 17l2.2-.8L5 14Z" />
+                  </template>
+                </svg>
+              </div>
+              <div>
+                <h3>{{ insight.title }}</h3>
+                <p>{{ insight.copy }}</p>
+              </div>
+            </article>
+          </div>
+        </section>
       </section>
     </main>
 
@@ -308,14 +335,11 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Header from '../components/Header.vue'
 import FooterSection from '../components/FooterSection.vue'
 import { estimateWaitTime } from '../services/facilitiesApi'
-
-const PREFER_NOT_TO_SAY = null
-const AUTO_ADVANCE_DELAY_MS = 180
 
 const OUTCOME_DISPLAY = {
   less_than_median: {
@@ -339,6 +363,7 @@ const questions = [
   {
     id: 'sex',
     field: 'sex',
+    required: true,
     section: 'ABOUT YOU',
     title: 'Gender',
     prompt: 'Which best describes you?',
@@ -346,13 +371,13 @@ const questions = [
     tooltip: 'AIHW uses sex recorded in assessment data as male or female. Records marked intersex, indeterminate or unknown were excluded from the AIHW model.',
     options: [
       { label: 'Woman', value: 'Women' },
-      { label: 'Man', value: 'Men' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'Man', value: 'Men' }
     ]
   },
   {
     id: 'age',
     field: 'age',
+    required: true,
     section: 'ABOUT YOU',
     title: 'Age group',
     prompt: 'What is your age range?',
@@ -362,8 +387,7 @@ const questions = [
       { label: '50-69 years', value: '50–69' },
       { label: '70-79 years', value: '70–79' },
       { label: '80-89 years', value: '80–89' },
-      { label: '90 years or older', value: '90+' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: '90 years or older', value: '90+' }
     ]
   },
   {
@@ -377,12 +401,13 @@ const questions = [
     options: [
       { label: 'First Nations', value: 'First Nations' },
       { label: 'Non-Indigenous', value: 'Non-Indigenous' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'Prefer not to say', value: null }
     ]
   },
   {
     id: 'cald_status',
     field: 'cald_status',
+    required: true,
     section: 'ABOUT YOU',
     title: 'Cultural background',
     prompt: 'Do you identify as culturally and linguistically diverse?',
@@ -390,8 +415,7 @@ const questions = [
     tooltip: 'CALD means culturally and linguistically diverse. In AIHW data this is based on country of birth and preferred language recorded by the assessor.',
     options: [
       { label: 'CALD', value: 'CALD' },
-      { label: 'Non-CALD', value: 'Non-CALD' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'Non-CALD', value: 'Non-CALD' }
     ]
   },
   {
@@ -405,7 +429,7 @@ const questions = [
     options: [
       { label: 'Born in Australia', value: 'Born in Australia' },
       { label: 'Born overseas', value: 'Born overseas' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'Prefer not to say', value: null }
     ]
   },
   {
@@ -416,11 +440,15 @@ const questions = [
     prompt: 'Which best describes where you live?',
     icon: 'map',
     tooltip: 'Location type uses the Modified Monash Model for the person’s primary address. AIHW groups this as metropolitan, regional centres, or rural and remote areas.',
+    tooltipLink: {
+      label: 'Find yours here',
+      href: 'https://www.health.gov.au/resources/apps-and-tools/health-workforce-locator'
+    },
     options: [
       { label: 'Metropolitan (MM 1)', value: 'Metropolitan (MM 1)' },
       { label: 'Regional centres (MM 2)', value: 'Regional centres (MM 2)' },
       { label: 'Rural and remote (MM 3-7)', value: 'Rural and remote (MM 3–7)' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'Prefer not to say', value: null }
     ]
   },
   {
@@ -434,12 +462,13 @@ const questions = [
     options: [
       { label: 'Yes, I have used aged care before', value: 'Has previously used aged care services' },
       { label: 'No, this would be my first time', value: 'Has not previously used aged care services' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'Prefer not to say', value: null }
     ]
   },
   {
     id: 'caring_arrangement',
     field: 'caring_arrangement',
+    required: true,
     section: 'CARE HISTORY',
     title: 'Informal carer',
     prompt: 'Do you have an informal carer, such as family or a friend?',
@@ -447,8 +476,7 @@ const questions = [
     tooltip: 'An informal carer is help from a carer, family member, friend or neighbour who is not a paid service provider, as recorded in the NSAF assessment.',
     options: [
       { label: 'Yes, I have an informal carer', value: 'Has an informal carer' },
-      { label: 'No, I do not have an informal carer', value: 'Does not have an informal carer' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'No, I do not have an informal carer', value: 'Does not have an informal carer' }
     ]
   },
   {
@@ -462,12 +490,13 @@ const questions = [
     options: [
       { label: 'I live alone', value: 'Lives alone' },
       { label: 'I do not live alone', value: 'Does not live alone' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'Prefer not to say', value: null }
     ]
   },
   {
     id: 'priority_level',
     field: 'priority_level',
+    required: true,
     section: 'ASSESSMENT',
     title: 'Priority level',
     prompt: 'What priority level was recorded for your aged care assessment?',
@@ -476,13 +505,13 @@ const questions = [
     options: [
       { label: 'Low', value: 'Low' },
       { label: 'Medium', value: 'Medium' },
-      { label: 'High', value: 'High' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'High', value: 'High' }
     ]
   },
   {
     id: 'assessment_location',
     field: 'assessment_location',
+    required: true,
     section: 'ASSESSMENT',
     title: 'Assessment location',
     prompt: 'Where was your assessment completed?',
@@ -490,8 +519,7 @@ const questions = [
     tooltip: 'Assessment location indicates whether the assessment setting was hospital, including public hospitals, private hospitals and clinics.',
     options: [
       { label: 'Assessed in hospital', value: 'Assessed in hospital' },
-      { label: 'Assessed outside hospital', value: 'Assessed outside hospital' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'Assessed outside hospital', value: 'Assessed outside hospital' }
     ]
   },
   {
@@ -505,7 +533,7 @@ const questions = [
     options: [
       { label: 'Dementia', value: 'Dementia' },
       { label: 'No dementia', value: 'No dementia' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'Prefer not to say', value: null }
     ]
   },
   {
@@ -519,7 +547,7 @@ const questions = [
     options: [
       { label: 'Has a mental health condition', value: 'Has a mental health condition' },
       { label: 'Does not have a mental health condition', value: 'Does not have a mental health condition' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'Prefer not to say', value: null }
     ]
   },
   {
@@ -535,8 +563,35 @@ const questions = [
       { label: '2-3 conditions', value: 'Having 2–3 health conditions' },
       { label: '4-5 conditions', value: 'Having 4–5 health conditions' },
       { label: '6 or more conditions', value: 'Having 6 health conditions or more' },
-      { label: 'Prefer not to say', value: PREFER_NOT_TO_SAY }
+      { label: 'Prefer not to say', value: null }
     ]
+  }
+]
+
+const categories = [
+  {
+    id: 'personal-background',
+    eyebrow: 'STEP 1',
+    shortLabel: 'Background',
+    title: 'Personal background',
+    description: 'Tell us about your background and where you live so we can compare you with the right AIHW cohort.',
+    questionIds: ['sex', 'age', 'first_nations_status', 'cald_status', 'country_of_birth', 'remoteness']
+  },
+  {
+    id: 'care-situation',
+    eyebrow: 'STEP 2',
+    shortLabel: 'Care',
+    title: 'Care situation',
+    description: 'These questions cover your care history, support network, and assessment details.',
+    questionIds: ['aged_care_service_use', 'caring_arrangement', 'living_arrangement', 'priority_level', 'assessment_location']
+  },
+  {
+    id: 'health-conditions',
+    eyebrow: 'STEP 3',
+    shortLabel: 'Health',
+    title: 'Health conditions',
+    description: 'Finally, we look at the health factors included in the AIHW wait-time model.',
+    questionIds: ['dementia_status', 'mental_health_status', 'morbidity']
   }
 ]
 
@@ -568,20 +623,24 @@ const estimatorInsights = [
 ]
 
 const router = useRouter()
-const currentIndex = ref(0)
-const reviewing = ref(false)
+const currentStep = ref(0)
 const answers = ref({})
 const openTooltip = ref(null)
 const submitting = ref(false)
 const error = ref('')
 const result = ref(null)
-let autoAdvanceTimer = null
+const invalidQuestionIds = ref([])
+let tooltipCloseTimer = null
+const questionLookup = Object.fromEntries(questions.map((question) => [question.id, question]))
+const categorySteps = categories.map((category) => ({
+  ...category,
+  questions: category.questionIds.map((questionId) => questionLookup[questionId])
+}))
 
-const currentQuestion = computed(() => questions[currentIndex.value])
-const isLastQuestion = computed(() => currentIndex.value === questions.length - 1)
-const answeredCount = computed(() => questions.filter(question => isAnswered(question.id)).length)
-const allAnswered = computed(() => answeredCount.value === questions.length)
-const isReviewStep = computed(() => reviewing.value)
+const currentCategory = computed(() => categorySteps[currentStep.value])
+const currentCategoryAnsweredCount = computed(
+  () => currentCategory.value.questions.filter((question) => isAnswered(question.id)).length
+)
 const resultDisplay = computed(() => OUTCOME_DISPLAY[result.value?.outcome] || OUTCOME_DISPLAY.around_median)
 
 const estimateText = computed(() => (result.value ? resultDisplay.value.text : ''))
@@ -607,95 +666,93 @@ function selectAnswer(questionId, value) {
 
 function handleAnswerSelect(question, value) {
   selectAnswer(question.id, value)
-
-  clearAutoAdvanceTimer()
-
-  autoAdvanceTimer = setTimeout(() => {
-    if (result.value || reviewing.value || currentQuestion.value.id !== question.id) return
-    advanceFromCurrentQuestion()
-  }, AUTO_ADVANCE_DELAY_MS)
-}
-
-function getAnswerLabel(question) {
-  if (!isAnswered(question.id)) return ''
-  const selected = question.options.find(option => option.value === answers.value[question.id])
-  return selected?.label || ''
-}
-
-function displayAnswer(question) {
-  return getAnswerLabel(question) || 'Not answered'
-}
-
-function hasPreferNotToSay(question) {
-  return question.options.some(option => option.value === PREFER_NOT_TO_SAY)
-}
-
-function answerPreferNotToSay(question) {
-  if (isAnswered(question.id) || !hasPreferNotToSay(question)) return
-  selectAnswer(question.id, PREFER_NOT_TO_SAY)
-}
-
-function clearAutoAdvanceTimer() {
-  if (autoAdvanceTimer) {
-    clearTimeout(autoAdvanceTimer)
-    autoAdvanceTimer = null
+  if (question.required) {
+    invalidQuestionIds.value = invalidQuestionIds.value.filter((questionId) => questionId !== question.id)
   }
+  error.value = ''
 }
 
-function goToQuestion(index) {
-  clearAutoAdvanceTimer()
-  currentIndex.value = index
-  reviewing.value = false
+function isCategoryComplete(category) {
+  return category.questions.every((question) => isAnswered(question.id))
+}
+
+function goToCategory(index) {
+  currentStep.value = index
   openTooltip.value = null
+  invalidQuestionIds.value = []
+  error.value = ''
 }
 
 function previousQuestion() {
-  if (reviewing.value) {
-    reviewing.value = false
-    currentIndex.value = questions.length - 1
-    return
+  if (currentStep.value > 0) {
+    goToCategory(currentStep.value - 1)
   }
+}
 
-  if (currentIndex.value > 0) {
-    goToQuestion(currentIndex.value - 1)
-  }
+function shouldShowQuestionError(questionId) {
+  return invalidQuestionIds.value.includes(questionId)
 }
 
 function nextQuestion() {
-  answerPreferNotToSay(currentQuestion.value)
-  advanceFromCurrentQuestion()
-}
+  const unanswered = currentCategory.value.questions.filter(
+    (question) => question.required && !isAnswered(question.id)
+  )
+  if (unanswered.length > 0) {
+    invalidQuestionIds.value = unanswered.map((question) => question.id)
+    const names = unanswered.map((question) => `"${question.title}"`).join(', ')
+    error.value = `Please answer ${names} before continuing.`
+    return
+  }
 
-function advanceFromCurrentQuestion() {
-  if (currentIndex.value < questions.length - 1) {
-    goToQuestion(currentIndex.value + 1)
+  invalidQuestionIds.value = []
+  error.value = ''
+  if (currentStep.value < categories.length - 1) {
+    goToCategory(currentStep.value + 1)
   } else {
-    clearAutoAdvanceTimer()
-    reviewing.value = true
-    openTooltip.value = null
+    submitEstimate()
   }
 }
 
+function clearTooltipCloseTimer() {
+  if (tooltipCloseTimer) {
+    clearTimeout(tooltipCloseTimer)
+    tooltipCloseTimer = null
+  }
+}
+
+function openTooltipFor(questionId) {
+  clearTooltipCloseTimer()
+  openTooltip.value = questionId
+}
+
 function toggleTooltip(questionId) {
+  clearTooltipCloseTimer()
   openTooltip.value = openTooltip.value === questionId ? null : questionId
 }
 
+function scheduleTooltipClose() {
+  clearTooltipCloseTimer()
+  tooltipCloseTimer = setTimeout(() => {
+    openTooltip.value = null
+    tooltipCloseTimer = null
+  }, 140)
+}
+
 function closeTooltip() {
+  clearTooltipCloseTimer()
   openTooltip.value = null
 }
 
 function buildPayload() {
   return questions.reduce((payload, question) => {
-    const value = answers.value[question.id]
-    payload[question.field] = value === PREFER_NOT_TO_SAY ? null : value
+    payload[question.field] = answers.value[question.id]
     return payload
   }, {})
 }
 
 async function submitEstimate() {
-  if (!allAnswered.value || submitting.value) return
+  if (submitting.value) return
 
-  clearAutoAdvanceTimer()
   submitting.value = true
   error.value = ''
 
@@ -717,22 +774,17 @@ async function submitEstimate() {
 }
 
 function startOver() {
-  clearAutoAdvanceTimer()
   answers.value = {}
-  currentIndex.value = 0
-  reviewing.value = false
+  currentStep.value = 0
   result.value = null
   error.value = ''
+  invalidQuestionIds.value = []
   openTooltip.value = null
 }
 
 function goFindCare() {
   router.push('/find-bed')
 }
-
-onBeforeUnmount(() => {
-  clearAutoAdvanceTimer()
-})
 </script>
 
 <style scoped>
@@ -801,7 +853,7 @@ onBeforeUnmount(() => {
 }
 
 .insight-grid {
-  margin: 42px auto 0;
+  margin: 22px auto 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
@@ -834,6 +886,14 @@ onBeforeUnmount(() => {
   font-size: 13px;
   line-height: 1.45;
   color: #5f746f;
+}
+
+.insight-card h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 1.1;
+  color: #22332e;
 }
 
 .insight-icon {
@@ -886,8 +946,40 @@ onBeforeUnmount(() => {
 }
 
 .insight-blue .insight-icon,
-.insight-blue h2 {
+.insight-blue h2,
+.insight-blue h3 {
   color: #2f7f91;
+}
+
+.insight-primary .insight-icon,
+.insight-primary h3 {
+  color: #2d6a5f;
+}
+
+.insight-green .insight-icon,
+.insight-green h3 {
+  color: #4e8133;
+}
+
+.did-you-know {
+  margin-top: 56px;
+  text-align: left;
+}
+
+.did-you-know-header {
+  max-width: 720px;
+}
+
+.did-you-know-header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 1.12;
+  color: #1f2d2a;
+}
+
+.did-you-know-result {
+  margin-top: 36px;
 }
 
 .progress-wrap {
@@ -909,46 +1001,63 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .progress-dot {
-  width: 12px;
-  height: 12px;
+  min-width: 124px;
+  height: 42px;
   border-radius: 999px;
   border: none;
   background: #e2dfd8;
-  padding: 0;
+  color: #617270;
+  padding: 0 16px;
   cursor: pointer;
-  transition: background 0.15s, transform 0.15s, width 0.15s;
+  transition: background 0.15s, transform 0.15s, color 0.15s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
+  font-weight: 700;
 }
 
 .progress-dot:hover {
   background: #98b5ad;
   transform: translateY(-1px);
+  color: #1f2d2a;
 }
 
 .progress-dot.active {
-  width: 36px;
   background: #2d6a5f;
+  color: #ffffff;
 }
 
 .progress-dot.answered {
   background: #83a29b;
+  color: #ffffff;
 }
 
-.progress-dot svg {
-  width: 8px;
-  height: 8px;
-  fill: none;
-  stroke: white;
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.progress-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.progress-dot:not(.active):not(.answered) .progress-number {
+  background: rgba(45, 106, 95, 0.12);
+  color: #2d6a5f;
+}
+
+.progress-label {
+  font-size: 14px;
+  letter-spacing: 0.01em;
 }
 
 .question-card,
@@ -966,6 +1075,64 @@ onBeforeUnmount(() => {
   --question-icon-size: 58px;
   --question-icon-gap: 20px;
   padding: 48px 56px;
+}
+
+.category-card {
+  text-align: left;
+}
+
+.category-header {
+  max-width: 700px;
+  margin-bottom: 28px;
+}
+
+.category-header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  color: #1f2d2a;
+  font-size: 34px;
+  line-height: 1.12;
+}
+
+.category-header p {
+  margin: 12px 0 0;
+  color: #5f746f;
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.category-question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.category-question {
+  border-top: 1px solid #ebe5db;
+  padding-top: 24px;
+  border-radius: 18px;
+  transition: box-shadow 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.category-question:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.category-question.invalid {
+  border-top-color: transparent;
+  background: #fff6f6;
+  box-shadow: 0 0 0 2px #d35c5c;
+  padding: 20px;
+}
+
+.category-question.invalid:first-child {
+  padding-top: 20px;
+}
+
+.category-question.invalid .question-icon {
+  background: #fbe3e3;
+  color: #b94040;
 }
 
 .question-header {
@@ -1013,11 +1180,12 @@ onBeforeUnmount(() => {
   stroke-linejoin: round;
 }
 
-.question-title-row h2 {
+.question-title-row h2,
+.question-title-row h3 {
   margin: 0;
   font-family: var(--font-display);
   color: #1f2d2a;
-  font-size: 32px;
+  font-size: 30px;
   line-height: 1.15;
 }
 
@@ -1074,6 +1242,15 @@ onBeforeUnmount(() => {
   margin-bottom: 8px;
   color: #1f2d2a;
   font-size: 15px;
+}
+
+.tooltip-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: #2d6a5f;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .answer-list {
@@ -1415,9 +1592,32 @@ onBeforeUnmount(() => {
     margin-top: 38px;
   }
 
+  .progress-dots {
+    gap: 10px;
+  }
+
+  .progress-dot {
+    min-width: 96px;
+    height: 38px;
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .progress-label {
+    font-size: 13px;
+  }
+
   .insight-grid {
     grid-template-columns: 1fr;
     margin-top: 30px;
+  }
+
+  .did-you-know {
+    margin-top: 42px;
+  }
+
+  .did-you-know-header h2 {
+    font-size: 26px;
   }
 
   .insight-card {
@@ -1446,6 +1646,14 @@ onBeforeUnmount(() => {
     --question-icon-gap: 14px;
   }
 
+  .category-header h2 {
+    font-size: 28px;
+  }
+
+  .category-header p {
+    font-size: 15px;
+  }
+
   .question-header {
     gap: 12px;
   }
@@ -1454,7 +1662,8 @@ onBeforeUnmount(() => {
     border-radius: 14px;
   }
 
-  .question-title-row h2 {
+  .question-title-row h2,
+  .question-title-row h3 {
     font-size: 26px;
   }
 
@@ -1489,8 +1698,7 @@ onBeforeUnmount(() => {
   }
 
   .back-btn,
-  .next-btn,
-  .skip-btn {
+  .next-btn {
     padding: 0 20px;
   }
 

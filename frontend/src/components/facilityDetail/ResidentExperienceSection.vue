@@ -1,26 +1,21 @@
 <template>
-  <div class="info-card resident-card">
-    <div class="resident-title-row">
-      <svg class="resident-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"/>
-      </svg>
+  <div class="info-card">
+    <div class="resident-header">
       <h2 class="section-title">Resident Experience</h2>
     </div>
 
-    <div v-if="hasData" class="resident-grid">
+    <div class="resident-grid">
       <div v-for="metric in metrics" :key="metric.label" class="resident-metric">
-        <div class="resident-metric-header">
-          <span class="resident-metric-label">{{ metric.label }}</span>
-          <span class="resident-metric-pct">{{ metric.pct != null ? metric.pct + '%' : 'N/A' }}</span>
-        </div>
-        <div class="resident-bar-track">
-          <div class="resident-bar-fill" :style="{ width: (metric.pct ?? 0) + '%' }"></div>
+        <span class="resident-label">{{ metric.label }}</span>
+        <div class="resident-stars" :aria-label="metric.value != null ? `${metric.label} rating ${metric.value.toFixed(1)} out of 5` : `${metric.label} rating unavailable`">
+          <template v-if="metric.value != null">
+            <span v-for="i in metric.full" :key="'f' + i" class="star filled">★</span>
+            <span v-for="i in metric.empty" :key="'e' + i" class="star empty">★</span>
+            <span class="resident-num">{{ metric.value.toFixed(1) }}</span>
+          </template>
+          <span v-else class="no-data-text">N/A</span>
         </div>
       </div>
-    </div>
-
-    <div v-else class="no-data-msg">
-      No resident experience data available for this facility.
     </div>
   </div>
 </template>
@@ -32,20 +27,20 @@ const props = defineProps({
   facility: { type: Object, required: true }
 })
 
-function toPct(val) {
-  if (val == null) return null
-  return Math.round((val / 5) * 100)
+function toStars(val) {
+  if (val == null) return { full: 0, empty: 5, value: null }
+  const value = Math.max(0, Math.min(5, Number(val)))
+  const full = Math.max(0, Math.min(5, Math.round(value)))
+  return { full, empty: 5 - full, value }
 }
 
 const metrics = computed(() => [
-  { label: 'Food',            pct: toPct(props.facility?.reFoodScore) },
-  { label: 'Safety',          pct: toPct(props.facility?.reSafetyScore) },
-  { label: 'Respect',         pct: toPct(props.facility?.reRespectScore) },
-  { label: 'Caring',          pct: toPct(props.facility?.reCaringScore) },
-  { label: 'Feeling at Home', pct: toPct(props.facility?.reHomeScore) },
+  { label: 'Food',            ...toStars(props.facility?.reFoodScore) },
+  { label: 'Safety',          ...toStars(props.facility?.reSafetyScore) },
+  { label: 'Respect',         ...toStars(props.facility?.reRespectScore) },
+  { label: 'Caring',          ...toStars(props.facility?.reCaringScore) },
+  { label: 'Feeling at Home', ...toStars(props.facility?.reHomeScore) },
 ])
-
-const hasData = computed(() => metrics.value.some(m => m.pct != null))
 </script>
 
 <style scoped>
@@ -64,62 +59,60 @@ const hasData = computed(() => metrics.value.some(m => m.pct != null))
   color: #22332e;
 }
 
-.resident-card { display: flex; flex-direction: column; gap: 20px; }
-
-.resident-title-row { display: flex; align-items: center; gap: 10px; }
-
-.resident-icon {
-  width: 20px;
-  height: 20px;
-  color: #3d6b59;
-  flex: 0 0 auto;
+.resident-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 18px;
 }
 
 .resident-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px 32px;
+  gap: 12px;
 }
 
-.resident-metric { display: flex; flex-direction: column; gap: 6px; }
-
-.resident-metric-header {
+.resident-metric {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background: #f8f5ef;
+  border: 1px solid #e8e2d8;
+  border-radius: 10px;
+  padding: 12px 14px;
+  gap: 8px;
 }
 
-.resident-metric-label {
-  font-size: 14px;
-  font-weight: 500;
+.resident-label {
+  font-size: 13.5px;
+  font-weight: 600;
   color: #3a4e47;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
-.resident-metric-pct {
+.resident-stars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.star { font-size: 16px; line-height: 1; }
+.star.filled { color: #e8a023; }
+.star.empty { color: #d8d0c4; }
+
+.resident-num {
+  margin-left: 5px;
   font-size: 14px;
   font-weight: 700;
   color: #22332e;
 }
 
-.resident-bar-track {
-  width: 100%;
-  height: 8px;
-  background: #e8e2d8;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.resident-bar-fill {
-  height: 100%;
-  background: #3d6b59;
-  border-radius: 999px;
-  transition: width 0.4s ease;
-}
-
-.no-data-msg {
-  font-size: 14px;
+.no-data-text {
+  font-size: 13px;
   color: #a0a8a4;
-  padding: 8px 0;
 }
 
 @media (max-width: 768px) {
