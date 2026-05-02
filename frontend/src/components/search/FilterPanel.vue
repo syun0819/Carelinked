@@ -3,15 +3,20 @@
     <div class="filters-header" @click="toggleFilters">
       <h2>Filters</h2>
       <div class="filters-header-right">
-        <button class="reset-btn" @click.stop="$emit('reset')">Reset all</button>
+        <button class="reset-btn" @click.stop="resetFilters">Reset all</button>
         <span class="toggle-icon">{{ filtersOpen ? '▲' : '▼' }}</span>
       </div>
     </div>
 
     <div class="filters-body" :class="{ collapsed: !filtersOpen }">
       <div class="filter-section">
-        <button class="section-toggle" type="button" @click="toggleSection('careType')">
-          <span class="filter-title">CARE TYPE</span>
+        <button class="section-toggle" :class="{ active: sectionOpen.careType }" type="button" @click="toggleSection('careType')">
+          <svg class="filter-section-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16"/>
+            <path d="M7 12h10"/>
+            <path d="M10 17h4"/>
+          </svg>
+          <span class="filter-title">Care type</span>
           <span class="section-toggle-icon" :class="{ open: sectionOpen.careType }"></span>
         </button>
         <label
@@ -47,8 +52,12 @@
 
       <div class="filter-section">
         <div class="distance-header">
-          <button class="section-toggle" type="button" @click="toggleSection('distance')">
-            <span class="filter-title">DISTANCE FILTER</span>
+          <button class="section-toggle" :class="{ active: sectionOpen.distance }" type="button" @click="toggleSection('distance')">
+            <svg class="filter-section-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 21s7-6.1 7-12A7 7 0 0 0 5 9c0 5.9 7 12 7 12Z"/>
+              <circle cx="12" cy="9" r="2.5"/>
+            </svg>
+            <span class="filter-title">Distance filter</span>
             <span class="section-toggle-icon" :class="{ open: sectionOpen.distance }"></span>
           </button>
         </div>
@@ -75,8 +84,12 @@
       <hr class="filter-divider" />
 
       <div class="filter-section">
-        <button class="section-toggle" type="button" @click="toggleSection('locationType')">
-          <span class="filter-title">LOCATION TYPE</span>
+        <button class="section-toggle" :class="{ active: sectionOpen.locationType }" type="button" @click="toggleSection('locationType')">
+          <svg class="filter-section-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5Z"/>
+            <path d="M9 21V12h6v9"/>
+          </svg>
+          <span class="filter-title">Location type</span>
           <span class="section-toggle-icon" :class="{ open: sectionOpen.locationType }"></span>
         </button>
         <select v-show="sectionOpen.locationType" v-model="localRemoteness" class="filter-select">
@@ -92,8 +105,16 @@
       <hr class="filter-divider" />
 
       <div class="filter-section">
-        <button class="section-toggle" type="button" @click="toggleSection('minBeds')">
-          <span class="filter-title">MIN BEDS</span>
+        <button class="section-toggle" :class="{ active: sectionOpen.minBeds }" type="button" @click="toggleSection('minBeds')">
+          <svg class="filter-section-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 20h16"/>
+            <path d="M7 20V8h10v12"/>
+            <path d="M9 11h2"/>
+            <path d="M13 11h2"/>
+            <path d="M9 15h2"/>
+            <path d="M13 15h2"/>
+          </svg>
+          <span class="filter-title">Min beds</span>
           <span class="section-toggle-icon" :class="{ open: sectionOpen.minBeds }"></span>
         </button>
         <input
@@ -108,8 +129,18 @@
       <hr class="filter-divider" />
 
       <div class="filter-section">
-        <button class="section-toggle" type="button" @click="toggleSection('maxBeds')">
-          <span class="filter-title">MAX BEDS</span>
+        <button class="section-toggle" :class="{ active: sectionOpen.maxBeds }" type="button" @click="toggleSection('maxBeds')">
+          <svg class="filter-section-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 20h16"/>
+            <path d="M6 20V5h12v15"/>
+            <path d="M9 8h2"/>
+            <path d="M13 8h2"/>
+            <path d="M9 12h2"/>
+            <path d="M13 12h2"/>
+            <path d="M9 16h2"/>
+            <path d="M13 16h2"/>
+          </svg>
+          <span class="filter-title">Max beds</span>
           <span class="section-toggle-icon" :class="{ open: sectionOpen.maxBeds }"></span>
         </button>
         <input
@@ -205,6 +236,18 @@ function toggleCareType(value) {
     : [...localCareTypes.value, value]
 }
 
+function closeFilterSections() {
+  Object.keys(sectionOpen.value).forEach((section) => {
+    sectionOpen.value[section] = false
+  })
+  localDistanceFilterEnabled.value = false
+}
+
+function resetFilters() {
+  closeFilterSections()
+  emit('reset')
+}
+
 function getCareTypeDescription(value) {
   return careTypeDescriptions[value] || 'Care services available under this care type.'
 }
@@ -238,9 +281,9 @@ const rangeStyle = computed(() => {
   position: relative;
   z-index: 2000;
   background: #ffffff;
-  border: 1.5px solid #ddd5ca;
-  border-radius: 8px;
-  padding: 0 26px;
+  border: 1px solid #ddd5ca;
+  border-radius: 12px;
+  padding: 6px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -249,15 +292,17 @@ const rangeStyle = computed(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 56px;
+  min-height: 52px;
   margin-bottom: 0;
+  padding: 8px 12px;
 }
 
 .filters-header h2 {
   margin: 0;
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 700;
   color: #22332e;
+  font-family: var(--font-display);
 }
 
 .filters-header-right {
@@ -277,7 +322,7 @@ const rangeStyle = computed(() => {
 }
 
 .filters-body {
-  padding-bottom: 16px;
+  padding: 0 0 10px;
 }
 
 .reset-btn {
@@ -285,50 +330,83 @@ const rangeStyle = computed(() => {
   background: transparent;
   padding: 0;
   font-size: 14px;
-  font-weight: 700;
-  color: #5a8b72;
+  font-weight: 600;
+  color: #667871;
   cursor: pointer;
 }
 
 .filter-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 18px;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.filter-divider {
+  display: none;
 }
 
 .filter-title {
+  flex: 1;
   margin: 0;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  color: #2D6A5F;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: currentColor;
   text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .section-toggle {
   width: 100%;
   border: none;
   background: transparent;
-  padding: 0;
+  padding: 11px 12px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   cursor: pointer;
   font-family: var(--font-sans);
+  color: #667871;
+  transition: background 0.15s, color 0.15s;
+}
+
+.section-toggle:hover {
+  background: #f3f0ea;
+}
+
+.section-toggle.active {
+  background: #3d6b59;
+  color: #fff;
+  font-weight: 600;
+}
+
+.filter-section-icon {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .section-toggle-icon {
-  width: 11px;
-  height: 11px;
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-right: 1.75px solid #22332e;
-  border-bottom: 1.75px solid #22332e;
+  border-right: 1.9px solid currentColor;
+  border-bottom: 1.9px solid currentColor;
   transform: rotate(45deg);
   transition: transform 0.16s ease;
+  opacity: 0.7;
 }
 
 .section-toggle-icon.open {
@@ -342,6 +420,7 @@ const rangeStyle = computed(() => {
   column-gap: 14px;
   min-height: 44px;
   padding: 0 10px;
+  margin: 0 8px;
   border-radius: 8px;
   border: 1px solid transparent;
   cursor: pointer;
@@ -499,7 +578,7 @@ const rangeStyle = computed(() => {
 .toggle-switch input:checked + .toggle-track::before { transform: translateX(18px); }
 
 .distance-warning-hint {
-  margin: 0;
+  margin: 0 8px;
   font-size: 12px;
   color: #c07000;
   line-height: 1.4;
@@ -510,9 +589,10 @@ const rangeStyle = computed(() => {
   justify-content: space-between;
   align-items: center;
   font-size: 16px;
+  margin: 0 8px;
 }
 
-.range-wrap { padding-top: 2px; }
+.range-wrap { padding: 2px 8px 0; }
 
 .distance-range {
   width: 100%;
@@ -540,8 +620,9 @@ const rangeStyle = computed(() => {
 
 .filter-select,
 .filter-input {
-  width: 100%;
+  width: calc(100% - 16px);
   height: 40px;
+  margin: 0 8px;
   padding: 0 14px;
   border: 1px solid #cfd6cf;
   border-radius: 8px;
@@ -563,11 +644,12 @@ const rangeStyle = computed(() => {
 .filter-input::placeholder { color: #a8b0ab; }
 
 .apply-btn {
-  width: 100%;
+  width: calc(100% - 24px);
+  margin: 14px 12px 4px;
   border: none;
-  border-radius: 6px;
-  padding: 11px 16px;
-  background: #4f6f67;
+  border-radius: 8px;
+  padding: 13px 16px;
+  background: #557067;
   color: white;
   cursor: pointer;
   font-size: 14px;
@@ -576,7 +658,7 @@ const rangeStyle = computed(() => {
 }
 
 .apply-btn:hover {
-  background: #3f5c55;
+  background: #3d6b59;
 }
 
 .filter-select {
