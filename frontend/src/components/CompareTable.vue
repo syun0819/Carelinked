@@ -4,15 +4,9 @@
     <div class="compare-header">
       <div class="compare-header-left">
         <h1 class="compare-title">Compare facilities</h1>
-        <p class="compare-subtitle">Side-by-side view of wait times, quality, staffing and compliance.</p>
+        <p class="compare-subtitle">Side-by-side view of quality, staffing, compliance and more.</p>
       </div>
       <div class="compare-header-actions">
-        <button class="filter-count-btn" :class="{ inactive: !showSectionFilter }" @click="showSectionFilter = !showSectionFilter">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>
-          </svg>
-          {{ visibleSections.size }}/{{ sections.length }}
-        </button>
         <button class="action-btn-outline" @click="$emit('go-back')">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           Back to search
@@ -75,21 +69,6 @@
       </div>
     </div>
 
-    <!-- Section filter chips -->
-    <div v-if="showSectionFilter" class="section-filter">
-      <span class="filter-label">Show:</span>
-      <div class="filter-chips">
-        <button
-          v-for="s in sections"
-          :key="s.key"
-          class="filter-chip"
-          :class="{ active: visibleSections.has(s.key) }"
-          @click="toggleSection(s.key)"
-        >{{ s.label }}</button>
-      </div>
-      <span class="filter-count">{{ visibleSections.size }}/{{ sections.length }}</span>
-    </div>
-
     <!-- Table -->
     <div class="compare-table-wrap">
       <table class="compare-table">
@@ -115,8 +94,17 @@
       </thead>
 
       <tbody>
+        <tr class="compare-section-row">
+          <td :colspan="sectionColspan">
+            <button class="compare-section-toggle" type="button" @click="toggleCompareSection('overview')">
+              <span class="compare-section-icon" :class="{ open: isSectionOpen('overview') }"></span>
+              <span>Overview</span>
+            </button>
+          </td>
+        </tr>
+
         <!-- Care type -->
-        <tr v-if="visibleSections.has('overview')" class="compare-row">
+        <tr v-if="isSectionOpen('overview')" class="compare-row">
           <td class="label-cell">
             <span class="label-with-help">
               <span>Care type</span>
@@ -131,8 +119,24 @@
           </td>
         </tr>
 
-        <!-- Availability -->
-        <tr v-if="visibleSections.has('waitTime')" class="compare-row">
+        <!-- Total beds -->
+        <tr v-if="isSectionOpen('overview')" class="compare-row">
+          <td class="label-cell">
+            <span class="label-with-help">
+              <span>Total beds</span>
+              <button class="info-dot" type="button" :aria-label="fieldInfo.totalBeds">
+                i
+                <span class="info-tooltip" role="tooltip">{{ fieldInfo.totalBeds }}</span>
+              </button>
+            </span>
+          </td>
+          <td v-for="f in facilities" :key="f.id" class="data-cell">
+            <span class="value-text">{{ f.totalBeds ?? 'N/A' }}</span>
+          </td>
+        </tr>
+
+        <!-- Availability (inside Overview) -->
+        <tr v-if="isSectionOpen('overview')" class="compare-row">
           <td class="label-cell">
             <span class="label-with-help">
               <span>Availability</span>
@@ -147,8 +151,17 @@
           </td>
         </tr>
 
+        <tr class="compare-section-row">
+          <td :colspan="sectionColspan">
+            <button class="compare-section-toggle" type="button" @click="toggleCompareSection('qualityRatings')">
+              <span class="compare-section-icon" :class="{ open: isSectionOpen('qualityRatings') }"></span>
+              <span>Quality Ratings</span>
+            </button>
+          </td>
+        </tr>
+
         <!-- Overall rating -->
-        <tr v-if="visibleSections.has('qualityRatings')" class="compare-row">
+        <tr v-if="isSectionOpen('qualityRatings')" class="compare-row">
           <td class="label-cell">
             <span class="label-with-help">
               <span>Overall rating</span>
@@ -175,7 +188,7 @@
         </tr>
 
         <!-- Resident experience rating -->
-        <tr v-if="visibleSections.has('qualityRatings')" class="compare-row">
+        <tr v-if="isSectionOpen('qualityRatings')" class="compare-row">
           <td class="label-cell">
             <span class="label-with-help">
               <span>Resident experience rating</span>
@@ -198,7 +211,7 @@
         </tr>
 
         <!-- Staffing rating -->
-        <tr v-if="visibleSections.has('qualityRatings')" class="compare-row">
+        <tr v-if="isSectionOpen('qualityRatings')" class="compare-row">
           <td class="label-cell">
             <span class="label-with-help">
               <span>Staffing rating</span>
@@ -221,7 +234,7 @@
         </tr>
 
         <!-- Compliance rating -->
-        <tr v-if="visibleSections.has('qualityRatings')" class="compare-row">
+        <tr v-if="isSectionOpen('qualityRatings')" class="compare-row">
           <td class="label-cell">
             <span class="label-with-help">
               <span>Compliance rating</span>
@@ -244,7 +257,7 @@
         </tr>
 
         <!-- Quality measures rating -->
-        <tr v-if="visibleSections.has('qualityRatings')" class="compare-row">
+        <tr v-if="isSectionOpen('qualityRatings')" class="compare-row">
           <td class="label-cell">
             <span class="label-with-help">
               <span>Quality measures rating</span>
@@ -266,24 +279,17 @@
           </td>
         </tr>
 
-        <!-- Total beds -->
-        <tr v-if="visibleSections.has('overview')" class="compare-row">
-          <td class="label-cell">
-            <span class="label-with-help">
-              <span>Total beds</span>
-              <button class="info-dot" type="button" :aria-label="fieldInfo.totalBeds">
-                i
-                <span class="info-tooltip" role="tooltip">{{ fieldInfo.totalBeds }}</span>
-              </button>
-            </span>
-          </td>
-          <td v-for="f in facilities" :key="f.id" class="data-cell">
-            <span class="value-text">{{ f.totalBeds ?? 'N/A' }}</span>
+        <tr class="compare-section-row">
+          <td :colspan="sectionColspan">
+            <button class="compare-section-toggle" type="button" @click="toggleCompareSection('staffingCompliance')">
+              <span class="compare-section-icon" :class="{ open: isSectionOpen('staffingCompliance') }"></span>
+              <span>Staffing & Compliance</span>
+            </button>
           </td>
         </tr>
 
         <!-- RN care minutes -->
-        <tr v-if="visibleSections.has('staffing')" class="compare-row">
+        <tr v-if="isSectionOpen('staffingCompliance')" class="compare-row">
           <td class="label-cell">
             <span class="label-with-help">
               <span>RN care minutes <span class="label-sub">(actual / target)</span></span>
@@ -309,7 +315,7 @@
         </tr>
 
         <!-- Total care minutes -->
-        <tr v-if="visibleSections.has('staffing')" class="compare-row">
+        <tr v-if="isSectionOpen('staffingCompliance')" class="compare-row">
           <td class="label-cell">
             <span class="label-with-help">
               <span>Total care minutes <span class="label-sub">(actual / target)</span></span>
@@ -335,7 +341,7 @@
         </tr>
 
         <!-- Compliance status -->
-        <tr v-if="visibleSections.has('compliance')" class="compare-row">
+        <tr v-if="isSectionOpen('staffingCompliance')" class="compare-row">
           <td class="label-cell">
             <span class="label-with-help">
               <span>Compliance status</span>
@@ -353,8 +359,17 @@
           </td>
         </tr>
 
+        <tr class="compare-section-row">
+          <td :colspan="sectionColspan">
+            <button class="compare-section-toggle" type="button" @click="toggleCompareSection('residentExperience')">
+              <span class="compare-section-icon" :class="{ open: isSectionOpen('residentExperience') }"></span>
+              <span>Resident Experience</span>
+            </button>
+          </td>
+        </tr>
+
         <!-- Resident scores -->
-        <tr v-if="visibleSections.has('residentExperience')" v-for="rs in residentScoreRows" :key="rs.key" class="compare-row">
+        <tr v-if="isSectionOpen('residentExperience')" v-for="rs in residentScoreRows" :key="rs.key" class="compare-row">
           <td class="label-cell">
             <span class="label-with-help">
               <span>{{ rs.label }}</span>
@@ -370,8 +385,17 @@
           </td>
         </tr>
 
+        <tr class="compare-section-row">
+          <td :colspan="sectionColspan">
+            <button class="compare-section-toggle" type="button" @click="toggleCompareSection('providerFunding')">
+              <span class="compare-section-icon" :class="{ open: isSectionOpen('providerFunding') }"></span>
+              <span>Provider & Funding</span>
+            </button>
+          </td>
+        </tr>
+
         <!-- Government funding -->
-        <tr v-if="visibleSections.has('providerFunding')" class="compare-row">
+        <tr v-if="isSectionOpen('providerFunding')" class="compare-row">
           <td class="label-cell">
             <span class="label-with-help">
               <span>Government funding</span>
@@ -387,7 +411,7 @@
         </tr>
 
         <!-- Provider -->
-        <tr v-if="visibleSections.has('providerFunding')" class="compare-row">
+        <tr v-if="isSectionOpen('providerFunding')" class="compare-row">
           <td class="label-cell">
             <span class="label-with-help">
               <span>Provider</span>
@@ -429,21 +453,13 @@ defineEmits(['remove-facility', 'go-back', 'clear-all', 'go-to-detail', 'add-fro
 const facilityColWidth = computed(() =>
   `calc((100% - 160px) / ${props.facilities.length || 1})`
 )
+const sectionColspan = computed(() => props.facilities.length + 1)
 const activeAddSlot = computed(() => Math.min(props.facilities.length, props.slots.length - 1))
 const nextFacilityNumber = computed(() => props.facilities.length + 1)
 
-const showSectionFilter = ref(true)
 const showAddPanel = ref(false)
 
-const sections = [
-  { key: 'overview',           label: 'Overview' },
-  { key: 'waitTime',           label: 'Availability' },
-  { key: 'qualityRatings',     label: 'Quality Ratings' },
-  { key: 'staffing',           label: 'Staffing' },
-  { key: 'compliance',         label: 'Compliance' },
-  { key: 'residentExperience', label: 'Resident Experience' },
-  { key: 'providerFunding',    label: 'Provider & Funding' },
-]
+const collapsedSections = ref(new Set())
 
 const fieldInfo = {
   careType: 'The type of aged care service offered, such as residential care.',
@@ -474,12 +490,14 @@ const residentScoreRows = [
   { key: 'reHomeScore',    label: 'Resident - Feeling at Home' },
 ]
 
-const visibleSections = ref(new Set(sections.map(s => s.key)))
+function isSectionOpen(key) {
+  return !collapsedSections.value.has(key)
+}
 
-function toggleSection(key) {
-  const s = new Set(visibleSections.value)
-  s.has(key) ? s.delete(key) : s.add(key)
-  visibleSections.value = s
+function toggleCompareSection(key) {
+  const next = new Set(collapsedSections.value)
+  next.has(key) ? next.delete(key) : next.add(key)
+  collapsedSections.value = next
 }
 
 function availabilityClass(val) {
@@ -658,76 +676,10 @@ function formatFunding(val) {
   font-size: 20px;
 }
 
-.filter-count-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid #3d6b59;
-  background: #3d6b59;
-  color: #fff;
-  border-radius: 7px;
-  padding: 4px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-.filter-count-btn.inactive {
-  background: #fff;
-  color: #4a5e57;
-}
-
 /* ── Section filter chips ── */
 .compare-content-frame {
   width: min(100%, 1160px);
   margin: 0 auto;
-}
-
-.section-filter {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-  background: #fff;
-  border: 1px solid #ddd5ca;
-  border-radius: 10px;
-  padding: 10px 16px;
-}
-
-.filter-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #7f8d87;
-  flex-shrink: 0;
-}
-
-.filter-chips {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  flex: 1;
-}
-
-.filter-chip {
-  padding: 4px 12px;
-  border-radius: 999px;
-  border: 1px solid #ccc7be;
-  background: transparent;
-  color: #7f8d87;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.filter-chip:hover { border-color: #3d6b59; color: #3d6b59; }
-.filter-chip.active { background: #3d6b59; border-color: #3d6b59; color: #fff; }
-
-.filter-count {
-  font-size: 13px;
-  font-weight: 600;
-  color: #7f8d87;
-  flex-shrink: 0;
 }
 
 /* ── Table ── */
@@ -916,6 +868,49 @@ col.col-label { width: 160px; }
 }
 
 /* ── Data rows ── */
+.compare-section-row td {
+  padding: 0;
+  background: #fff;
+  border-bottom: 1px solid #ece9e3;
+}
+
+.compare-section-toggle {
+  width: 100%;
+  min-height: 46px;
+  border: none;
+  background: transparent;
+  color: #22332e;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 0 18px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+.compare-section-toggle:hover {
+  background: #f7f7f6;
+}
+
+.compare-section-icon {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-right: 2px solid #4f665e;
+  border-bottom: 2px solid #4f665e;
+  transform: rotate(-45deg);
+  transition: transform 0.16s ease;
+  margin-bottom: 1px;
+}
+
+.compare-section-icon.open {
+  transform: rotate(45deg);
+}
+
 .compare-row { height: 62px; }
 
 .compare-row td {
@@ -1202,9 +1197,7 @@ tfoot tr td {
   .footer-cell { padding: 12px 8px; }
   .view-btn { font-size: 12px; padding: 8px 8px; }
 
-  /* Section filter */
-  .section-filter { padding: 8px 10px; gap: 6px; }
-  .filter-chip { font-size: 11px; padding: 3px 8px; }
+  .compare-section-toggle { min-height: 42px; font-size: 13px; padding: 0 14px; }
 }
 
 @media (max-width: 768px) {
@@ -1248,8 +1241,6 @@ tfoot tr td {
   .footer-cell { padding: 10px 6px; }
   .view-btn { font-size: 11px; padding: 7px 6px; }
 
-  /* Section filter */
-  .section-filter { padding: 8px 10px; gap: 6px; }
-  .filter-chip { font-size: 10px; padding: 3px 7px; }
+  .compare-section-toggle { min-height: 40px; font-size: 12px; padding: 0 10px; }
 }
 </style>
