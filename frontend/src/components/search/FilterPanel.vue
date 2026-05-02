@@ -123,7 +123,10 @@
           v-model="localMinBeds"
           class="filter-input"
           placeholder="e.g. 20"
+          min="0"
+          @input="onMinBedsInput"
         />
+        <p v-if="sectionOpen.minBeds && minBedsHint" class="filter-field-hint">Maximum 3 digits allowed</p>
       </div>
 
       <hr class="filter-divider" />
@@ -149,7 +152,10 @@
           v-model="localMaxBeds"
           class="filter-input"
           placeholder="e.g. 100"
+          min="0"
+          @input="onMaxBedsInput"
         />
+        <p v-if="sectionOpen.maxBeds && maxBedsHint" class="filter-field-hint">Maximum 3 digits allowed</p>
       </div>
 
       <button class="apply-btn" @click="applyFilters">
@@ -181,6 +187,32 @@ const emit = defineEmits([
 ])
 
 const localCareTypes = ref([...props.selectedCareTypes])
+const minBedsHint = ref(false)
+const maxBedsHint = ref(false)
+let minBedsHintTimer = null
+let maxBedsHintTimer = null
+
+function onMinBedsInput(event) {
+  const raw = event.target.value
+  if (raw.length > 3) {
+    event.target.value = raw.slice(0, 3)
+    localMinBeds.value = Number(raw.slice(0, 3))
+    minBedsHint.value = true
+    clearTimeout(minBedsHintTimer)
+    minBedsHintTimer = setTimeout(() => { minBedsHint.value = false }, 2000)
+  }
+}
+
+function onMaxBedsInput(event) {
+  const raw = event.target.value
+  if (raw.length > 3) {
+    event.target.value = raw.slice(0, 3)
+    localMaxBeds.value = Number(raw.slice(0, 3))
+    maxBedsHint.value = true
+    clearTimeout(maxBedsHintTimer)
+    maxBedsHintTimer = setTimeout(() => { maxBedsHint.value = false }, 2000)
+  }
+}
 const localRemoteness = ref(props.selectedRemoteness || '')
 const localMinBeds = ref(props.minBeds)
 const localMaxBeds = ref(props.maxBeds)
@@ -642,6 +674,12 @@ const rangeStyle = computed(() => {
 }
 
 .filter-input::placeholder { color: #a8b0ab; }
+
+.filter-field-hint {
+  margin: 4px 8px 0;
+  font-size: 12px;
+  color: #a8b0ab;
+}
 
 .apply-btn {
   width: calc(100% - 24px);
