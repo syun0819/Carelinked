@@ -1,7 +1,7 @@
 import math
 from typing import Optional, Tuple, List
 
-from sqlalchemy import select, func, or_
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.aged_care import AgedCareService
@@ -129,21 +129,9 @@ async def search_facilities(
     if abs_remoteness:
         query = query.where(AgedCareService.abs_remoteness.ilike(f"%{abs_remoteness}%"))
     if min_beds is not None and min_beds > 0:
-        query = query.where(
-            or_(
-                AgedCareService.residential_places >= min_beds,
-                AgedCareService.residential_places == None,  # noqa: E711
-                AgedCareService.residential_places == 0,
-            )
-        )
+        query = query.where(AgedCareService.residential_places >= min_beds)
     if max_beds is not None and max_beds > 0:
-        query = query.where(
-            or_(
-                AgedCareService.residential_places <= max_beds,
-                AgedCareService.residential_places == None,  # noqa: E711
-                AgedCareService.residential_places == 0,
-            )
-        )
+        query = query.where(AgedCareService.residential_places <= max_beds)
 
     # Resolve center coords from postcode or suburb when distance filtering is requested
     center_lat, center_lng = None, None
