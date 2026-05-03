@@ -164,7 +164,11 @@
         <p v-else-if="sectionOpen.maxBeds && bedsRangeError" class="filter-field-error">{{ bedsRangeError }}</p>
       </div>
 
-      <button class="apply-btn" @click="applyFilters">
+      <button
+        class="apply-btn"
+        :disabled="!!minBedsError || !!maxBedsError || !!bedsRangeError"
+        @click="applyFilters"
+      >
         Apply filters
       </button>
     </div>
@@ -736,6 +740,12 @@ const rangeStyle = computed(() => {
 
 .apply-btn:hover {
   background: #3d6b59;
+}
+
+.apply-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #557067;
 }
 
 .filter-select {
