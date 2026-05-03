@@ -122,11 +122,14 @@
           type="number"
           v-model="localMinBeds"
           class="filter-input"
+          :class="{ 'input-error': sectionOpen.minBeds && (minBedsError || bedsRangeError) }"
           placeholder="e.g. 20"
           min="0"
           @input="onMinBedsInput"
         />
-        <p v-if="sectionOpen.minBeds && minBedsHint" class="filter-field-hint">Maximum 3 digits allowed</p>
+        <p v-if="sectionOpen.minBeds && minBedsError" class="filter-field-error">{{ minBedsError }}</p>
+        <p v-else-if="sectionOpen.minBeds && minBedsHint" class="filter-field-hint">Maximum 3 digits allowed</p>
+        <p v-else-if="sectionOpen.minBeds && bedsRangeError" class="filter-field-error">{{ bedsRangeError }}</p>
       </div>
 
       <hr class="filter-divider" />
@@ -151,11 +154,14 @@
           type="number"
           v-model="localMaxBeds"
           class="filter-input"
+          :class="{ 'input-error': sectionOpen.maxBeds && (maxBedsError || bedsRangeError) }"
           placeholder="e.g. 100"
           min="0"
           @input="onMaxBedsInput"
         />
-        <p v-if="sectionOpen.maxBeds && maxBedsHint" class="filter-field-hint">Maximum 3 digits allowed</p>
+        <p v-if="sectionOpen.maxBeds && maxBedsError" class="filter-field-error">{{ maxBedsError }}</p>
+        <p v-else-if="sectionOpen.maxBeds && maxBedsHint" class="filter-field-hint">Maximum 3 digits allowed</p>
+        <p v-else-if="sectionOpen.maxBeds && bedsRangeError" class="filter-field-error">{{ bedsRangeError }}</p>
       </div>
 
       <button class="apply-btn" @click="applyFilters">
@@ -193,6 +199,11 @@ let minBedsHintTimer = null
 let maxBedsHintTimer = null
 
 function onMinBedsInput(event) {
+  if (event.target.validity.badInput) {
+    minBedsError.value = 'Please enter a valid number'
+    return
+  }
+  minBedsError.value = ''
   const raw = event.target.value
   if (raw.length > 3) {
     event.target.value = raw.slice(0, 3)
@@ -204,6 +215,11 @@ function onMinBedsInput(event) {
 }
 
 function onMaxBedsInput(event) {
+  if (event.target.validity.badInput) {
+    maxBedsError.value = 'Please enter a valid number'
+    return
+  }
+  maxBedsError.value = ''
   const raw = event.target.value
   if (raw.length > 3) {
     event.target.value = raw.slice(0, 3)
@@ -216,6 +232,17 @@ function onMaxBedsInput(event) {
 const localRemoteness = ref(props.selectedRemoteness || '')
 const localMinBeds = ref(props.minBeds)
 const localMaxBeds = ref(props.maxBeds)
+const minBedsError = ref('')
+const maxBedsError = ref('')
+
+const bedsRangeError = computed(() => {
+  const min = toNullableNumber(localMinBeds.value)
+  const max = toNullableNumber(localMaxBeds.value)
+  if (min !== null && max !== null && min > max) {
+    return 'Min beds cannot be greater than max beds'
+  }
+  return ''
+})
 const localDistance = ref(props.distance)
 const localDistanceFilterEnabled = ref(props.distanceFilterEnabled)
 const filtersOpen = ref(window.innerWidth > 768)
@@ -679,6 +706,18 @@ const rangeStyle = computed(() => {
   margin: 4px 8px 0;
   font-size: 12px;
   color: #a8b0ab;
+}
+
+.filter-field-error {
+  margin: 4px 8px 0;
+  font-size: 12px;
+  color: #c0392b;
+  line-height: 1.4;
+}
+
+.filter-input.input-error {
+  border-color: #c0392b;
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1);
 }
 
 .apply-btn {
