@@ -7,7 +7,7 @@
             <span>with confidence.</span>
         </h1>
         <p class="hero-description">
-            Search residential aged care services across Victoria.
+            Search residential aged care services across Australia.
             See available beds, expected wait times, and funding options in one place.
         </p>
 
