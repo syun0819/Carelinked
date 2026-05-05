@@ -287,7 +287,7 @@ function renderMarkers() {
     const params = buildParams()
     if (hasFocusCoordinates()) {
       focusMapOnSelectedFacility()
-    } else if (params.postcode || params.suburb) {
+    } else if (params.keyword || params.postcode || params.suburb) {
       // 保持当前地图位置不变，不重置到 Melbourne
     } else {
       map.setView([-37.8136, 144.9631], 12)
@@ -343,14 +343,14 @@ async function fetchMarkers() {
 
     let rawResults = []
 
-    if (params.suburb || params.postcode || params.region) {
+    if (params.keyword || params.suburb || params.postcode || params.region) {
       const data = await getMapFacilities(params)
       console.log('map response:', data)
       rawResults = data.results || []
     }
 
     markers.value = rawResults.map(mapFacilityMarker)
-    hasSearched.value = params.suburb || params.postcode || params.region ? true : false
+    hasSearched.value = !!(params.keyword || params.suburb || params.postcode || params.region)
 
     emit('update:count', markers.value.length)
 
