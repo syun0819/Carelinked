@@ -42,7 +42,7 @@
           </div>
         </section>
 
-        <section class="question-card category-card">
+        <section ref="categoryCardRef" class="question-card category-card">
           <div class="category-header">
             <div class="question-section">{{ currentCategory.eyebrow }}</div>
             <h2>{{ currentCategory.title }}</h2>
@@ -335,7 +335,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Header from '../components/Header.vue'
 import FooterSection from '../components/FooterSection.vue'
@@ -630,6 +630,7 @@ const submitting = ref(false)
 const error = ref('')
 const result = ref(null)
 const invalidQuestionIds = ref([])
+const categoryCardRef = ref(null)
 let tooltipCloseTimer = null
 const questionLookup = Object.fromEntries(questions.map((question) => [question.id, question]))
 const categorySteps = categories.map((category) => ({
@@ -676,11 +677,13 @@ function isCategoryComplete(category) {
   return category.questions.every((question) => isAnswered(question.id))
 }
 
-function goToCategory(index) {
+async function goToCategory(index) {
   currentStep.value = index
   openTooltip.value = null
   invalidQuestionIds.value = []
   error.value = ''
+  await nextTick()
+  categoryCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 function previousQuestion() {
