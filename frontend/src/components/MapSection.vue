@@ -129,6 +129,7 @@ function buildParams() {
       params.postcode = q
     } else {
       params.suburb = q
+      params.keyword = q
     }
   }
 

@@ -159,6 +159,7 @@ async def get_map(
     suburb: Optional[str] = Query(None),
     postcode: Optional[str] = Query(None),
     region: Optional[str] = Query(None),
+    keyword: Optional[str] = Query(None),
     care_type: Optional[List[str]] = Query(default=None),
     max_distance_km: Optional[float] = Query(None, ge=0, le=500),
     db: AsyncSession = Depends(get_db),
@@ -166,16 +167,17 @@ async def get_map(
     suburb = validate_text_input(suburb, "Suburb")
     region = validate_text_input(region, "Region")
     postcode = validate_postcode(postcode)
+    keyword = validate_text_input(keyword, "Keyword")
 
     if care_type:
         for ct in care_type:
             if ct not in VALID_CARE_TYPES:
                 raise HTTPException(status_code=400, detail=f"Invalid care type: {ct}")
 
-    if not suburb and not postcode and not region:
+    if not suburb and not postcode and not region and not keyword:
         raise HTTPException(
             status_code=400,
-            detail="At least one of suburb, postcode, or region is required.",
+            detail="At least one of suburb, postcode, keyword, or region is required.",
         )
 
     center_lat, center_lng = None, None
@@ -194,6 +196,7 @@ async def get_map(
         suburb=suburb,
         postcode=postcode,
         region=region,
+        keyword=keyword,
         care_type=care_type,
         max_distance_km=max_distance_km,
         center_lat=center_lat,

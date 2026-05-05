@@ -186,6 +186,7 @@ async def get_facilities_for_map(
     suburb: Optional[str],
     postcode: Optional[str],
     region: Optional[str],
+    keyword: Optional[str],
     care_type: Optional[List[str]],
     max_distance_km: Optional[float],
     center_lat: Optional[float],
@@ -201,6 +202,8 @@ async def get_facilities_for_map(
         query = query.where(AgedCareService.aged_care_planning_region.ilike(f"%{region}%"))
     if care_type:
         query = query.where(AgedCareService.care_type.in_(care_type))
+    if keyword:
+        query = query.where(AgedCareService.service_name.ilike(f"%{keyword}%"))
 
     result = await db.execute(query)
     rows = result.scalars().all()
