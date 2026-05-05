@@ -128,7 +128,7 @@ function buildParams() {
     if (/^\d+$/.test(q)) {
       params.postcode = q
     } else {
-      params.suburb = q
+      // 只传 keyword，让后端同时匹配 suburb 名称和设施名称
       params.keyword = q
     }
   }
