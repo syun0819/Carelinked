@@ -10,9 +10,9 @@
               <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" />
               <path d="M5 14l.8 2.2L8 17l-2.2.8L5 20l-.8-2.2L2 17l2.2-.8L5 14Z" />
             </svg>
-            Personal Wait Time Estimator
+            Answer a few questions
           </div>
-          <h1>Answer a few questions</h1>
+          <h1>Wait Time Estimator</h1>
           <p>
             Based on AIHW open data. Complete each section to build your personalised wait time estimate.
           </p>
@@ -243,7 +243,7 @@
             <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" />
             <path d="M5 14l.8 2.2L8 17l-2.2.8L5 20l-.8-2.2L2 17l2.2-.8L5 14Z" />
           </svg>
-          Personal Wait Time Estimator
+          Answer a few questions
         </div>
         <h1>Your estimated wait time</h1>
 

@@ -3,7 +3,7 @@
     <Header />
 
     <section class="page-title page-animate">
-      <h1>Find a Bed</h1>
+      <h1>Find Care</h1>
       <p>Get a personalised estimate of how long you may wait for an aged care placement.</p>
     </section>
 
