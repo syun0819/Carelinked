@@ -30,10 +30,13 @@
               class="progress-dot"
               :class="{
                 active: index === currentStep,
-                answered: isCategoryComplete(category) && index !== currentStep
+                answered: isCategoryComplete(category) && index !== currentStep,
+                locked: !canNavigateToCategory(index)
               }"
               type="button"
+              :disabled="!canNavigateToCategory(index)"
               :aria-label="`Go to category ${index + 1}`"
+              :title="!canNavigateToCategory(index) ? 'Complete earlier sections first' : undefined"
               @click="goToCategory(index)"
             >
               <span class="progress-number">{{ index + 1 }}</span>
@@ -259,7 +262,7 @@
           <div class="estimate-value" :class="estimateToneClass">{{ estimateText }}</div>
           <div class="estimate-pill" :class="estimateToneClass">{{ outcomeLabel }}</div>
           <p class="result-copy">
-            Compared with the AIHW-reported average residential aged care wait of 41 days.
+            Compared with the AIHW-reported median residential aged care wait of 41 days.
           </p>
 
           <div class="result-actions">
@@ -343,17 +346,17 @@ import { estimateWaitTime } from '../services/facilitiesApi'
 
 const OUTCOME_DISPLAY = {
   less_than_median: {
-    text: 'Likely less than average',
+    text: 'Likely less than median',
     label: 'Estimated shorter wait',
     tone: 'tone-shorter'
   },
   around_median: {
-    text: 'Likely around average',
-    label: 'Estimated average wait',
+    text: 'Likely around median',
+    label: 'Estimated median wait',
     tone: 'tone-average'
   },
   more_than_median: {
-    text: 'Likely more than average',
+    text: 'Likely more than median',
     label: 'Estimated longer wait',
     tone: 'tone-longer'
   }
@@ -435,6 +438,7 @@ const questions = [
   {
     id: 'remoteness',
     field: 'remoteness',
+    required: true,
     section: 'LOCATION',
     title: 'Location type',
     prompt: 'Which best describes where you live?',
@@ -447,8 +451,7 @@ const questions = [
     options: [
       { label: 'Metropolitan (MM 1)', value: 'Metropolitan (MM 1)' },
       { label: 'Regional centres (MM 2)', value: 'Regional centres (MM 2)' },
-      { label: 'Rural and remote (MM 3-7)', value: 'Rural and remote (MM 3–7)' },
-      { label: 'Prefer not to say', value: null }
+      { label: 'Rural and remote (MM 3-7)', value: 'Rural and remote (MM 3–7)' }
     ]
   },
   {
@@ -677,7 +680,35 @@ function isCategoryComplete(category) {
   return category.questions.every((question) => isAnswered(question.id))
 }
 
+function getRequiredUnansweredQuestions(category) {
+  return category.questions.filter((question) => question.required && !isAnswered(question.id))
+}
+
+function isCategoryRequiredComplete(category) {
+  return getRequiredUnansweredQuestions(category).length === 0
+}
+
+function canNavigateToCategory(index) {
+  if (index <= currentStep.value) return true
+  return categorySteps.slice(0, index).every(isCategoryRequiredComplete)
+}
+
 async function goToCategory(index) {
+  if (!canNavigateToCategory(index)) {
+    const firstIncompleteIndex = categorySteps.findIndex((category) => !isCategoryRequiredComplete(category))
+
+    if (firstIncompleteIndex >= 0) {
+      const unanswered = getRequiredUnansweredQuestions(categorySteps[firstIncompleteIndex])
+      currentStep.value = firstIncompleteIndex
+      invalidQuestionIds.value = unanswered.map((question) => question.id)
+      error.value = 'Please complete earlier required questions before moving ahead.'
+      await nextTick()
+      categoryCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+
+    return
+  }
+
   currentStep.value = index
   openTooltip.value = null
   invalidQuestionIds.value = []
@@ -697,9 +728,7 @@ function shouldShowQuestionError(questionId) {
 }
 
 function nextQuestion() {
-  const unanswered = currentCategory.value.questions.filter(
-    (question) => question.required && !isAnswered(question.id)
-  )
+  const unanswered = getRequiredUnansweredQuestions(currentCategory.value)
   if (unanswered.length > 0) {
     invalidQuestionIds.value = unanswered.map((question) => question.id)
     const names = unanswered.map((question) => `"${question.title}"`).join(', ')
@@ -755,6 +784,19 @@ function buildPayload() {
 
 async function submitEstimate() {
   if (submitting.value) return
+
+  const firstIncompleteIndex = categorySteps.findIndex((category) => !isCategoryRequiredComplete(category))
+
+  if (firstIncompleteIndex >= 0) {
+    const unanswered = getRequiredUnansweredQuestions(categorySteps[firstIncompleteIndex])
+    currentStep.value = firstIncompleteIndex
+    invalidQuestionIds.value = unanswered.map((question) => question.id)
+    const names = unanswered.map((question) => `"${question.title}"`).join(', ')
+    error.value = `Please answer ${names} before seeing your estimate.`
+    await nextTick()
+    categoryCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    return
+  }
 
   submitting.value = true
   error.value = ''
@@ -1025,7 +1067,7 @@ function goFindCare() {
   font-weight: 700;
 }
 
-.progress-dot:hover {
+.progress-dot:hover:not(:disabled) {
   background: #98b5ad;
   transform: translateY(-1px);
   color: #1f2d2a;
@@ -1037,8 +1079,23 @@ function goFindCare() {
 }
 
 .progress-dot.answered {
-  background: #83a29b;
-  color: #ffffff;
+  background: #e2dfd8;
+  color: #617270;
+}
+
+.progress-dot.answered .progress-number {
+  background: rgba(45, 106, 95, 0.12);
+  color: #2d6a5f;
+}
+
+.progress-dot:disabled,
+.progress-dot.locked {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.progress-dot:disabled {
+  transform: none;
 }
 
 .progress-number {
