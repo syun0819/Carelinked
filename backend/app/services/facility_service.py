@@ -1,7 +1,7 @@
 import math
 from typing import Optional, Tuple, List
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.aged_care import AgedCareService
@@ -203,7 +203,12 @@ async def get_facilities_for_map(
     if care_type:
         query = query.where(AgedCareService.care_type.in_(care_type))
     if keyword:
-        query = query.where(AgedCareService.service_name.ilike(f"%{keyword}%"))
+        query = query.where(
+            or_(
+                AgedCareService.service_name.ilike(f"%{keyword}%"),
+                AgedCareService.physical_suburb.ilike(f"%{keyword}%"),
+            )
+        )
 
     result = await db.execute(query)
     rows = result.scalars().all()
