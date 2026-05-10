@@ -16,6 +16,8 @@ export function mapFacilityCard(item) {
     totalBeds: item.residential_places ?? 0,
     bedAvailability: item.availability_group || 'Unknown',
     distance: item.distance_km ?? null,
+    matchScore: item.match_score ?? null,
+    matchCategory: item.match_category ?? null,
 
     image: DEFAULT_IMAGE,
   }

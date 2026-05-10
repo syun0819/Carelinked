@@ -25,6 +25,9 @@
     <div class="facility-body">
       <div class="facility-top-row">
         <div class="facility-main-info">
+          <div v-if="matchLabel" class="match-badge" :class="matchClass">
+            {{ matchLabel }}
+          </div>
           <h3>{{ facility.name }}</h3>
           <p class="facility-address">
             <svg class="location-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -112,6 +115,27 @@ const goToDetail = () => {
 
 const availabilityLevel = computed(() => {
   return props.facility.bedAvailability || 'Unknown'
+})
+
+const matchLabel = computed(() => {
+  if (!props.facility.matchCategory) return ''
+  if (props.facility.matchScore == null) return props.facility.matchCategory
+  return `${props.facility.matchCategory} - ${formatMatchScore(props.facility.matchScore)}%`
+})
+
+function formatMatchScore(score) {
+  const numericScore = Number(score)
+  if (!Number.isFinite(numericScore)) return 'N/A'
+  if (numericScore >= 100) return '100'
+  return String(Math.floor(numericScore))
+}
+
+const matchClass = computed(() => {
+  const category = props.facility.matchCategory || ''
+  if (category === 'Strong Match') return 'match-strong'
+  if (category === 'Moderate Match') return 'match-moderate'
+  if (category === 'Lower Match') return 'match-lower'
+  return 'match-unknown'
 })
 
 const displayAddress = computed(() => {
@@ -257,6 +281,36 @@ const availabilityClass = computed(() => {
   text-align: left;
   display: flex;
   flex-direction: column;
+}
+
+.match-badge {
+  align-self: flex-start;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.match-strong {
+  background: #e2f3e8;
+  color: #176a3d;
+}
+
+.match-moderate {
+  background: #fff0d9;
+  color: #925114;
+}
+
+.match-lower {
+  background: #f6e4df;
+  color: #9a3d2b;
+}
+
+.match-unknown {
+  background: #ece9e2;
+  color: #65736e;
 }
 
 .facility-top-row h3 {
@@ -524,4 +578,3 @@ color: #c9a200;
   box-shadow: 0 0 0 2px #3d6b59, 0 8px 24px rgba(61, 107, 89, 0.4);
 }
 </style>
-

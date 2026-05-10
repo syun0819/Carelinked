@@ -39,7 +39,10 @@
         :distance="distance"
         :sort-by="sortBy"
         :viewMode="activeView"
+        :matching-active="matchingActive"
         @update:sortBy="sortBy = $event"
+        @open-match-modal="matchModalOpen = true"
+        @clear-match="clearMatching"
       />
 
       <FilterPanel
@@ -97,6 +100,11 @@
     </section>
 
     <FooterSection />
+    <PreferenceMatchModal
+      v-model="matchModalOpen"
+      :initial-weights="matchWeights"
+      @confirm="applyMatchWeights"
+    />
     <CompareBar ref="compareBarRef" />
   </div>
 </template>
@@ -114,6 +122,7 @@ import ListSection from '../components/search/ListSection.vue'
 import FacilityCardSkeleton from '../components/FacilityCardSkeleton.vue'
 import MapSection from '../components/MapSection.vue'
 import PaginationBar from '../components/search/PaginationBar.vue'
+import PreferenceMatchModal from '../components/search/PreferenceMatchModal.vue'
 import FooterSection from '../components/FooterSection.vue'
 import CompareBar from '../components/CompareBar.vue'
 
@@ -150,6 +159,13 @@ const pageSize = 4
 const mapResultCount = ref(0)
 const totalResults = ref(0)
 const searchMessage = ref('')
+const matchModalOpen = ref(false)
+const matchWeights = ref(null)
+
+const matchingActive = computed(() => {
+  if (!matchWeights.value) return false
+  return Object.values(matchWeights.value).reduce((sum, value) => sum + Number(value || 0), 0) === 100
+})
 
 const careTypeOptions = [
   { value: 'Residential', label: 'Residential' },
@@ -202,6 +218,10 @@ async function fetchFacilities() {
       } else {
         params.max_distance_km = distance.value
       }
+    }
+
+    if (matchingActive.value) {
+      Object.assign(params, matchWeights.value)
     }
 
     console.log('search params:', params)
@@ -268,6 +288,19 @@ function applyFilters(filters) {
   maxBeds.value = filters.maxBeds
   distance.value = filters.distance
   distanceFilterEnabled.value = filters.distanceFilterEnabled
+}
+
+function applyMatchWeights(weights) {
+  matchWeights.value = { ...weights }
+  currentPage.value = 1
+  syncStateToQuery()
+  fetchFacilities()
+}
+
+function clearMatching() {
+  matchWeights.value = null
+  currentPage.value = 1
+  fetchFacilities()
 }
 
 function getDistanceValue(facility) {
