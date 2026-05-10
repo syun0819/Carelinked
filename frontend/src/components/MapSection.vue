@@ -79,6 +79,10 @@ const props = defineProps({
   distanceFilterEnabled: {
     type: Boolean,
     default: false
+  },
+  searchType: {
+    type: String,
+    default: ''
   }
 })
 
@@ -87,10 +91,13 @@ const loading = ref(false)
 const error = ref('')
 const hasSearched = ref(false)
 const markers = ref([])
+const allMarkersCache = ref([])
 
 let map = null
 let markersLayer = null
 let userMarker = null
+let preCreatedMarkers = []
+const visibleSet = new Set()
 
 const defaultCenter = [-37.8136, 144.9631]
 const defaultZoom = 12
@@ -125,10 +132,14 @@ function buildParams() {
   const q = props.searchQuery.trim()
 
   if (q) {
-    if (/^\d+$/.test(q)) {
+    const type = (props.searchType || '').toLowerCase()
+    if (type === 'suburb') {
+      params.suburb = q
+    } else if (type === 'region') {
+      params.region = q
+    } else if (type === 'postcode' || /^\d+$/.test(q)) {
       params.postcode = q
     } else {
-      // 只传 keyword，让后端同时匹配 suburb 名称和设施名称
       params.keyword = q
     }
   }
@@ -183,7 +194,13 @@ function initMap() {
 
   markersLayer = L.layerGroup().addTo(map)
 
-  renderUserMarker() 
+  let _filterTimer = null
+  map.on('moveend zoomend', () => {
+    clearTimeout(_filterTimer)
+    _filterTimer = setTimeout(filterByViewport, 150)
+  })
+
+  renderUserMarker()
 }
 
 function invalidateMapSize() {
@@ -267,7 +284,6 @@ function offsetDuplicateCoordinates(facilities) {
       longitude: facility.longitude + offset * Math.sin(angle)
     }
   })
-  console.log('offset result:', result.length, result.map(f => `${f.latitude},${f.longitude}`))
   return result
 }
 
@@ -283,16 +299,6 @@ function renderMarkers() {
 
   if (validMarkers.length === 0) {
     markersLayer.clearLayers()
-
-    const params = buildParams()
-    if (hasFocusCoordinates()) {
-      focusMapOnSelectedFacility()
-    } else if (params.keyword || params.postcode || params.suburb) {
-      // 保持当前地图位置不变，不重置到 Melbourne
-    } else {
-      map.setView([-37.8136, 144.9631], 12)
-    }
-
     invalidateMapSize()
     return
   }
@@ -322,13 +328,63 @@ function renderMarkers() {
     marker.addTo(markersLayer)
   })
 
-  const leafletMarkers = validMarkers.map((item) =>
-    L.marker([item.latitude, item.longitude])
-  )
-  const group = L.featureGroup(leafletMarkers)
-  map.fitBounds(group.getBounds().pad(0.2))
-  focusMapOnSelectedFacility()
+  invalidateMapSize()
+}
 
+function buildLeafletMarkers() {
+  visibleSet.forEach(m => markersLayer.removeLayer(m))
+  visibleSet.clear()
+
+  const withCoords = allMarkersCache.value.filter(
+    item => item.latitude != null && item.longitude != null
+  )
+  const offsetted = offsetDuplicateCoordinates(withCoords)
+
+  preCreatedMarkers = offsetted.map(item => {
+    const icon = createCustomIcon(getMarkerColor(item.availability))
+    const leafletMarker = L.marker([item.latitude, item.longitude], { icon })
+    leafletMarker.bindPopup(`
+      <div class="facility-popup">
+        <div class="popup-title">${escapeHtml(item.name) || 'Unnamed facility'}</div>
+        <div class="popup-line">${escapeHtml(item.suburb)} ${escapeHtml(item.postcode)}</div>
+        <div class="popup-line">${escapeHtml(item.careType)}</div>
+        <div class="popup-line">Beds: ${item.totalBeds ?? 'N/A'}</div>
+        <div class="popup-line">
+          ${item.availability ? `Availability: ${escapeHtml(item.availability)}` : 'Availability: Unknown'}
+        </div>
+        <div class="popup-actions">
+          <a class="popup-detail-btn" href="/facility/${item.id}">SHOW DETAIL</a>
+        </div>
+      </div>
+    `)
+    return { leafletMarker, lat: item.latitude, lng: item.longitude }
+  })
+}
+
+function filterByViewport() {
+  if (!map || !markersLayer) return
+
+  if (preCreatedMarkers.length === 0 && allMarkersCache.value.length > 0) {
+    buildLeafletMarkers()
+  }
+
+  const bounds = map.getBounds()
+
+  preCreatedMarkers.forEach(({ leafletMarker, lat, lng }) => {
+    const inView = bounds.contains([lat, lng])
+    const shown = visibleSet.has(leafletMarker)
+    if (inView && !shown) {
+      markersLayer.addLayer(leafletMarker)
+      visibleSet.add(leafletMarker)
+    } else if (!inView && shown) {
+      markersLayer.removeLayer(leafletMarker)
+      visibleSet.delete(leafletMarker)
+    }
+  })
+
+  markers.value = new Array(visibleSet.size)
+  emit('update:count', visibleSet.size)
+  renderUserMarker()
   invalidateMapSize()
 }
 
@@ -338,27 +394,49 @@ async function fetchMarkers() {
 
   try {
     const params = buildParams()
+    const isInitialLoad = !params.keyword && !params.postcode && !params.suburb && !params.region
 
-    console.log('map params:', params)
+    if (isInitialLoad) {
+      const data = await getMapFacilities({})
+      allMarkersCache.value = (data.results || []).map(mapFacilityMarker)
+      hasSearched.value = false
+      buildLeafletMarkers()
+    } else {
+      hasSearched.value = true
 
-    let rawResults = []
+      // If cache is empty (e.g. user switched from list view), fetch all facilities in parallel
+      const cacheEmpty = allMarkersCache.value.length === 0
+      const [searchData, allData] = await Promise.all([
+        getMapFacilities(params),
+        cacheEmpty ? getMapFacilities({}) : Promise.resolve(null),
+      ])
 
-    if (params.keyword || params.suburb || params.postcode || params.region) {
-      const data = await getMapFacilities(params)
-      console.log('map response:', data)
-      rawResults = data.results || []
+      if (cacheEmpty && allData) {
+        allMarkersCache.value = (allData.results || []).map(mapFacilityMarker)
+        buildLeafletMarkers()
+      }
+
+      const results = (searchData.results || []).map(mapFacilityMarker)
+      const valid = results.filter(m => m.latitude != null && m.longitude != null)
+
+      if (valid.length > 0) {
+        if (params.keyword) {
+          // facility name search: zoom to level 15 (~2.5km wide) centered on first result
+          map.setView([valid[0].latitude, valid[0].longitude], 15, { animate: false })
+        } else {
+          // postcode / suburb / region search: fitBounds to all results
+          const group = L.featureGroup(valid.map(m => L.marker([m.latitude, m.longitude])))
+          map.fitBounds(group.getBounds().pad(0.2), { animate: false })
+        }
+      }
     }
 
-    markers.value = rawResults.map(mapFacilityMarker)
-    hasSearched.value = !!(params.keyword || params.suburb || params.postcode || params.region)
-
-    emit('update:count', markers.value.length)
-
     await nextTick()
-    renderMarkers()
+    filterByViewport()
   } catch (err) {
     console.error('Failed to load map facilities:', err)
     error.value = 'Failed to load map facilities.'
+    allMarkersCache.value = []
     markers.value = []
     emit('update:count', 0)
     clearMarkers()
@@ -376,11 +454,20 @@ onMounted(async () => {
 })
 
 watch(
-  () => [props.searchQuery, props.selectedCareTypes, props.distance, props.focusLat, props.focusLng],
+  () => [props.searchQuery, props.searchType, props.selectedCareTypes, props.distance],
   async () => {
     await fetchMarkers()
   },
   { deep: true }
+)
+
+watch(
+  () => [props.focusLat, props.focusLng],
+  () => {
+    if (map && hasFocusCoordinates()) {
+      map.setView([props.focusLat, props.focusLng], 15)
+    }
+  }
 )
 
 watch(

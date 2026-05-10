@@ -162,6 +162,8 @@ async def get_map(
     keyword: Optional[str] = Query(None),
     care_type: Optional[List[str]] = Query(default=None),
     max_distance_km: Optional[float] = Query(None, ge=0, le=500),
+    center_lat: Optional[float] = Query(None, ge=-90, le=90),
+    center_lng: Optional[float] = Query(None, ge=-180, le=180),
     db: AsyncSession = Depends(get_db),
 ):
     suburb = validate_text_input(suburb, "Suburb")
@@ -174,22 +176,16 @@ async def get_map(
             if ct not in VALID_CARE_TYPES:
                 raise HTTPException(status_code=400, detail=f"Invalid care type: {ct}")
 
-    if not suburb and not postcode and not region and not keyword:
-        raise HTTPException(
-            status_code=400,
-            detail="At least one of suburb, postcode, keyword, or region is required.",
-        )
-
-    center_lat, center_lng = None, None
-    if max_distance_km is not None:
-        center_lat, center_lng = await location_service.get_location_center(
-            db=db, suburb=suburb, postcode=postcode
-        )
-        if center_lat is None or center_lng is None:
-            raise HTTPException(
-                status_code=400,
-                detail="Could not find location coordinates for the given suburb/postcode",
+    if center_lat is None or center_lng is None:
+        if max_distance_km is not None:
+            center_lat, center_lng = await location_service.get_location_center(
+                db=db, suburb=suburb, postcode=postcode
             )
+            if center_lat is None or center_lng is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Could not find location coordinates for the given suburb/postcode",
+                )
 
     results, total = await get_facilities_for_map(
         db=db,
