@@ -212,6 +212,9 @@ __marimo__/
 # data files
 *.xls
 *.xlsx
+*.csv
 *.pdf
 .DS_Store
 australian-postcodes.sql
+LGA_2024_AUST_GDA2020
+*.gdb
