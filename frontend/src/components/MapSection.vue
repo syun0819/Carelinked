@@ -9,14 +9,39 @@
           :class="{ active: activeOverlay === 'environmental' }"
           :disabled="overlayLoading"
           @click="toggleOverlay('environmental')"
-        >Environmental</button>
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M13.5 2.5S8 1.5 5 4.5C2 7.5 3 13.5 3 13.5S9 12 12 9C15 6 13.5 2.5 13.5 2.5Z"/>
+            <path d="M3 13.5L7.5 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+          </svg>
+          Environmental
+        </button>
         <button
           class="overlay-btn"
           :class="{ active: activeOverlay === 'demand' }"
           :disabled="overlayLoading"
           @click="toggleOverlay('demand')"
-        >Demand</button>
-        <button class="overlay-btn" disabled title="Coming soon">Crime</button>
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <rect x="0.5" y="6" width="4" height="9.5" rx="0.5"/>
+            <rect x="6" y="3" width="4" height="12.5" rx="0.5"/>
+            <rect x="11.5" y="0.5" width="4" height="15" rx="0.5"/>
+          </svg>
+          Demand
+        </button>
+        <button
+          class="overlay-btn"
+          :class="{ active: activeOverlay === 'crime' }"
+          :disabled="overlayLoading"
+          @click="toggleOverlay('crime')"
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+            <path d="M8 2L1.5 14H14.5L8 2Z"/>
+            <line x1="8" y1="6.5" x2="8" y2="10"/>
+            <circle cx="8" cy="12.2" r="0.7" fill="currentColor" stroke="none"/>
+          </svg>
+          Crime
+        </button>
       </div>
       <span class="overlay-hint">Only one overlay allowed</span>
     </div>
@@ -32,63 +57,97 @@
       </div>
       <div ref="mapEl" class="map-container"></div>
 
-      <div v-if="activeOverlay === 'environmental'" class="map-legend" aria-label="Bushfire legend">
-        <div class="legend-title">Bushfire Activity</div>
-        <div class="legend-gradient-bar"></div>
-        <div class="legend-gradient-labels">
-          <span>Low</span><span>High</span>
+      <div class="map-legends-container">
+        <!-- Overlay-specific legend -->
+        <div v-if="activeOverlay === 'environmental'" class="map-legend" aria-label="Bushfire legend">
+          <div class="legend-title">Bushfire Activity</div>
+          <div class="legend-gradient-bar"></div>
+          <div class="legend-gradient-labels">
+            <span>Low</span><span>High</span>
+          </div>
         </div>
-      </div>
 
-      <div v-else-if="activeOverlay === 'demand'" class="map-legend choropleth-legend" aria-label="Demand legend">
-        <div class="legend-title">Supply / Demand Ratio</div>
-        <div class="legend-item">
-          <span class="legend-dot" style="background:#1a7a4a"></span>
-          <span>Very High (&gt; 80th pct)</span>
+        <div v-else-if="activeOverlay === 'demand'" class="map-legend choropleth-legend" aria-label="Demand legend">
+          <div class="legend-title">Supply / Demand Ratio</div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#1a7a4a"></span>
+            <span>Very High (&gt; 80th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#74c476"></span>
+            <span>High (60–80th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#f7e07a"></span>
+            <span>Medium (40–60th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#f4923a"></span>
+            <span>Low (20–40th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#d64545"></span>
+            <span>Very Low (≤ 20th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#cccccc"></span>
+            <span>No data</span>
+          </div>
         </div>
-        <div class="legend-item">
-          <span class="legend-dot" style="background:#74c476"></span>
-          <span>High (60–80th pct)</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-dot" style="background:#f7e07a"></span>
-          <span>Medium (40–60th pct)</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-dot" style="background:#f4923a"></span>
-          <span>Low (20–40th pct)</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-dot" style="background:#d64545"></span>
-          <span>Very Low (≤ 20th pct)</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-dot" style="background:#cccccc"></span>
-          <span>No data</span>
-        </div>
-      </div>
 
-      <div v-else class="map-legend" aria-label="Availability legend">
-        <div class="legend-title">Availability</div>
-        <div class="legend-item">
-          <span class="legend-dot legend-likely"></span>
-          <span>Likely Available</span>
+        <div v-else-if="activeOverlay === 'crime'" class="map-legend choropleth-legend" aria-label="Break-ins legend">
+          <div class="legend-title">Break-ins</div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#7b2d26"></span>
+            <span>&gt; 80th</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#c05a28"></span>
+            <span>&gt; 60th to 80th</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#dda060"></span>
+            <span>&gt; 40th to 60th</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#9dc89d"></span>
+            <span>&gt; 20th to 40th</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#d0e8cc"></span>
+            <span>≤ 20th</span>
+          </div>
+          <div class="legend-sub">Percentile rank</div>
         </div>
-        <div class="legend-item">
-          <span class="legend-dot legend-potential"></span>
-          <span>Potentially Available</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-dot legend-constrained"></span>
-          <span>Constrained</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-dot legend-highly-constrained"></span>
-          <span>Highly Constrained</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-dot legend-unavailable"></span>
-          <span>Not Provided / Unknown</span>
+
+        <!-- Availability legend — always shown -->
+        <div class="map-legend" aria-label="Availability legend">
+          <div class="legend-title">
+            Availability
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="#5e706a" aria-hidden="true">
+              <path d="M8 1a5 5 0 0 0-5 5c0 3.5 5 9 5 9s5-5.5 5-9a5 5 0 0 0-5-5zm0 6.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+            </svg>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot legend-likely"></span>
+            <span>Likely Available</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot legend-potential"></span>
+            <span>Potentially Available</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot legend-constrained"></span>
+            <span>Constrained</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot legend-highly-constrained"></span>
+            <span>Highly Constrained</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot legend-unavailable"></span>
+            <span>Not Provided / Unknown</span>
+          </div>
         </div>
       </div>
     </div>
@@ -98,7 +157,7 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import L from 'leaflet'
-import { getMapFacilities, getHeatmapDemand, getHeatmapBushfire } from '../services/facilitiesApi'
+import { getMapFacilities, getHeatmapDemand, getHeatmapBushfire, getHeatmapCrime } from '../services/facilitiesApi'
 import { mapFacilityMarker } from '../utils/facilityMappers'
 
 const props = defineProps({
@@ -160,6 +219,7 @@ let choropletheLayer = null
 let lgaGeoJson = null
 let environmentalLayer = null
 let bushfireCache = null
+let crimeCache = null
 
 const activeOverlay = ref(null)
 const overlayLoading = ref(false)
@@ -566,6 +626,47 @@ async function toggleOverlay(name) {
       choropletheLayer.addTo(map)
       choropletheLayer.bringToBack()
 
+    } else if (name === 'crime') {
+      const [geojson, apiData] = await Promise.all([
+        lgaGeoJson ? Promise.resolve(lgaGeoJson) : fetch('/data/lga.geojson').then(r => r.json()),
+        crimeCache ?? getHeatmapCrime().then(d => (crimeCache = d)),
+      ])
+      lgaGeoJson = geojson
+
+      if (activeOverlay.value !== name) return
+
+      const rateMap = Object.fromEntries(
+        apiData.results.map(r => [r.lga_name.toUpperCase(), r.adjusted_rate])
+      )
+      const sorted = apiData.results
+        .map(r => r.adjusted_rate)
+        .filter(v => v != null)
+        .sort((a, b) => a - b)
+      const pct = p => sorted[Math.floor(p * sorted.length)] ?? 0
+      const [p20, p40, p60, p80] = [0.2, 0.4, 0.6, 0.8].map(pct)
+
+      choropletheLayer = L.geoJSON(geojson, {
+        style(feature) {
+          const key = (
+            feature.properties.lga_name_2021 ||
+            feature.properties.LGA_NAME_2021 ||
+            feature.properties.LGA_NAME ||
+            ''
+          ).toUpperCase()
+          const rate = rateMap[key]
+          const fill =
+            rate == null ? '#e0e0e0'
+            : rate > p80 ? '#7b2d26'
+            : rate > p60 ? '#c05a28'
+            : rate > p40 ? '#dda060'
+            : rate > p20 ? '#9dc89d'
+            : '#d0e8cc'
+          return { fillColor: fill, fillOpacity: 0.55, color: '#888', weight: 0.5 }
+        },
+      })
+      choropletheLayer.addTo(map)
+      choropletheLayer.bringToBack()
+
     } else if (name === 'environmental') {
       const apiData = bushfireCache ?? (bushfireCache = await getHeatmapBushfire())
       if (activeOverlay.value !== name) return
@@ -685,11 +786,18 @@ onBeforeUnmount(() => {
   background: #f5f5f5;
 }
 
-.map-legend {
+.map-legends-container {
   position: absolute;
   left: 16px;
   bottom: 16px;
   z-index: 800;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.map-legend {
   background: rgba(255, 255, 255, 0.94);
   border: 1px solid #ddd8cf;
   border-radius: 8px;
@@ -704,6 +812,16 @@ onBeforeUnmount(() => {
   margin-bottom: 7px;
   font-weight: 700;
   color: #22332e;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-sub {
+  margin-top: 6px;
+  font-size: 10px;
+  color: #77857f;
+  font-style: italic;
 }
 
 .legend-item {
@@ -794,6 +912,9 @@ onBeforeUnmount(() => {
 }
 
 .overlay-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 12px;
   font-weight: 500;
   padding: 4px 10px;
@@ -839,22 +960,13 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 640px) {
-  .map-legend {
+  .map-legends-container {
     left: 10px;
-    right: 10px;
     bottom: 10px;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 5px 10px;
   }
 
-  .legend-title {
-    grid-column: 1 / -1;
-    margin-bottom: 2px;
-  }
-
-  .legend-item + .legend-item {
-    margin-top: 0;
+  .overlay-hint {
+    display: none;
   }
 }
 </style>
