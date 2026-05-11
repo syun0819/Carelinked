@@ -6,15 +6,6 @@
 
     <div v-if="viewMode === 'list'" class="header-actions">
       <button
-        class="match-btn"
-        :class="{ active: matchingActive }"
-        type="button"
-        @click="$emit('open-match-modal')"
-      >
-        {{ matchingActive ? 'Edit priorities' : 'Personalise match' }}
-      </button>
-
-      <button
         v-if="matchingActive"
         class="clear-match-btn"
         type="button"
@@ -68,7 +59,7 @@ defineProps({
   viewMode: String 
 })
 
-defineEmits(['update:sortBy', 'open-match-modal', 'clear-match'])
+defineEmits(['update:sortBy', 'clear-match'])
 </script>
 
 <style scoped>
@@ -99,26 +90,15 @@ defineEmits(['update:sortBy', 'open-match-modal', 'clear-match'])
   justify-content: flex-end;
 }
 
-.match-btn,
 .clear-match-btn {
-  border: 1px solid #2d6a5f;
+  border: 1px solid #ddd8cf;
   border-radius: 999px;
   background: #fff;
-  color: #2d6a5f;
+  color: #65736e;
   padding: 7px 13px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-}
-
-.match-btn.active {
-  background: #2d6a5f;
-  color: #fff;
-}
-
-.clear-match-btn {
-  border-color: #ddd8cf;
-  color: #65736e;
 }
 
 .match-sort-note {

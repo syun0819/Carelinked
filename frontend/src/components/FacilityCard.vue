@@ -20,14 +20,15 @@
         </span>
         Compare
       </button>
+      <div v-if="matchLabel" class="match-badge" :class="matchClass">
+        <span aria-hidden="true">✦</span>
+        {{ matchLabel }}
+      </div>
     </div>
 
     <div class="facility-body">
       <div class="facility-top-row">
         <div class="facility-main-info">
-          <div v-if="matchLabel" class="match-badge" :class="matchClass">
-            {{ matchLabel }}
-          </div>
           <h3>{{ facility.name }}</h3>
           <p class="facility-address">
             <svg class="location-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -214,7 +215,7 @@ const availabilityClass = computed(() => {
   backdrop-filter: blur(6px);
   box-shadow: 0 1px 4px rgba(0,0,0,0.18);
   transition: all 0.2s ease;
-  z-index: 1;
+  z-index: 2;
 }
 
 .compare-circle {
@@ -284,33 +285,42 @@ const availabilityClass = computed(() => {
 }
 
 .match-badge {
-  align-self: flex-start;
-  margin-bottom: 10px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
   border-radius: 999px;
-  padding: 5px 10px;
-  font-size: 12px;
+  padding: 9px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #fff;
+  font-size: 15px;
   font-weight: 800;
   line-height: 1.2;
+  box-shadow: 0 4px 14px rgba(31, 45, 42, 0.24);
+  z-index: 2;
+  backdrop-filter: blur(5px);
+}
+
+.match-badge span {
+  font-size: 18px;
+  line-height: 1;
 }
 
 .match-strong {
-  background: #e2f3e8;
-  color: #176a3d;
+  background: #1f9b54;
 }
 
 .match-moderate {
-  background: #fff0d9;
-  color: #925114;
+  background: #d37b22;
 }
 
 .match-lower {
-  background: #f6e4df;
-  color: #9a3d2b;
+  background: #b94a36;
 }
 
 .match-unknown {
-  background: #ece9e2;
-  color: #65736e;
+  background: #65736e;
 }
 
 .facility-top-row h3 {
@@ -542,6 +552,14 @@ color: #c9a200;
 @media (max-width: 768px) {
   .facility-image-wrap {
     height: 180px;
+  }
+
+  .match-badge {
+    top: 50px;
+    right: 10px;
+    max-width: calc(100% - 20px);
+    padding: 8px 12px;
+    font-size: 13px;
   }
 
   .facility-body {
