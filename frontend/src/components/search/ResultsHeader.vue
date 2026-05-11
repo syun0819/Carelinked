@@ -4,16 +4,38 @@
       Showing {{ start }}–{{ end }} of {{ count }} care facilities
     </p>
 
-    <label v-if="viewMode === 'list'" class="sort-box">
-      <span>Sort by:</span>
-      <select :value="sortBy" @change="$emit('update:sortBy', $event.target.value)">
-        <option value="">None</option>
-        <option value="name">A to Z</option>
-        <option value="beds_desc">Most beds</option>
-        <option value="beds_asc">Fewest beds</option>
-        <option value="distance">Closest to me</option>
-      </select>
-    </label>
+    <div v-if="viewMode === 'list'" class="header-actions">
+      <button
+        class="match-btn"
+        :class="{ active: matchingActive }"
+        type="button"
+        @click="$emit('open-match-modal')"
+      >
+        {{ matchingActive ? 'Edit priorities' : 'Personalise match' }}
+      </button>
+
+      <button
+        v-if="matchingActive"
+        class="clear-match-btn"
+        type="button"
+        @click="$emit('clear-match')"
+      >
+        Clear
+      </button>
+
+      <span v-if="matchingActive" class="match-sort-note">Ranked by your priorities</span>
+
+      <label v-else class="sort-box">
+        <span>Sort by:</span>
+        <select :value="sortBy" @change="$emit('update:sortBy', $event.target.value)">
+          <option value="">None</option>
+          <option value="name">A to Z</option>
+          <option value="beds_desc">Most beds</option>
+          <option value="beds_asc">Fewest beds</option>
+          <option value="distance">Closest to me</option>
+        </select>
+      </label>
+    </div>
   </div>
 </template>
 
@@ -39,10 +61,14 @@ defineProps({
     type: String,
     default: 'name'
   },
+  matchingActive: {
+    type: Boolean,
+    default: false
+  },
   viewMode: String 
 })
 
-defineEmits(['update:sortBy'])
+defineEmits(['update:sortBy', 'open-match-modal', 'clear-match'])
 </script>
 
 <style scoped>
@@ -50,6 +76,7 @@ defineEmits(['update:sortBy'])
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
 }
 
 .results-count {
@@ -62,6 +89,42 @@ defineEmits(['update:sortBy'])
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.match-btn,
+.clear-match-btn {
+  border: 1px solid #2d6a5f;
+  border-radius: 999px;
+  background: #fff;
+  color: #2d6a5f;
+  padding: 7px 13px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.match-btn.active {
+  background: #2d6a5f;
+  color: #fff;
+}
+
+.clear-match-btn {
+  border-color: #ddd8cf;
+  color: #65736e;
+}
+
+.match-sort-note {
+  color: #65736e;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .sort-box span {
@@ -77,5 +140,16 @@ defineEmits(['update:sortBy'])
   font-size: 13px;
   color: #1f2d2a;
   cursor: pointer;
+}
+
+@media (max-width: 760px) {
+  .results-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .header-actions {
+    justify-content: flex-start;
+  }
 }
 </style>

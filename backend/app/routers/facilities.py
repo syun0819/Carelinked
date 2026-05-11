@@ -57,6 +57,37 @@ def validate_postcode(postcode: Optional[str]) -> Optional[str]:
     return postcode
 
 
+def build_match_weights(
+    food_points: int,
+    safety_points: int,
+    respect_points: int,
+    caring_points: int,
+    home_points: int,
+    staffing_points: int,
+    compliance_points: int,
+    clinical_quality_points: int,
+) -> Optional[dict]:
+    weights = {
+        "food_points": food_points,
+        "safety_points": safety_points,
+        "respect_points": respect_points,
+        "caring_points": caring_points,
+        "home_points": home_points,
+        "staffing_points": staffing_points,
+        "compliance_points": compliance_points,
+        "clinical_quality_points": clinical_quality_points,
+    }
+    total = sum(weights.values())
+    if total == 0:
+        return None
+    if total != 100:
+        raise HTTPException(
+            status_code=400,
+            detail="Matching priority points must total exactly 100.",
+        )
+    return weights
+
+
 @router.get("/search", response_model=FacilitySearchResponse)
 @limiter.limit("30/minute")
 async def search(
@@ -75,6 +106,14 @@ async def search(
     max_distance_km: Optional[float] = Query(None, ge=0, le=500),
     user_lat: Optional[float] = Query(None, ge=-90, le=90),
     user_lng: Optional[float] = Query(None, ge=-180, le=180),
+    food_points: int = Query(0, ge=0, le=100),
+    safety_points: int = Query(0, ge=0, le=100),
+    respect_points: int = Query(0, ge=0, le=100),
+    caring_points: int = Query(0, ge=0, le=100),
+    home_points: int = Query(0, ge=0, le=100),
+    staffing_points: int = Query(0, ge=0, le=100),
+    compliance_points: int = Query(0, ge=0, le=100),
+    clinical_quality_points: int = Query(0, ge=0, le=100),
     db: AsyncSession = Depends(get_db),
 ):
     suburb = validate_text_input(suburb, "Suburb")
@@ -99,6 +138,17 @@ async def search(
     if min_beds is not None and max_beds is not None and min_beds > max_beds:
         raise HTTPException(status_code=400, detail="min_beds cannot be greater than max_beds.")
 
+    match_weights = build_match_weights(
+        food_points=food_points,
+        safety_points=safety_points,
+        respect_points=respect_points,
+        caring_points=caring_points,
+        home_points=home_points,
+        staffing_points=staffing_points,
+        compliance_points=compliance_points,
+        clinical_quality_points=clinical_quality_points,
+    )
+
     results, total = await search_facilities(
         db=db,
         suburb=suburb,
@@ -115,6 +165,7 @@ async def search(
         max_distance_km=max_distance_km,
         user_lat=user_lat,
         user_lng=user_lng,
+        match_weights=match_weights,
     )
 
     cards = []
@@ -122,6 +173,8 @@ async def search(
         card = FacilityCard.model_validate(r)
         card.availability_group = getattr(r, "_availability_group", None)
         card.data_source = getattr(r, "_data_source", None)
+        card.match_score = getattr(r, "match_score", None)
+        card.match_category = getattr(r, "match_category", None)
         cards.append(card)
 
     message = None
