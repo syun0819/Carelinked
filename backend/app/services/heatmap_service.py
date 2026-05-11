@@ -55,10 +55,10 @@ async def get_lga_supply_demand(db: AsyncSession) -> List[LgaStatItem]:
 
 async def get_crime_heatmap(db: AsyncSession) -> List[CrimeStatItem]:
     latest_year_q = select(func.max(CrimeRateLga.year)).where(
-        CrimeRateLga.offence_type == "Property and Deception Offences",
-        CrimeRateLga.offence.ilike("%burglary%"),
-        CrimeRateLga.measure == "Rate",
-        CrimeRateLga.frequency == "Annual",
+        CrimeRateLga.offence == "dwelling",
+        CrimeRateLga.measure == "OFFENCE_RATE_POOLED_NORMALISED",
+        CrimeRateLga.frequency == "ANNUAL",
+        CrimeRateLga.adjusted_rate.isnot(None),
     )
     latest_year = (await db.execute(latest_year_q)).scalar()
     if latest_year is None:
@@ -67,14 +67,14 @@ async def get_crime_heatmap(db: AsyncSession) -> List[CrimeStatItem]:
     q = (
         select(
             CrimeRateLga.lga_name,
-            func.sum(CrimeRateLga.adjusted_rate).label("adjusted_rate"),
+            func.avg(CrimeRateLga.adjusted_rate).label("adjusted_rate"),
         )
         .where(
             CrimeRateLga.year == latest_year,
-            CrimeRateLga.offence_type == "Property and Deception Offences",
-            CrimeRateLga.offence.ilike("%burglary%"),
-            CrimeRateLga.measure == "Rate",
-            CrimeRateLga.frequency == "Annual",
+            CrimeRateLga.offence == "dwelling",
+            CrimeRateLga.measure == "OFFENCE_RATE_POOLED_NORMALISED",
+            CrimeRateLga.frequency == "ANNUAL",
+            CrimeRateLga.adjusted_rate.isnot(None),
         )
         .group_by(CrimeRateLga.lga_name)
     )
