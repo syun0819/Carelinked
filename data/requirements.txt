@@ -3,3 +3,11 @@ openpyxl
 sqlalchemy==2.0.49
 psycopg2-binary
 python-dotenv
+fiona
+geopandas
+pyogrio
+requests
+matplotlib
+folium 
+mapclassify 
+branca
