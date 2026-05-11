@@ -65,3 +65,11 @@ export function estimateWaitTime(body) {
     body
   })
 }
+
+export function getHeatmapDemand() {
+  return request('/api/v1/heatmap/demand')
+}
+
+export function getHeatmapBushfire() {
+  return request('/api/v1/heatmap/bushfire')
+}

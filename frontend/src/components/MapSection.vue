@@ -1,5 +1,26 @@
 <template>
   <div class="map-section">
+
+    <div class="overlay-bar" aria-label="Map overlay selector">
+      <div class="overlay-bar-left">
+        <span class="overlay-label">Overlay</span>
+        <button
+          class="overlay-btn"
+          :class="{ active: activeOverlay === 'environmental' }"
+          :disabled="overlayLoading"
+          @click="toggleOverlay('environmental')"
+        >Environmental</button>
+        <button
+          class="overlay-btn"
+          :class="{ active: activeOverlay === 'demand' }"
+          :disabled="overlayLoading"
+          @click="toggleOverlay('demand')"
+        >Demand</button>
+        <button class="overlay-btn" disabled title="Coming soon">Crime</button>
+      </div>
+      <span class="overlay-hint">Only one overlay allowed</span>
+    </div>
+
     <div v-if="loading" class="map-state">Loading map...</div>
     <div v-else-if="error" class="map-state error">{{ error }}</div>
     <div v-show="!loading && !error" class="map-wrapper">
@@ -10,7 +31,44 @@
         No facilities found. Try adjusting filters.
       </div>
       <div ref="mapEl" class="map-container"></div>
-      <div class="map-legend" aria-label="Availability legend">
+
+      <div v-if="activeOverlay === 'environmental'" class="map-legend" aria-label="Bushfire legend">
+        <div class="legend-title">Bushfire Activity</div>
+        <div class="legend-gradient-bar"></div>
+        <div class="legend-gradient-labels">
+          <span>Low</span><span>High</span>
+        </div>
+      </div>
+
+      <div v-else-if="activeOverlay === 'demand'" class="map-legend choropleth-legend" aria-label="Demand legend">
+        <div class="legend-title">Supply / Demand Ratio</div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#1a7a4a"></span>
+          <span>Very High (&gt; 80th pct)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#74c476"></span>
+          <span>High (60–80th pct)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#f7e07a"></span>
+          <span>Medium (40–60th pct)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#f4923a"></span>
+          <span>Low (20–40th pct)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#d64545"></span>
+          <span>Very Low (≤ 20th pct)</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#cccccc"></span>
+          <span>No data</span>
+        </div>
+      </div>
+
+      <div v-else class="map-legend" aria-label="Availability legend">
         <div class="legend-title">Availability</div>
         <div class="legend-item">
           <span class="legend-dot legend-likely"></span>
@@ -40,7 +98,7 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import L from 'leaflet'
-import { getMapFacilities } from '../services/facilitiesApi'
+import { getMapFacilities, getHeatmapDemand, getHeatmapBushfire } from '../services/facilitiesApi'
 import { mapFacilityMarker } from '../utils/facilityMappers'
 
 const props = defineProps({
@@ -98,6 +156,13 @@ let markersLayer = null
 let userMarker = null
 let preCreatedMarkers = []
 const visibleSet = new Set()
+let choropletheLayer = null
+let lgaGeoJson = null
+let environmentalLayer = null
+let bushfireCache = null
+
+const activeOverlay = ref(null)
+const overlayLoading = ref(false)
 
 const defaultCenter = [-37.8136, 144.9631]
 const defaultZoom = 12
@@ -446,6 +511,92 @@ async function fetchMarkers() {
   }
 }
 
+function removeCurrentOverlay() {
+  if (choropletheLayer) { map.removeLayer(choropletheLayer); choropletheLayer = null }
+  if (environmentalLayer) { map.removeLayer(environmentalLayer); environmentalLayer = null }
+}
+
+async function toggleOverlay(name) {
+  if (!map || overlayLoading.value) return
+
+  if (activeOverlay.value === name) {
+    activeOverlay.value = null
+    removeCurrentOverlay()
+    return
+  }
+
+  overlayLoading.value = true
+  removeCurrentOverlay()
+  activeOverlay.value = name
+
+  try {
+    if (name === 'demand') {
+      const [geojson, apiData] = await Promise.all([
+        lgaGeoJson ? Promise.resolve(lgaGeoJson) : fetch('/data/lga.geojson').then(r => r.json()),
+        getHeatmapDemand(),
+      ])
+      lgaGeoJson = geojson
+
+      if (activeOverlay.value !== name) return
+
+      const ratioMap = Object.fromEntries(
+        apiData.results.map(r => [r.lga_name.toUpperCase(), r.ratio])
+      )
+      const sorted = apiData.results
+        .map(r => r.ratio)
+        .filter(v => v != null)
+        .sort((a, b) => a - b)
+      const pct = p => sorted[Math.floor(p * sorted.length)] ?? 0
+      const [p20, p40, p60, p80] = [0.2, 0.4, 0.6, 0.8].map(pct)
+
+      choropletheLayer = L.geoJSON(geojson, {
+        style(feature) {
+          const key = (feature.properties.lga_name_2021 || feature.properties.LGA_NAME_2021 || feature.properties.LGA_NAME || '').toUpperCase()
+          const ratio = ratioMap[key]
+          const fill =
+            ratio == null ? '#cccccc'
+            : ratio > p80 ? '#1a7a4a'
+            : ratio > p60 ? '#74c476'
+            : ratio > p40 ? '#f7e07a'
+            : ratio > p20 ? '#f4923a'
+            : '#d64545'
+          return { fillColor: fill, fillOpacity: 0.55, color: '#888', weight: 0.5 }
+        },
+      })
+      choropletheLayer.addTo(map)
+      choropletheLayer.bringToBack()
+
+    } else if (name === 'environmental') {
+      const apiData = bushfireCache ?? (bushfireCache = await getHeatmapBushfire())
+      if (activeOverlay.value !== name) return
+
+      function fireColor(v) {
+        if (v >= 0.75) return '#7f1d1d'
+        if (v >= 0.55) return '#dc2626'
+        if (v >= 0.35) return '#f97316'
+        return '#fbbf24'
+      }
+
+      const HALF = 0.25
+      const cells = apiData.results
+        .filter(r => r.intensity >= 0.15)
+        .map(r => L.rectangle(
+          [[r.lat - HALF, r.lon - HALF], [r.lat + HALF, r.lon + HALF]],
+          {
+            stroke: false,
+            fillColor: fireColor(r.intensity),
+            fillOpacity: 0.25 + r.intensity * 0.5,
+          }
+        ))
+
+      environmentalLayer = L.layerGroup(cells)
+      environmentalLayer.addTo(map)
+    }
+  } finally {
+    overlayLoading.value = false
+  }
+}
+
 onMounted(async () => {
   await nextTick()
   initMap()
@@ -489,6 +640,7 @@ watch(
 
 onBeforeUnmount(() => {
   if (map) {
+    removeCurrentOverlay()
     map.remove()
     map = null
   }
@@ -592,6 +744,82 @@ onBeforeUnmount(() => {
 
 .legend-unavailable {
   background: #9e9e9e;
+}
+
+.legend-gradient-bar {
+  width: 140px;
+  height: 10px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #fbbf24, #f97316, #dc2626, #7f1d1d);
+  margin: 6px 0 4px;
+}
+
+.legend-gradient-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #5e706a;
+}
+
+.overlay-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  background: #fff;
+  border: 1px solid #ddd8cf;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.overlay-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.overlay-hint {
+  font-size: 12px;
+  color: #9aa8a4;
+  white-space: nowrap;
+}
+
+.overlay-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #5e706a;
+  margin-right: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.overlay-btn {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd8cf;
+  background: transparent;
+  color: #2D6A5F;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font-sans);
+}
+
+.overlay-btn:disabled {
+  color: #b0bab7;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+.overlay-btn.active {
+  background: #557067;
+  color: white;
+  border-color: #557067;
+}
+
+.overlay-btn:not(:disabled):not(.active):hover {
+  background: #f0edea;
 }
 
 .map-state {
