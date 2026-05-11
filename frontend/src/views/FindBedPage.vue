@@ -10,6 +10,10 @@
     <SearchBar
       v-model="searchQuery"
       v-model:search-type="searchType"
+      :matching-active="matchingActive"
+      :match-weights="matchWeights"
+      @open-match-modal="matchModalOpen = true"
+      @clear-match="clearMatching"
     />
 
     <section class="view-toggle">
@@ -41,7 +45,6 @@
         :viewMode="activeView"
         :matching-active="matchingActive"
         @update:sortBy="sortBy = $event"
-        @open-match-modal="matchModalOpen = true"
         @clear-match="clearMatching"
       />
 
