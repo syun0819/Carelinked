@@ -23,3 +23,12 @@ class BushfireHeatPoint(BaseModel):
 
 class BushfireHeatResponse(BaseModel):
     results: List[BushfireHeatPoint]
+
+
+class CrimeStatItem(BaseModel):
+    lga_name: str
+    adjusted_rate: float
+
+
+class CrimeStatsResponse(BaseModel):
+    results: List[CrimeStatItem]

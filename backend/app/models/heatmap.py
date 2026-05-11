@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
 
 
+
 class ResidentialCareDemandByLga(Base):
     __tablename__ = "residential_care_demand_by_service_lga"
 
@@ -29,3 +30,17 @@ class BushfireExtent(Base):
     agency: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     centroid_lat: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     centroid_lon: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
+
+class CrimeRateLga(Base):
+    __tablename__ = "crime_rate_lga"
+
+    id: Mapped[str] = mapped_column(Uuid(as_uuid=False), primary_key=True)
+    lga_name: Mapped[str] = mapped_column(String)
+    year: Mapped[int] = mapped_column(Integer)
+    offence: Mapped[str] = mapped_column(String)
+    adjusted_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    frequency: Mapped[str] = mapped_column(String)
+    measure: Mapped[str] = mapped_column(String)
+    region_type: Mapped[str] = mapped_column(String)
+    offence_type: Mapped[str] = mapped_column(String)

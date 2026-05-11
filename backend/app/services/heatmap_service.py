@@ -5,8 +5,8 @@ from sqlalchemy import select, func, cast, Numeric, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.aged_care import AgedCareService
-from app.models.heatmap import BushfireExtent, ResidentialCareDemandByLga
-from app.schemas.heatmap import BushfireHeatPoint, LgaStatItem
+from app.models.heatmap import BushfireExtent, CrimeRateLga, ResidentialCareDemandByLga
+from app.schemas.heatmap import BushfireHeatPoint, CrimeStatItem, LgaStatItem
 
 
 async def get_lga_supply_demand(db: AsyncSession) -> List[LgaStatItem]:
@@ -51,6 +51,39 @@ async def get_lga_supply_demand(db: AsyncSession) -> List[LgaStatItem]:
         )
 
     return results
+
+
+async def get_crime_heatmap(db: AsyncSession) -> List[CrimeStatItem]:
+    latest_year_q = select(func.max(CrimeRateLga.year)).where(
+        CrimeRateLga.offence_type == "Property and Deception Offences",
+        CrimeRateLga.offence.ilike("%burglary%"),
+        CrimeRateLga.measure == "Rate",
+        CrimeRateLga.frequency == "Annual",
+    )
+    latest_year = (await db.execute(latest_year_q)).scalar()
+    if latest_year is None:
+        return []
+
+    q = (
+        select(
+            CrimeRateLga.lga_name,
+            func.sum(CrimeRateLga.adjusted_rate).label("adjusted_rate"),
+        )
+        .where(
+            CrimeRateLga.year == latest_year,
+            CrimeRateLga.offence_type == "Property and Deception Offences",
+            CrimeRateLga.offence.ilike("%burglary%"),
+            CrimeRateLga.measure == "Rate",
+            CrimeRateLga.frequency == "Annual",
+        )
+        .group_by(CrimeRateLga.lga_name)
+    )
+    rows = (await db.execute(q)).all()
+    return [
+        CrimeStatItem(lga_name=row.lga_name, adjusted_rate=float(row.adjusted_rate or 0))
+        for row in rows
+        if row.adjusted_rate is not None
+    ]
 
 
 async def get_bushfire_heatmap(db: AsyncSession) -> List[BushfireHeatPoint]:
