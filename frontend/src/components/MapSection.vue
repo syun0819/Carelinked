@@ -576,6 +576,26 @@ function removeCurrentOverlay() {
   if (environmentalLayer) { map.removeLayer(environmentalLayer); environmentalLayer = null }
 }
 
+function normalizeLgaName(value) {
+  return String(value || '')
+    .toUpperCase()
+    .replace(/\s*\([^)]*\)\s*/g, ' ')
+    .replace(/\b(RURAL CITY|REGIONAL CITY|CITY|SHIRE|BOROUGH|MUNICIPALITY|COUNCIL)\b/g, ' ')
+    .replace(/\b(RC|C|S|B)\b/g, ' ')
+    .replace(/[^A-Z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function getFeatureLgaName(feature) {
+  return (
+    feature.properties.lga_name_2021 ||
+    feature.properties.LGA_NAME_2021 ||
+    feature.properties.LGA_NAME ||
+    ''
+  )
+}
+
 async function toggleOverlay(name) {
   if (!map || overlayLoading.value) return
 
@@ -600,7 +620,7 @@ async function toggleOverlay(name) {
       if (activeOverlay.value !== name) return
 
       const ratioMap = Object.fromEntries(
-        apiData.results.map(r => [r.lga_name.toUpperCase(), r.ratio])
+        apiData.results.map(r => [normalizeLgaName(r.lga_name), r.ratio])
       )
       const sorted = apiData.results
         .map(r => r.ratio)
@@ -611,7 +631,7 @@ async function toggleOverlay(name) {
 
       choropletheLayer = L.geoJSON(geojson, {
         style(feature) {
-          const key = (feature.properties.lga_name_2021 || feature.properties.LGA_NAME_2021 || feature.properties.LGA_NAME || '').toUpperCase()
+          const key = normalizeLgaName(getFeatureLgaName(feature))
           const ratio = ratioMap[key]
           const fill =
             ratio == null ? '#cccccc'
@@ -629,14 +649,14 @@ async function toggleOverlay(name) {
     } else if (name === 'crime') {
       const [geojson, apiData] = await Promise.all([
         lgaGeoJson ? Promise.resolve(lgaGeoJson) : fetch('/data/lga.geojson').then(r => r.json()),
-        crimeCache ?? getHeatmapCrime().then(d => (crimeCache = d)),
+        crimeCache ?? getHeatmapCrime().then(d => { if (d.results.length) crimeCache = d; return d }),
       ])
       lgaGeoJson = geojson
 
       if (activeOverlay.value !== name) return
 
       const rateMap = Object.fromEntries(
-        apiData.results.map(r => [r.lga_name.toUpperCase(), r.adjusted_rate])
+        apiData.results.map(r => [normalizeLgaName(r.lga_name), r.adjusted_rate])
       )
       const sorted = apiData.results
         .map(r => r.adjusted_rate)
@@ -647,12 +667,7 @@ async function toggleOverlay(name) {
 
       choropletheLayer = L.geoJSON(geojson, {
         style(feature) {
-          const key = (
-            feature.properties.lga_name_2021 ||
-            feature.properties.LGA_NAME_2021 ||
-            feature.properties.LGA_NAME ||
-            ''
-          ).toUpperCase()
+          const key = normalizeLgaName(getFeatureLgaName(feature))
           const rate = rateMap[key]
           const fill =
             rate == null ? '#e0e0e0'

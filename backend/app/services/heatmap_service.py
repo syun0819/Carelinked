@@ -80,9 +80,8 @@ async def get_crime_heatmap(db: AsyncSession) -> List[CrimeStatItem]:
     )
     rows = (await db.execute(q)).all()
     return [
-        CrimeStatItem(lga_name=row.lga_name, adjusted_rate=float(row.adjusted_rate or 0))
+        CrimeStatItem(lga_name=row.lga_name, adjusted_rate=float(row.adjusted_rate))
         for row in rows
-        if row.adjusted_rate is not None
     ]
 
 
