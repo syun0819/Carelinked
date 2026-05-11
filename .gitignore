@@ -215,3 +215,6 @@ __marimo__/
 *.pdf
 .DS_Store
 australian-postcodes.sql
+
+# Claude Code
+CLAUDE.md
