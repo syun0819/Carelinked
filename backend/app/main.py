@@ -11,7 +11,7 @@ from app.core.database import engine, Base
 from app.core.limiter import limiter
 
 
-from app.routers import autocomplete, facilities, quality, waittime
+from app.routers import autocomplete, facilities, quality, waittime, heatmap
 
 
 
@@ -36,6 +36,7 @@ app.include_router(facilities.router)
 app.include_router(autocomplete.router)
 app.include_router(quality.router)
 app.include_router(waittime.router)
+app.include_router(heatmap.router)
 
 
 app.add_middleware(

@@ -31,4 +31,6 @@ class AgedCareService(Base):
     australian_government_funding: Mapped[Optional[float]] = mapped_column(
         "australian_government_funding_2024_25", Float, nullable=True
     )
+    lga_name: Mapped[Optional[str]] = mapped_column("lga_name_2023", String, nullable=True)
+    lga_code: Mapped[Optional[str]] = mapped_column("lga_code_2023", String, nullable=True)
     created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
