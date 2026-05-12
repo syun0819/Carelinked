@@ -555,7 +555,7 @@ color: #c9a200;
   }
 
   .match-badge {
-    top: 50px;
+    top: 10px;
     right: 10px;
     max-width: calc(100% - 20px);
     padding: 8px 12px;

@@ -78,6 +78,7 @@ function goToFindBedWithType(careType) {
 .hero-section {
   width: 100%;
   background: #dfe8e3;
+  padding-top: 40px;
 }
 
 .hero-content {
@@ -86,7 +87,7 @@ function goToFindBedWithType(careType) {
   gap: 110px;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 75px 40px;
+  padding:75px 40px;
   align-items: center;
   min-height: 75vh;
 }

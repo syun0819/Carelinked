@@ -47,7 +47,7 @@
     </div>
     <p v-if="!matchingActive" class="match-helper">
       <span aria-hidden="true">✦</span>
-      Not sure where to start? Tap <strong>Match Me</strong> to rank facilities by what matters most to you.
+      Not sure where to start? Tap <strong class="match-helper-link" @click="$emit('open-match-modal')">Match Me</strong> to rank facilities by what matters most to you.
     </p>
     <div v-else class="match-summary">
       <div class="summary-label">
@@ -338,7 +338,7 @@ function hideSuggestions() {
 .search-icon {
   color: #7b8d87;
   font-size: 30px;
-  margin-bottom: 8px;
+  margin-bottom: 0px;
 }
 
 .search-input {
@@ -596,6 +596,10 @@ function hideSuggestions() {
     flex-wrap: wrap;
   }
 
+  .search-icon {
+  align-self: center;
+  }
+
   .search-input {
     min-width: 0;
     flex: 1 1 220px;
@@ -609,7 +613,8 @@ function hideSuggestions() {
 
   .match-helper {
     font-size: 15px;
-    align-items: flex-start;
+    display: block;
+    text-align: center;
   }
 
   .match-summary {
@@ -626,6 +631,29 @@ function hideSuggestions() {
 
   .summary-actions {
     justify-content: flex-start;
+    width: 100%;
+    gap: 8px;
   }
+
+  .summary-action {
+    flex: 1;
+    justify-content: center;
+    border: 1px solid #ddd8cf;
+    border-radius: 8px;
+    background: #fff;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+}
+
+  .match-helper-link {
+  cursor: pointer;
+  color: #2D6A5F;
+  text-decoration: none;
+}
+
+.match-helper-link:hover {
+  text-decoration: underline;
+  opacity: 0.8;
 }
 </style>
