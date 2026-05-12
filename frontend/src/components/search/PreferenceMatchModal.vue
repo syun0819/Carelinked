@@ -808,5 +808,42 @@ function confirmWeights() {
   .primary-btn {
     flex: 1;
   }
+  .review-label {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    font-size: 15px;
+  }
+
+  .review-item {
+    grid-template-columns: 28px 30px 1fr;
+    row-gap: 6px;
+    padding: 16px;
+    margin-bottom: 8px;
+  }
+
+  .review-bar {
+    grid-column: 2 / 4;
+  }
+
+  .review-item strong {
+    grid-column: 2 / 4;
+    text-align: left;
+    font-size: 14px;
+  }
+
+  .primary-btn {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .secondary-btn {
+    flex: 1 1 auto;
+  }
+
+  .modal-actions {
+    gap: 8px;
+    padding: 16px 18px;
+  }
 }
 </style>
