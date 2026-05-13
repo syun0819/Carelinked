@@ -17,6 +17,16 @@
         Search
       </button>
 
+      <button
+        class="match-me-btn"
+        :class="{ active: matchingActive }"
+        type="button"
+        @click="$emit('open-match-modal')"
+      >
+        <span aria-hidden="true">✦</span>
+        {{ matchingActive ? 'Edit matches' : 'Match me' }}
+      </button>
+
       <ul
         v-if="showSuggestions && suggestions.length"
         class="search-suggestions"
@@ -35,12 +45,48 @@
         </li>
       </ul>
     </div>
+    <p v-if="!matchingActive" class="match-helper">
+      <span aria-hidden="true">✦</span>
+      Not sure where to start? Tap <strong class="match-helper-link" @click="$emit('open-match-modal')">Match Me</strong> to rank facilities by what matters most to you.
+    </p>
+    <div v-else class="match-summary">
+      <div class="summary-label">
+        <span class="summary-icon" aria-hidden="true">✦</span>
+        <span>Matched on your priorities:</span>
+      </div>
+
+      <ol class="summary-chips" aria-label="Selected match priorities">
+        <li
+          v-for="(item, index) in rankedMatchPreferences"
+          :key="item.key"
+          class="summary-chip"
+          :style="{ '--pref-color': item.color }"
+        >
+          <span class="chip-rank">{{ index + 1 }}.</span>
+          <span class="chip-marker">{{ item.marker }}</span>
+          <span class="chip-label">{{ item.label }}</span>
+          <strong>{{ item.points }}</strong>
+        </li>
+      </ol>
+
+      <div class="summary-actions">
+        <button class="summary-action" type="button" @click="$emit('open-match-modal')">
+          <span aria-hidden="true">✎</span>
+          Edit
+        </button>
+        <button class="summary-action" type="button" @click="$emit('clear-match')">
+          <span aria-hidden="true">×</span>
+          Clear
+        </button>
+      </div>
+    </div>
   </section>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { getSearchAutocomplete } from '../../services/facilitiesApi'
+import { MATCH_PREFERENCES } from '../../constants/matchPreferences'
 
 const props = defineProps({
   modelValue: {
@@ -50,10 +96,18 @@ const props = defineProps({
   searchType: {
     type: String,
     default: ''
+  },
+  matchingActive: {
+    type: Boolean,
+    default: false
+  },
+  matchWeights: {
+    type: Object,
+    default: null
   }
 })
 
-const emit = defineEmits(['update:modelValue', 'update:searchType'])
+const emit = defineEmits(['update:modelValue', 'update:searchType', 'open-match-modal', 'clear-match'])
 
 const inputValue = ref(props.modelValue)
 const suggestions = ref([])
@@ -63,6 +117,16 @@ let autocompleteTimer = null
 let autocompleteController = null
 let selectingSuggestion = false
 let syncingFromModel = false
+
+const rankedMatchPreferences = computed(() =>
+  MATCH_PREFERENCES
+    .map(pref => ({
+      ...pref,
+      points: Number(props.matchWeights?.[pref.key] || 0)
+    }))
+    .filter(pref => pref.points > 0)
+    .sort((a, b) => b.points - a.points || a.label.localeCompare(b.label))
+)
 
 watch(
   () => props.modelValue,
@@ -248,18 +312,19 @@ function hideSuggestions() {
 <style scoped>
 .search-top {
   width: 100%;
-  max-width: 1000px;
+  max-width: 1280px;
   margin: 0 auto 30px;
   padding: 0 24px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   position: relative;
   z-index: 2200;
 }
 
 .search-bar {
   width: 100%;
-  max-width: 750px;
+  max-width: 1180px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -273,7 +338,7 @@ function hideSuggestions() {
 .search-icon {
   color: #7b8d87;
   font-size: 30px;
-  margin-bottom: 8px;
+  margin-bottom: 0px;
 }
 
 .search-input {
@@ -290,17 +355,173 @@ function hideSuggestions() {
 }
 
 .search-btn {
-  background: #4f6f67;
-  color: white;
+  background: #f3f1ec;
+  color: #1f2d2a;
   border: none;
-  padding: 8px 16px;
+  padding: 12px 28px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 800;
 }
 
 .search-btn:hover {
-  background: #3f5c55;
+  background: #ebe7df;
+}
+
+.match-me-btn {
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #4ea283, #4f7f80);
+  color: #fff;
+  padding: 12px 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.match-me-btn:hover,
+.match-me-btn.active {
+  background: #23695e;
+}
+
+.match-me-btn span,
+.match-helper span {
+  color: currentColor;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.match-helper {
+  margin: 18px 0 0;
+  color: #24463f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 18px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.match-helper strong {
+  color: #1f4039;
+  font-weight: 900;
+}
+
+.match-summary {
+  width: 100%;
+  max-width: 1180px;
+  margin: 28px auto 0;
+  min-height: 78px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  border: 1px solid #cbd8d2;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 14px 22px;
+  box-shadow: 0 8px 26px rgba(31, 45, 42, 0.06);
+}
+
+.summary-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #1f2d2a;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.summary-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #dbece5;
+  color: #2d6a5f;
+  font-size: 20px;
+}
+
+.summary-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.summary-chip {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #ddd8cf;
+  border-radius: 999px;
+  background: #fff;
+  padding: 5px 10px;
+  color: #1f2d2a;
+  font-size: 13px;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgba(31, 45, 42, 0.05);
+}
+
+.chip-rank {
+  color: #65736e;
+  font-weight: 800;
+}
+
+.chip-marker {
+  color: var(--pref-color);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.chip-label {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summary-chip strong {
+  color: var(--pref-color);
+  font-weight: 900;
+}
+
+.summary-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  white-space: nowrap;
+}
+
+.summary-action {
+  border: none;
+  background: transparent;
+  color: #374843;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px;
+}
+
+.summary-action:hover {
+  color: #23695e;
 }
 
 .search-suggestions {
@@ -367,5 +588,72 @@ function hideSuggestions() {
   flex: 0 0 auto;
   color: #7b8d87;
   font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .search-bar {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .search-icon {
+  align-self: center;
+  }
+
+  .search-input {
+    min-width: 0;
+    flex: 1 1 220px;
+  }
+
+  .search-btn,
+  .match-me-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .match-helper {
+    font-size: 15px;
+    display: block;
+    text-align: center;
+  }
+
+  .match-summary {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .summary-label,
+  .summary-actions {
+    white-space: normal;
+  }
+
+  .summary-actions {
+    justify-content: flex-start;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .summary-action {
+    flex: 1;
+    justify-content: center;
+    border: 1px solid #ddd8cf;
+    border-radius: 8px;
+    background: #fff;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+}
+
+  .match-helper-link {
+  cursor: pointer;
+  color: #2D6A5F;
+  text-decoration: none;
+}
+
+.match-helper-link:hover {
+  text-decoration: underline;
+  opacity: 0.8;
 }
 </style>

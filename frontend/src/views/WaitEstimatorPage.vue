@@ -10,194 +10,282 @@
               <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" />
               <path d="M5 14l.8 2.2L8 17l-2.2.8L5 20l-.8-2.2L2 17l2.2-.8L5 14Z" />
             </svg>
-            Answer a few questions
+            Wait time estimator
           </div>
           <h1>Wait Time Estimator</h1>
           <p>
-            Based on AIHW open data. Complete each section to build your personalised wait time estimate.
+            Get a guided estimate of whether your wait may be shorter, moderate, or longer compared with
+            published AIHW residential aged care wait-time patterns.
           </p>
         </section>
 
-        <section class="progress-wrap" aria-label="Estimator progress">
-          <div class="progress-text">
-            Category {{ currentStep + 1 }} of {{ categories.length }}
-            <span>· {{ currentCategoryAnsweredCount }} of {{ currentCategory.questions.length }} answered</span>
-          </div>
-          <div class="progress-dots">
-            <button
-              v-for="(category, index) in categorySteps"
-              :key="category.id"
-              class="progress-dot"
-              :class="{
-                active: index === currentStep,
-                answered: isCategoryComplete(category) && index !== currentStep,
-                locked: !canNavigateToCategory(index)
-              }"
-              type="button"
-              :disabled="!canNavigateToCategory(index)"
-              :aria-label="`Go to category ${index + 1}`"
-              :title="!canNavigateToCategory(index) ? 'Complete earlier sections first' : undefined"
-              @click="goToCategory(index)"
-            >
-              <span class="progress-number">{{ index + 1 }}</span>
-              <span class="progress-label">{{ category.shortLabel }}</span>
-            </button>
-          </div>
+        <section class="wait-landing">
+          <article class="benchmark-card">
+            <div class="benchmark-label">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="8" />
+                <path d="M12 7v5l3 2" />
+              </svg>
+              Key benchmark
+            </div>
+            <div class="benchmark-value">
+              <strong>41</strong>
+              <span>days</span>
+            </div>
+            <p>Median elapsed time for people approved for permanent residential aged care.</p>
+            <div class="benchmark-chart" aria-hidden="true">
+              <span v-for="bar in benchmarkBars" :key="bar.index" :class="{ median: bar.median }" :style="{ height: `${bar.height}%` }"></span>
+            </div>
+            <div class="benchmark-axis" aria-hidden="true">
+              <span>0D</span>
+              <strong>↑ Median</strong>
+              <span>180D</span>
+            </div>
+            <a class="benchmark-source" href="https://www.aihw.gov.au/reports/aged-care/aged-care-services-access/contents/technical-notes" target="_blank" rel="noreferrer">
+              Source: AIHW ↗
+            </a>
+          </article>
+
+          <article class="landing-disclaimer">
+            <div class="safe-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 3 19 6v5c0 4.6-3 8-7 10-4-2-7-5.4-7-10V6l7-3Z" />
+                <path d="m9 12 2 2 4-5" />
+              </svg>
+            </div>
+            <h2>Before you start</h2>
+            <p>A quick, private estimation.</p>
+            <ul class="start-checklist">
+              <li>
+                <span class="check-icon">✓</span>
+                <span>Estimate only - not a live vacancy or guaranteed placement.</span>
+              </li>
+              <li>
+                <span class="check-icon">✓</span>
+                <span>About 2 minutes. Skip any sensitive question.</span>
+              </li>
+              <li>
+                <span class="check-icon">✓</span>
+                <span>Built on published AIHW cohort patterns.</span>
+              </li>
+              <li class="privacy-note">
+                <span class="check-icon">✓</span>
+                <span>Your answers stay on this device.</span>
+              </li>
+            </ul>
+          </article>
+
+          <button class="start-estimate-btn" type="button" @click="openEstimator">
+            Get my estimate
+            <span aria-hidden="true">→</span>
+          </button>
         </section>
 
-        <section ref="categoryCardRef" class="question-card category-card">
-          <div class="category-header">
-            <div class="question-section">{{ currentCategory.eyebrow }}</div>
-            <h2>{{ currentCategory.title }}</h2>
-            <p>{{ currentCategory.description }}</p>
-          </div>
-
-          <div class="category-question-list">
-            <article
-              v-for="question in currentCategory.questions"
-              :key="question.id"
-              class="category-question"
-              :class="{ invalid: shouldShowQuestionError(question.id) }"
-            >
-              <div class="question-header">
-                <div class="question-copy">
-                  <div class="question-title-row">
-                    <div class="question-icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24">
-                        <template v-if="question.icon === 'user'">
-                          <circle cx="12" cy="8" r="3" />
-                          <path d="M6 20v-1a6 6 0 0 1 12 0v1" />
-                        </template>
-                        <template v-else-if="question.icon === 'calendar'">
-                          <rect x="4" y="5" width="16" height="15" rx="2" />
-                          <path d="M8 3v4M16 3v4M4 10h16" />
-                        </template>
-                        <template v-else-if="question.icon === 'people'">
-                          <circle cx="9" cy="8" r="3" />
-                          <path d="M3 20v-1a6 6 0 0 1 12 0v1" />
-                          <path d="M16 6.5a3 3 0 0 1 0 5" />
-                          <path d="M21 20v-1a5 5 0 0 0-3-4.6" />
-                        </template>
-                        <template v-else-if="question.icon === 'globe'">
-                          <circle cx="12" cy="12" r="8" />
-                          <path d="M4 12h16M12 4a12 12 0 0 1 0 16M12 4a12 12 0 0 0 0 16" />
-                        </template>
-                        <template v-else-if="question.icon === 'map'">
-                          <path d="M9 18 3 21V6l6-3 6 3 6-3v15l-6 3-6-3Z" />
-                          <path d="M9 3v15M15 6v15" />
-                        </template>
-                        <template v-else-if="question.icon === 'list'">
-                          <path d="M9 6h11M9 12h11M9 18h11" />
-                          <path d="m4 6 1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" />
-                        </template>
-                        <template v-else-if="question.icon === 'home'">
-                          <path d="M4 11 12 4l8 7v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9Z" />
-                          <path d="M9 21v-7h6v7" />
-                        </template>
-                        <template v-else-if="question.icon === 'flag'">
-                          <path d="M6 21V4h11l-2 4 2 4H6" />
-                        </template>
-                        <template v-else-if="question.icon === 'hospital'">
-                          <rect x="4" y="4" width="16" height="16" rx="2" />
-                          <path d="M12 8v8M8 12h8" />
-                        </template>
-                        <template v-else-if="question.icon === 'health'">
-                          <path d="M12 21s-7-4.6-9-10a4.8 4.8 0 0 1 8-5 4.8 4.8 0 0 1 8 5c-2 5.4-9 10-9 10Z" />
-                        </template>
-                        <template v-else>
-                          <rect x="6" y="3" width="12" height="18" rx="2" />
-                          <path d="M9 8h6M9 12h6M9 16h3" />
-                        </template>
-                      </svg>
-                    </div>
-                    <div>
-                      <h3>{{ question.title }}</h3>
-                      <p>{{ question.prompt }}</p>
-                    </div>
+        <Teleport to="body">
+          <div v-if="estimatorOpen" class="estimator-overlay" role="dialog" aria-modal="true" aria-labelledby="estimator-modal-title">
+            <section class="estimator-modal">
+              <header class="estimator-modal-header">
+                <div>
+                  <div class="wait-kicker">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" />
+                      <path d="M5 14l.8 2.2L8 17l-2.2.8L5 20l-.8-2.2L2 17l2.2-.8L5 14Z" />
+                    </svg>
+                    Guided estimate
                   </div>
+                  <h2 id="estimator-modal-title">Answer a few questions</h2>
+                  <p>Complete the Background, Care, and Health sections to calculate your estimate.</p>
                 </div>
-
-                <div
-                  class="tooltip-wrap"
-                  @mouseenter="openTooltipFor(question.id)"
-                  @mouseleave="scheduleTooltipClose"
-                >
-                  <button
-                    class="info-btn"
-                    type="button"
-                    :aria-expanded="openTooltip === question.id"
-                    :aria-label="`Why we ask about ${question.title}`"
-                    @click="toggleTooltip(question.id)"
-                  >
-                    i
-                  </button>
-                  <div
-                    v-if="openTooltip === question.id"
-                    class="tooltip-card"
-                    @mouseenter="openTooltipFor(question.id)"
-                    @mouseleave="scheduleTooltipClose"
-                  >
-                    <strong>Why we ask</strong>
-                    <span>{{ question.tooltip }}</span>
-                    <a
-                      v-if="question.tooltipLink"
-                      class="tooltip-link"
-                      :href="question.tooltipLink.href"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {{ question.tooltipLink.label }}
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              <div class="answer-list">
-                <button
-                  v-for="option in question.options"
-                  :key="option.label"
-                  class="answer-option"
-                  :class="{ selected: isSelected(question.id, option.value) }"
-                  type="button"
-                  @click="handleAnswerSelect(question, option.value)"
-                >
-                  <span>{{ option.label }}</span>
-                  <span class="radio" aria-hidden="true">
-                    <span v-if="isSelected(question.id, option.value)"></span>
-                  </span>
+                <button class="modal-close-btn" type="button" aria-label="Close estimator" @click="closeEstimator">
+                  ×
                 </button>
+              </header>
+
+              <div class="estimator-modal-body">
+                <section class="progress-wrap" aria-label="Estimator progress">
+                  <div class="progress-text">
+                    Category {{ currentStep + 1 }} of {{ categories.length }}
+                    <span>· {{ currentCategoryAnsweredCount }} of {{ currentCategory.questions.length }} answered</span>
+                  </div>
+                  <div class="progress-dots">
+                    <button
+                      v-for="(category, index) in categorySteps"
+                      :key="category.id"
+                      class="progress-dot"
+                      :class="{
+                        active: index === currentStep,
+                        answered: isCategoryComplete(category) && index !== currentStep,
+                        locked: !canNavigateToCategory(index)
+                      }"
+                      type="button"
+                      :disabled="!canNavigateToCategory(index)"
+                      :aria-label="`Go to category ${index + 1}`"
+                      :title="!canNavigateToCategory(index) ? 'Complete earlier sections first' : undefined"
+                      @click="goToCategory(index)"
+                    >
+                      <span class="progress-number">{{ index + 1 }}</span>
+                      <span class="progress-label">{{ category.shortLabel }}</span>
+                    </button>
+                  </div>
+                </section>
+
+                <section ref="categoryCardRef" class="question-card category-card">
+                  <div class="category-header">
+                    <div class="question-section">{{ currentCategory.eyebrow }}</div>
+                    <h2>{{ currentCategory.title }}</h2>
+                    <p>{{ currentCategory.description }}</p>
+                  </div>
+
+                  <div class="category-question-list">
+                    <article
+                      v-for="question in currentCategory.questions"
+                      :key="question.id"
+                      class="category-question"
+                      :class="{ invalid: shouldShowQuestionError(question.id) }"
+                    >
+                      <div class="question-header">
+                        <div class="question-copy">
+                          <div class="question-title-row">
+                            <div class="question-icon" aria-hidden="true">
+                              <svg viewBox="0 0 24 24">
+                                <template v-if="question.icon === 'user'">
+                                  <circle cx="12" cy="8" r="3" />
+                                  <path d="M6 20v-1a6 6 0 0 1 12 0v1" />
+                                </template>
+                                <template v-else-if="question.icon === 'calendar'">
+                                  <rect x="4" y="5" width="16" height="15" rx="2" />
+                                  <path d="M8 3v4M16 3v4M4 10h16" />
+                                </template>
+                                <template v-else-if="question.icon === 'people'">
+                                  <circle cx="9" cy="8" r="3" />
+                                  <path d="M3 20v-1a6 6 0 0 1 12 0v1" />
+                                  <path d="M16 6.5a3 3 0 0 1 0 5" />
+                                  <path d="M21 20v-1a5 5 0 0 0-3-4.6" />
+                                </template>
+                                <template v-else-if="question.icon === 'globe'">
+                                  <circle cx="12" cy="12" r="8" />
+                                  <path d="M4 12h16M12 4a12 12 0 0 1 0 16M12 4a12 12 0 0 0 0 16" />
+                                </template>
+                                <template v-else-if="question.icon === 'map'">
+                                  <path d="M9 18 3 21V6l6-3 6 3 6-3v15l-6 3-6-3Z" />
+                                  <path d="M9 3v15M15 6v15" />
+                                </template>
+                                <template v-else-if="question.icon === 'list'">
+                                  <path d="M9 6h11M9 12h11M9 18h11" />
+                                  <path d="m4 6 1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" />
+                                </template>
+                                <template v-else-if="question.icon === 'home'">
+                                  <path d="M4 11 12 4l8 7v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9Z" />
+                                  <path d="M9 21v-7h6v7" />
+                                </template>
+                                <template v-else-if="question.icon === 'flag'">
+                                  <path d="M6 21V4h11l-2 4 2 4H6" />
+                                </template>
+                                <template v-else-if="question.icon === 'hospital'">
+                                  <rect x="4" y="4" width="16" height="16" rx="2" />
+                                  <path d="M12 8v8M8 12h8" />
+                                </template>
+                                <template v-else-if="question.icon === 'health'">
+                                  <path d="M12 21s-7-4.6-9-10a4.8 4.8 0 0 1 8-5 4.8 4.8 0 0 1 8 5c-2 5.4-9 10-9 10Z" />
+                                </template>
+                                <template v-else>
+                                  <rect x="6" y="3" width="12" height="18" rx="2" />
+                                  <path d="M9 8h6M9 12h6M9 16h3" />
+                                </template>
+                              </svg>
+                            </div>
+                            <div>
+                              <h3>{{ question.title }}</h3>
+                              <p>{{ question.prompt }}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div
+                          class="tooltip-wrap"
+                          @mouseenter="openTooltipFor(question.id)"
+                          @mouseleave="scheduleTooltipClose"
+                        >
+                          <button
+                            class="info-btn"
+                            type="button"
+                            :aria-expanded="openTooltip === question.id"
+                            :aria-label="`Why we ask about ${question.title}`"
+                            @click="toggleTooltip(question.id)"
+                          >
+                            i
+                          </button>
+                          <div
+                            v-if="openTooltip === question.id"
+                            class="tooltip-card"
+                            @mouseenter="openTooltipFor(question.id)"
+                            @mouseleave="scheduleTooltipClose"
+                          >
+                            <strong>Why we ask</strong>
+                            <span>{{ question.tooltip }}</span>
+                            <a
+                              v-if="question.tooltipLink"
+                              class="tooltip-link"
+                              :href="question.tooltipLink.href"
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              {{ question.tooltipLink.label }}
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="answer-list">
+                        <button
+                          v-for="option in question.options"
+                          :key="option.label"
+                          class="answer-option"
+                          :class="{ selected: isSelected(question.id, option.value) }"
+                          type="button"
+                          @click="handleAnswerSelect(question, option.value)"
+                        >
+                          <span>{{ option.label }}</span>
+                          <span class="radio" aria-hidden="true">
+                            <span v-if="isSelected(question.id, option.value)"></span>
+                          </span>
+                        </button>
+                      </div>
+                    </article>
+                  </div>
+                </section>
+
+                <section class="wizard-actions">
+                  <button
+                    class="back-btn"
+                    type="button"
+                    :disabled="currentStep === 0"
+                    @click="previousQuestion"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                    Back
+                  </button>
+
+                  <button
+                    class="next-btn"
+                    type="button"
+                    :disabled="submitting"
+                    @click="nextQuestion"
+                  >
+                    {{ currentStep === categories.length - 1 ? (submitting ? 'Calculating...' : 'See my estimate') : 'Next category' }}
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  </button>
+                </section>
+
+                <p v-if="error" class="error-message">{{ error }}</p>
               </div>
-            </article>
+            </section>
           </div>
-        </section>
-
-        <section class="wizard-actions">
-          <button
-            class="back-btn"
-            type="button"
-            :disabled="currentStep === 0"
-            @click="previousQuestion"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
-
-          <button
-            class="next-btn"
-            type="button"
-            :disabled="submitting"
-            @click="nextQuestion"
-          >
-            {{ currentStep === categories.length - 1 ? (submitting ? 'Calculating...' : 'See my estimate') : 'Next category' }}
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
-          </button>
-        </section>
-
-        <p v-if="error" class="error-message">{{ error }}</p>
+        </Teleport>
 
         <section class="did-you-know" aria-label="AIHW wait time context">
           <div class="did-you-know-header">
@@ -262,7 +350,8 @@
           <div class="estimate-value" :class="estimateToneClass">{{ estimateText }}</div>
           <div class="estimate-pill" :class="estimateToneClass">{{ outcomeLabel }}</div>
           <p class="result-copy">
-            Compared with the AIHW-reported median residential aged care wait of 41 days.
+            This estimate compares your answers with AIHW-reported elapsed-time patterns for aged care access.
+            It is intended as a guide for planning conversations.
           </p>
 
           <div class="result-actions">
@@ -283,8 +372,9 @@
           </div>
 
           <p class="result-note">
-            This is not an official wait-time decision or guarantee. It is an estimated guide based on AIHW cohort patterns,
-            and actual wait times depend on individual circumstances, local availability, assessment details and provider decisions.
+            This result is based on AIHW data and is not a guaranteed wait time. It does not represent live vacancies,
+            confirmed waiting time, or guaranteed placement. Actual wait times depend on individual circumstances,
+            local availability, assessment details and provider decisions.
             <a href="https://www.aihw.gov.au/reports/aged-care/aged-care-services-access/contents/technical-notes" target="_blank" rel="noreferrer">
               AIHW technical notes
             </a>
@@ -346,18 +436,18 @@ import { estimateWaitTime } from '../services/facilitiesApi'
 
 const OUTCOME_DISPLAY = {
   less_than_median: {
-    text: 'Likely less than median',
-    label: 'Estimated shorter wait',
+    text: 'Shorter Wait',
+    label: 'Estimated shorter than the benchmark',
     tone: 'tone-shorter'
   },
   around_median: {
-    text: 'Likely around median',
-    label: 'Estimated median wait',
+    text: 'Moderate Wait',
+    label: 'Estimated around the benchmark',
     tone: 'tone-average'
   },
   more_than_median: {
-    text: 'Likely more than median',
-    label: 'Estimated longer wait',
+    text: 'Longer Wait',
+    label: 'Estimated longer than the benchmark',
     tone: 'tone-longer'
   }
 }
@@ -625,8 +715,17 @@ const estimatorInsights = [
   }
 ]
 
+const benchmarkBars = [
+  16, 22, 30, 42, 55, 66, 78, 90, 72, 58, 46, 34, 25, 18, 14
+].map((height, index) => ({
+  height,
+  index,
+  median: index === 7
+}))
+
 const router = useRouter()
 const currentStep = ref(0)
+const estimatorOpen = ref(false)
 const answers = ref({})
 const openTooltip = ref(null)
 const submitting = ref(false)
@@ -652,6 +751,17 @@ const estimateText = computed(() => (result.value ? resultDisplay.value.text : '
 const outcomeLabel = computed(() => (result.value ? resultDisplay.value.label : ''))
 
 const estimateToneClass = computed(() => (result.value ? resultDisplay.value.tone : ''))
+
+function openEstimator() {
+  estimatorOpen.value = true
+  error.value = ''
+}
+
+function closeEstimator() {
+  estimatorOpen.value = false
+  openTooltip.value = null
+  error.value = ''
+}
 
 function isAnswered(questionId) {
   return Object.prototype.hasOwnProperty.call(answers.value, questionId)
@@ -803,6 +913,7 @@ async function submitEstimate() {
 
   try {
     result.value = await estimateWaitTime(buildPayload())
+    estimatorOpen.value = false
     window.scrollTo({ top: 0, behavior: 'smooth' })
   } catch (err) {
     console.error('Failed to estimate wait time:', err)
@@ -822,6 +933,7 @@ function startOver() {
   answers.value = {}
   currentStep.value = 0
   result.value = null
+  estimatorOpen.value = false
   error.value = ''
   invalidQuestionIds.value = []
   openTooltip.value = null
@@ -895,6 +1007,314 @@ function goFindCare() {
   color: #687777;
   font-size: 18px;
   line-height: 1.65;
+}
+
+.wait-landing {
+  margin: 62px auto 0;
+  max-width: 1060px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px;
+  align-items: stretch;
+}
+
+.benchmark-card,
+.landing-disclaimer {
+  min-height: 520px;
+  border: 1px solid #ddd8cf;
+  border-radius: 32px;
+  background: #fff;
+  box-shadow: 0 22px 42px rgba(31, 45, 42, 0.1);
+  padding: 52px;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.benchmark-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    #21685b;
+  background-size: 32px 32px;
+  border-color: #21685b;
+}
+
+.landing-disclaimer {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.landing-disclaimer::after {
+  content: "";
+  position: absolute;
+  top: -62px;
+  right: -80px;
+  width: 270px;
+  height: 270px;
+  border-radius: 50%;
+  border: 2px solid rgba(45, 106, 95, 0.1);
+  box-shadow:
+    0 0 0 38px rgba(45, 106, 95, 0.055),
+    0 0 0 76px rgba(45, 106, 95, 0.04);
+  pointer-events: none;
+}
+
+.benchmark-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.benchmark-label svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.benchmark-value {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  margin-top: 34px;
+}
+
+.benchmark-card strong {
+  font-family: var(--font-display);
+  color: #fff;
+  font-size: 106px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.benchmark-value span {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 42px;
+}
+
+.benchmark-card p,
+.landing-disclaimer p {
+  margin: 18px 0 0;
+  color: #5f746f;
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+.benchmark-card p {
+  max-width: 390px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.benchmark-chart {
+  height: 118px;
+  margin-top: auto;
+  display: flex;
+  align-items: end;
+  gap: 10px;
+}
+
+.benchmark-chart span {
+  width: 18px;
+  min-height: 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.benchmark-chart span.median {
+  background: #34bd82;
+}
+
+.benchmark-axis {
+  display: flex;
+  justify-content: space-between;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 13px;
+}
+
+.benchmark-axis strong {
+  color: #62d59d;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.benchmark-source {
+  margin: 28px -52px -52px;
+  padding: 18px 52px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.landing-disclaimer h2 {
+  margin: 28px 0 0;
+  color: #1f2d2a;
+  font-family: var(--font-display);
+  font-size: 36px;
+  line-height: 1.08;
+}
+
+.safe-icon {
+  width: 74px;
+  height: 74px;
+  border-radius: 20px;
+  background: #dcefe8;
+  color: #2ca878;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.safe-icon svg {
+  width: 34px;
+  height: 34px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.start-checklist {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin: 34px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.start-checklist li {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  color: #52625f;
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+.check-icon,
+.lock-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e1f2ed;
+  color: #34a87a;
+  font-weight: 900;
+}
+
+.lock-icon {
+  background: transparent;
+  color: #72807d;
+  font-size: 24px;
+}
+
+.start-estimate-btn {
+  grid-column: 1 / -1;
+  justify-self: center;
+  min-height: 54px;
+  border: none;
+  border-radius: 999px;
+  background: #2d6a5f;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 28px;
+  padding: 0 42px;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(45, 106, 95, 0.22);
+}
+
+.start-estimate-btn:hover {
+  background: #23564d;
+}
+
+.estimator-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  background: rgba(31, 45, 42, 0.48);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 18px;
+}
+
+.estimator-modal {
+  width: min(1120px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #f7f4ee;
+  border: 1px solid #ddd8cf;
+  border-radius: 18px;
+  box-shadow: 0 26px 80px rgba(31, 45, 42, 0.36);
+  overflow: hidden;
+}
+
+.estimator-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 24px 28px;
+  background: #fff;
+  border-bottom: 1px solid #e7e1d7;
+}
+
+.estimator-modal-header h2 {
+  margin: 14px 0 8px;
+  font-family: var(--font-display);
+  color: #1f2d2a;
+  font-size: 34px;
+}
+
+.estimator-modal-header p {
+  margin: 0;
+  color: #687777;
+  line-height: 1.5;
+}
+
+.modal-close-btn {
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: #f2efe8;
+  color: #4d5b57;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.estimator-modal-body {
+  overflow: auto;
+  padding: 0 28px 34px;
 }
 
 .insight-grid {
@@ -1646,6 +2066,68 @@ function goFindCare() {
 
   .wait-intro p {
     font-size: 15px;
+  }
+
+  .wait-landing {
+    grid-template-columns: 1fr;
+    margin-top: 30px;
+  }
+
+  .benchmark-card,
+  .landing-disclaimer {
+    min-height: auto;
+    border-radius: 22px;
+    padding: 24px;
+  }
+
+  .benchmark-card strong {
+    font-size: 70px;
+  }
+
+  .benchmark-value span {
+    font-size: 28px;
+  }
+
+  .benchmark-chart {
+    height: 88px;
+    gap: 6px;
+  }
+
+  .benchmark-chart span {
+    width: 12px;
+  }
+
+  .benchmark-source {
+    margin: 22px -24px -24px;
+    padding: 16px 24px;
+  }
+
+  .landing-disclaimer h2 {
+    font-size: 30px;
+  }
+
+  .start-checklist li {
+    font-size: 16px;
+  }
+
+  .estimator-overlay {
+    padding: 0;
+  }
+
+  .estimator-modal {
+    border-radius: 0;
+  }
+
+  .estimator-modal-header {
+    padding: 18px 16px;
+  }
+
+  .estimator-modal-header h2 {
+    font-size: 27px;
+  }
+
+  .estimator-modal-body {
+    padding: 0 16px 28px;
   }
 
   .progress-wrap {

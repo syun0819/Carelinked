@@ -1,5 +1,4 @@
 
-console.log("API BASE:", import.meta.env.VITE_API_BASE_URL)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 async function request(path, params = {}, options = {}) {
@@ -64,4 +63,16 @@ export function estimateWaitTime(body) {
     method: 'POST',
     body
   })
+}
+
+export function getHeatmapDemand() {
+  return request('/api/v1/heatmap/demand')
+}
+
+export function getHeatmapBushfire() {
+  return request('/api/v1/heatmap/bushfire')
+}
+
+export function getHeatmapCrime() {
+  return request('/api/v1/heatmap/crime')
 }

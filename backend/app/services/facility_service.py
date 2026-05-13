@@ -9,6 +9,7 @@ from app.models.availability import FacilityAvailabilityML
 from app.models.quality import StarRating
 from app.schemas.aged_care import FacilityCard, FacilityDetail, FacilityMapMarker
 from app.services import location_service
+from app.services.matching_service import calculate_match_score, get_match_category, is_matching_active
 
 _DATA_SOURCE_BEDS = "Based on residential bed capacity data (aged_care_services)"
 _DATA_SOURCE_ML = "Based on ML prediction model (aged_care_facility_availability)"
@@ -79,6 +80,39 @@ async def _fetch_ml_records_bulk(db: AsyncSession, facility_ids: List[str]) -> d
         return {}
 
 
+async def _fetch_star_rating_records_bulk(db: AsyncSession, facility_ids: List[str]) -> dict:
+    """Returns {service_id: StarRating}."""
+    if not facility_ids:
+        return {}
+    try:
+        result = await db.execute(
+            select(StarRating)
+            .where(StarRating.service_id.in_(facility_ids))
+        )
+        return {str(row.service_id): row for row in result.scalars().all()}
+    except Exception:
+        return {}
+
+
+def _apply_match_scores(rows: list, star_map: dict, match_weights: Optional[dict]) -> list:
+    if not is_matching_active(match_weights):
+        return rows
+
+    for row in rows:
+        score = calculate_match_score(star_map.get(str(row.id)), match_weights)
+        row.match_score = score
+        row.match_category = get_match_category(score)
+
+    rows.sort(
+        key=lambda row: (
+            getattr(row, "match_score", None) is None,
+            -(getattr(row, "match_score", None) or 0),
+            row.service_name or "",
+        )
+    )
+    return rows
+
+
 def _sort_rows(rows: list, sort_by: Optional[str], user_lat: Optional[float], user_lng: Optional[float]) -> list:
     """Sort a list of AgedCareService rows. Rows without coords go last for distance sort."""
     if sort_by == "beds_desc":
@@ -112,6 +146,7 @@ async def search_facilities(
     max_distance_km: Optional[float] = None,
     user_lat: Optional[float] = None,
     user_lng: Optional[float] = None,
+    match_weights: Optional[dict] = None,
 ) -> Tuple[List[AgedCareService], int]:
     query = select(AgedCareService)
 
@@ -142,8 +177,9 @@ async def search_facilities(
 
     apply_distance_filter = center_lat is not None and center_lng is not None and max_distance_km is not None
     apply_distance_sort = sort_by == "distance" and user_lat is not None and user_lng is not None
+    apply_match_sort = is_matching_active(match_weights)
 
-    if apply_distance_filter or apply_distance_sort:
+    if apply_distance_filter or apply_distance_sort or apply_match_sort:
         result = await db.execute(query)
         all_rows = list(result.scalars().all())
 
@@ -155,7 +191,12 @@ async def search_facilities(
                 and haversine_distance(center_lat, center_lng, r.latitude, r.longitude) <= max_distance_km
             ]
 
-        all_rows = _sort_rows(all_rows, sort_by, user_lat, user_lng)
+        if apply_match_sort:
+            star_map = await _fetch_star_rating_records_bulk(db, [r.id for r in all_rows])
+            all_rows = _apply_match_scores(all_rows, star_map, match_weights)
+        else:
+            all_rows = _sort_rows(all_rows, sort_by, user_lat, user_lng)
+
         total = len(all_rows)
         rows = all_rows[offset: offset + limit]
     else:
@@ -177,6 +218,10 @@ async def search_facilities(
     ml_map = await _fetch_ml_records_bulk(db, [r.id for r in rows])
     for row in rows:
         row._availability_group, row._data_source = resolve_availability(ml_map, row)
+        if not hasattr(row, "match_score"):
+            row.match_score = None
+        if not hasattr(row, "match_category"):
+            row.match_category = None
 
     return rows, total
 

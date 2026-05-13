@@ -20,6 +20,10 @@
         </span>
         Compare
       </button>
+      <div v-if="matchLabel" class="match-badge" :class="matchClass">
+        <span aria-hidden="true">✦</span>
+        {{ matchLabel }}
+      </div>
     </div>
 
     <div class="facility-body">
@@ -114,6 +118,27 @@ const availabilityLevel = computed(() => {
   return props.facility.bedAvailability || 'Unknown'
 })
 
+const matchLabel = computed(() => {
+  if (!props.facility.matchCategory) return ''
+  if (props.facility.matchScore == null) return props.facility.matchCategory
+  return `${props.facility.matchCategory} - ${formatMatchScore(props.facility.matchScore)}%`
+})
+
+function formatMatchScore(score) {
+  const numericScore = Number(score)
+  if (!Number.isFinite(numericScore)) return 'N/A'
+  if (numericScore >= 100) return '100'
+  return String(Math.floor(numericScore))
+}
+
+const matchClass = computed(() => {
+  const category = props.facility.matchCategory || ''
+  if (category === 'Strong Match') return 'match-strong'
+  if (category === 'Moderate Match') return 'match-moderate'
+  if (category === 'Lower Match') return 'match-lower'
+  return 'match-unknown'
+})
+
 const displayAddress = computed(() => {
   const locationParts = [props.facility.suburb, props.facility.postcode].filter(Boolean)
   const locationText = locationParts.join(' ')
@@ -190,7 +215,7 @@ const availabilityClass = computed(() => {
   backdrop-filter: blur(6px);
   box-shadow: 0 1px 4px rgba(0,0,0,0.18);
   transition: all 0.2s ease;
-  z-index: 1;
+  z-index: 2;
 }
 
 .compare-circle {
@@ -257,6 +282,45 @@ const availabilityClass = computed(() => {
   text-align: left;
   display: flex;
   flex-direction: column;
+}
+
+.match-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border-radius: 999px;
+  padding: 9px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.2;
+  box-shadow: 0 4px 14px rgba(31, 45, 42, 0.24);
+  z-index: 2;
+  backdrop-filter: blur(5px);
+}
+
+.match-badge span {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.match-strong {
+  background: #1f9b54;
+}
+
+.match-moderate {
+  background: #d37b22;
+}
+
+.match-lower {
+  background: #b94a36;
+}
+
+.match-unknown {
+  background: #65736e;
 }
 
 .facility-top-row h3 {
@@ -490,6 +554,14 @@ color: #c9a200;
     height: 180px;
   }
 
+  .match-badge {
+    top: 10px;
+    right: 10px;
+    max-width: calc(100% - 20px);
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
   .facility-body {
     padding: 18px 18px 0;
   }
@@ -524,4 +596,3 @@ color: #c9a200;
   box-shadow: 0 0 0 2px #3d6b59, 0 8px 24px rgba(61, 107, 89, 0.4);
 }
 </style>
-

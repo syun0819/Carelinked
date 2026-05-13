@@ -20,6 +20,8 @@ class FacilityCard(BaseModel):
     availability_group: Optional[str] = None
     data_source: Optional[str] = None
     distance_km: Optional[float] = None
+    match_score: Optional[float] = None
+    match_category: Optional[str] = None
 
 
 class FacilityDetail(FacilityCard):
