@@ -1,12 +1,11 @@
-import math
 from typing import List
 
-from sqlalchemy import select, func, cast, Numeric, text
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.aged_care import AgedCareService
-from app.models.heatmap import BushfireExtent, CrimeRateLga, ResidentialCareDemandByLga
-from app.schemas.heatmap import BushfireHeatPoint, CrimeStatItem, LgaStatItem
+from app.models.heatmap import BushfireLgaSummary, CrimeRateLga, ResidentialCareDemandByLga
+from app.schemas.heatmap import BushfireLgaItem, CrimeStatItem, LgaStatItem
 
 
 async def get_lga_supply_demand(db: AsyncSession) -> List[LgaStatItem]:
@@ -85,32 +84,18 @@ async def get_crime_heatmap(db: AsyncSession) -> List[CrimeStatItem]:
     ]
 
 
-async def get_bushfire_heatmap(db: AsyncSession) -> List[BushfireHeatPoint]:
-    lat_num = cast(BushfireExtent.centroid_lat, Numeric(10, 4))
-    lon_num = cast(BushfireExtent.centroid_lon, Numeric(10, 4))
-    grid_lat = (func.round(lat_num / 0.5, 0) * 0.5).label("lat")
-    grid_lon = (func.round(lon_num / 0.5, 0) * 0.5).label("lon")
-
-    q = (
-        select(grid_lat, grid_lon, func.sum(BushfireExtent.area_ha).label("total_ha"))
-        .where(
-            BushfireExtent.centroid_lat.isnot(None),
-            BushfireExtent.centroid_lon.isnot(None),
-        )
-        .group_by(text("1"), text("2"))
-    )
+async def get_bushfire_heatmap(db: AsyncSession) -> List[BushfireLgaItem]:
+    q = select(
+        BushfireLgaSummary.lga_name,
+        BushfireLgaSummary.lga_code,
+        BushfireLgaSummary.bushfire_count,
+    ).order_by(BushfireLgaSummary.bushfire_count.desc())
     rows = (await db.execute(q)).all()
-    if not rows:
-        return []
-
-    max_log = math.log1p(max(row.total_ha or 0 for row in rows))
-    if max_log == 0:
-        max_log = 1
     return [
-        BushfireHeatPoint(
-            lat=float(row.lat),
-            lon=float(row.lon),
-            intensity=round(math.log1p(row.total_ha or 0) / max_log, 4),
+        BushfireLgaItem(
+            lga_name=row.lga_name,
+            lga_code=row.lga_code,
+            bushfire_count=row.bushfire_count,
         )
         for row in rows
     ]

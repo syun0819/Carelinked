@@ -32,6 +32,16 @@ class BushfireExtent(Base):
     centroid_lon: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
 
+class BushfireLgaSummary(Base):
+    __tablename__ = "bushfire_lga_summary"
+
+    id: Mapped[str] = mapped_column(Uuid(as_uuid=False), primary_key=True)
+    lga_code: Mapped[str] = mapped_column(String)
+    lga_name: Mapped[str] = mapped_column(String)
+    state_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    bushfire_count: Mapped[int] = mapped_column(Integer)
+
+
 class CrimeRateLga(Base):
     __tablename__ = "crime_rate_lga"
 

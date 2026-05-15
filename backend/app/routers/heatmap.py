@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.limiter import limiter
-from app.schemas.heatmap import BushfireHeatResponse, CrimeStatsResponse, LgaStatsResponse
+from app.schemas.heatmap import BushfireLgaResponse, CrimeStatsResponse, LgaStatsResponse
 from app.services.heatmap_service import get_bushfire_heatmap, get_crime_heatmap, get_lga_supply_demand
 
 router = APIRouter(prefix="/api/v1/heatmap", tags=["heatmap"])
@@ -18,7 +18,7 @@ async def demand_heatmap(request: Request, db: AsyncSession = Depends(get_db)):
     return LgaStatsResponse(results=results)
 
 
-@router.get("/bushfire", response_model=BushfireHeatResponse)
+@router.get("/bushfire", response_model=BushfireLgaResponse)
 @limiter.limit("30/minute")
 @cache(expire=3600)
 async def bushfire_heatmap(request: Request, db: AsyncSession = Depends(get_db)):
