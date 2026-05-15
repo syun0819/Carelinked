@@ -65,6 +65,10 @@ export function estimateWaitTime(body) {
   })
 }
 
+export function getHeatmapLgaBoundaries() {
+  return request('/api/v1/heatmap/lga-boundaries')
+}
+
 export function getHeatmapDemand() {
   return request('/api/v1/heatmap/demand')
 }

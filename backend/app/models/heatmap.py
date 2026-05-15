@@ -42,6 +42,16 @@ class BushfireLgaSummary(Base):
     bushfire_count: Mapped[int] = mapped_column(Integer)
 
 
+class LgaBoundary(Base):
+    __tablename__ = "lga_boundaries"
+
+    id: Mapped[str] = mapped_column(Uuid(as_uuid=False), primary_key=True)
+    lga_code: Mapped[str] = mapped_column(String)
+    lga_name: Mapped[str] = mapped_column(String)
+    state_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    geom_wkt: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+
 class CrimeRateLga(Base):
     __tablename__ = "crime_rate_lga"
 

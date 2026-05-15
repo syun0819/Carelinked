@@ -62,23 +62,23 @@
         <div v-if="activeOverlay === 'environmental'" class="map-legend choropleth-legend" aria-label="Bushfire legend">
           <div class="legend-title">Bushfire Activity</div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#7f1d1d"></span>
+            <span class="legend-dot" style="background:#d64545"></span>
             <span>Very High (&gt; 80th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#dc2626"></span>
+            <span class="legend-dot" style="background:#f4923a"></span>
             <span>High (60–80th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#f97316"></span>
+            <span class="legend-dot" style="background:#f7e07a"></span>
             <span>Medium (40–60th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#fbbf24"></span>
+            <span class="legend-dot" style="background:#74c476"></span>
             <span>Low (20–40th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#fef9c3; border: 1px solid #ccc"></span>
+            <span class="legend-dot" style="background:#1a7a4a"></span>
             <span>Very Low (≤ 20th pct)</span>
           </div>
           <div class="legend-item">
@@ -118,26 +118,29 @@
         <div v-else-if="activeOverlay === 'crime'" class="map-legend choropleth-legend" aria-label="Break-ins legend">
           <div class="legend-title">Break-ins</div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#7b2d26"></span>
-            <span>&gt; 80th</span>
+            <span class="legend-dot" style="background:#d64545"></span>
+            <span>Very High (&gt; 80th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#c05a28"></span>
-            <span>&gt; 60th to 80th</span>
+            <span class="legend-dot" style="background:#f4923a"></span>
+            <span>High (60–80th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#dda060"></span>
-            <span>&gt; 40th to 60th</span>
+            <span class="legend-dot" style="background:#f7e07a"></span>
+            <span>Medium (40–60th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#9dc89d"></span>
-            <span>&gt; 20th to 40th</span>
+            <span class="legend-dot" style="background:#74c476"></span>
+            <span>Low (20–40th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#d0e8cc"></span>
-            <span>≤ 20th</span>
+            <span class="legend-dot" style="background:#1a7a4a"></span>
+            <span>Very Low (≤ 20th pct)</span>
           </div>
-          <div class="legend-sub">Percentile rank</div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#cccccc"></span>
+            <span>No data</span>
+          </div>
         </div>
 
         <!-- Availability legend — always shown -->
@@ -177,7 +180,7 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import L from 'leaflet'
-import { getMapFacilities, getHeatmapDemand, getHeatmapBushfire, getHeatmapCrime } from '../services/facilitiesApi'
+import { getMapFacilities, getHeatmapDemand, getHeatmapBushfire, getHeatmapCrime, getHeatmapLgaBoundaries } from '../services/facilitiesApi'
 import { mapFacilityMarker } from '../utils/facilityMappers'
 
 const props = defineProps({
@@ -609,8 +612,8 @@ function normalizeLgaName(value) {
 
 function getFeatureLgaName(feature) {
   return (
+    feature.properties.lga_name ||
     feature.properties.lga_name_2021 ||
-    feature.properties.LGA_NAME_2021 ||
     feature.properties.LGA_NAME ||
     ''
   )
@@ -632,7 +635,7 @@ async function toggleOverlay(name) {
   try {
     if (name === 'demand') {
       const [geojson, apiData] = await Promise.all([
-        lgaGeoJson ? Promise.resolve(lgaGeoJson) : fetch('/data/lga.geojson').then(r => r.json()),
+        lgaGeoJson ? Promise.resolve(lgaGeoJson) : getHeatmapLgaBoundaries().then(d => { lgaGeoJson = d; return d }),
         getHeatmapDemand(),
       ])
       lgaGeoJson = geojson
@@ -668,7 +671,7 @@ async function toggleOverlay(name) {
 
     } else if (name === 'crime') {
       const [geojson, apiData] = await Promise.all([
-        lgaGeoJson ? Promise.resolve(lgaGeoJson) : fetch('/data/lga.geojson').then(r => r.json()),
+        lgaGeoJson ? Promise.resolve(lgaGeoJson) : getHeatmapLgaBoundaries().then(d => { lgaGeoJson = d; return d }),
         crimeCache ?? getHeatmapCrime().then(d => { if (d.results.length) crimeCache = d; return d }),
       ])
       lgaGeoJson = geojson
@@ -691,11 +694,11 @@ async function toggleOverlay(name) {
           const rate = rateMap[key]
           const fill =
             rate == null ? '#e0e0e0'
-            : rate > p80 ? '#7b2d26'
-            : rate > p60 ? '#c05a28'
-            : rate > p40 ? '#dda060'
-            : rate > p20 ? '#9dc89d'
-            : '#d0e8cc'
+            : rate > p80 ? '#d64545'
+            : rate > p60 ? '#f4923a'
+            : rate > p40 ? '#f7e07a'
+            : rate > p20 ? '#74c476'
+            : '#1a7a4a'
           return { fillColor: fill, fillOpacity: 0.55, color: '#888', weight: 0.5 }
         },
       })
@@ -704,7 +707,7 @@ async function toggleOverlay(name) {
 
     } else if (name === 'environmental') {
       const [geojson, apiData] = await Promise.all([
-        lgaGeoJson ? Promise.resolve(lgaGeoJson) : fetch('/data/lga.geojson').then(r => r.json()),
+        lgaGeoJson ? Promise.resolve(lgaGeoJson) : getHeatmapLgaBoundaries().then(d => { lgaGeoJson = d; return d }),
         bushfireCache ? Promise.resolve(bushfireCache) : getHeatmapBushfire().then(d => { bushfireCache = d; return d }),
       ])
       lgaGeoJson = geojson
@@ -724,11 +727,11 @@ async function toggleOverlay(name) {
           const count = countMap[key]
           const fill =
             count == null ? '#cccccc'
-            : count > p80 ? '#7f1d1d'
-            : count > p60 ? '#dc2626'
-            : count > p40 ? '#f97316'
-            : count > p20 ? '#fbbf24'
-            : '#fef9c3'
+            : count > p80 ? '#d64545'
+            : count > p60 ? '#f4923a'
+            : count > p40 ? '#f7e07a'
+            : count > p20 ? '#74c476'
+            : '#1a7a4a'
           return { fillColor: fill, fillOpacity: 0.6, color: '#888', weight: 0.5 }
         },
         onEachFeature(feature, layer) {
