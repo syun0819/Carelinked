@@ -399,6 +399,9 @@ function initMap() {
 
   markersLayer = L.layerGroup().addTo(map)
 
+  const hrPane = map.createPane('heatRiskPane')
+  hrPane.style.zIndex = 650
+
   let _filterTimer = null
   map.on('moveend zoomend', () => {
     clearTimeout(_filterTimer)
@@ -794,11 +797,12 @@ async function toggleOverlay(name) {
       const colorMap = { high: '#d64545', medium: '#f4923a', low: '#1a7a4a' }
       const markers = apiData.results.map(r =>
         L.circleMarker([r.lat, r.lon], {
-          radius: 5,
+          pane: 'heatRiskPane',
+          radius: 9,
           fillColor: colorMap[r.heat_risk] ?? '#cccccc',
-          fillOpacity: 0.8,
+          fillOpacity: 0.85,
           color: '#fff',
-          weight: 0.5,
+          weight: 1.5,
         }).bindTooltip(
           `Heat Risk: ${r.heat_risk}<br>Score: ${r.risk_score?.toFixed(3) ?? 'N/A'}`,
           { sticky: true }
