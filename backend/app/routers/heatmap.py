@@ -23,7 +23,7 @@ async def demand_heatmap(request: Request, db: AsyncSession = Depends(get_db)):
 @cache(expire=3600)
 async def bushfire_heatmap(request: Request, db: AsyncSession = Depends(get_db)):
     results = await get_bushfire_heatmap(db)
-    return BushfireHeatResponse(results=results)
+    return BushfireLgaResponse(results=results)
 
 
 @router.get("/crime", response_model=CrimeStatsResponse)
