@@ -190,16 +190,28 @@
         <div v-else-if="activeOverlay === 'heatrisk'" class="map-legend choropleth-legend" aria-label="Heat risk legend">
           <div class="legend-title">Facility Heat Risk</div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#d64545"></span>
-            <span>High risk</span>
+            <span class="legend-dot" style="background:#9d0208"></span>
+            <span>Very High (&gt; 80th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#f4923a"></span>
-            <span>Medium risk</span>
+            <span class="legend-dot" style="background:#f3722c"></span>
+            <span>High (60–80th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#1a7a4a"></span>
-            <span>Low risk</span>
+            <span class="legend-dot" style="background:#f9c74f"></span>
+            <span>Moderate (40–60th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#52b788"></span>
+            <span>Low (20–40th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#1e7145"></span>
+            <span>Very Low (≤ 20th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#adb5bd"></span>
+            <span>No score data</span>
           </div>
         </div>
 
@@ -802,15 +814,30 @@ async function toggleOverlay(name) {
       const apiData = heatRiskCache ?? (heatRiskCache = await getHeatmapHeatRisk())
       if (activeOverlay.value !== name) return
 
-      const colorMap = { high: '#d64545', medium: '#f4923a', low: '#1a7a4a' }
+      const scores = apiData.results
+        .map(r => r.risk_score)
+        .filter(s => s != null)
+        .sort((a, b) => a - b)
+      const pct = p => scores[Math.floor(p * scores.length)] ?? 0
+      const [p20, p40, p60, p80] = [0.2, 0.4, 0.6, 0.8].map(pct)
+
+      const getHrColor = score => {
+        if (score == null) return '#adb5bd'
+        if (score > p80) return '#9d0208'
+        if (score > p60) return '#f3722c'
+        if (score > p40) return '#f9c74f'
+        if (score > p20) return '#52b788'
+        return '#1e7145'
+      }
+
       const markers = apiData.results.map(r =>
         L.circleMarker([r.lat, r.lon], {
           pane: 'heatRiskPane',
-          radius: 9,
-          fillColor: colorMap[r.heat_risk] ?? '#cccccc',
-          fillOpacity: 0.85,
-          color: '#fff',
-          weight: 1.5,
+          radius: 8,
+          fillColor: getHrColor(r.risk_score),
+          fillOpacity: 0.9,
+          color: 'rgba(0,0,0,0.25)',
+          weight: 1,
         }).bindTooltip(
           `Heat Risk: ${r.heat_risk}<br>Score: ${r.risk_score?.toFixed(3) ?? 'N/A'}`,
           { sticky: true }
