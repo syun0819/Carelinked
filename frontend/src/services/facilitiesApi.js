@@ -77,6 +77,6 @@ export function getHeatmapBushfire() {
   return request('/api/v1/heatmap/bushfire')
 }
 
-export function getHeatmapCrime() {
-  return request('/api/v1/heatmap/crime')
+export function getHeatmapCrime(params = {}) {
+  return request('/api/v1/heatmap/crime', params)
 }

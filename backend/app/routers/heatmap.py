@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi_cache.decorator import cache
@@ -37,7 +39,9 @@ async def bushfire_heatmap(request: Request, db: AsyncSession = Depends(get_db))
 
 @router.get("/crime", response_model=CrimeStatsResponse)
 @limiter.limit("30/minute")
-@cache(expire=3600)
-async def crime_heatmap(request: Request, db: AsyncSession = Depends(get_db)):
-    results = await get_crime_heatmap(db)
-    return CrimeStatsResponse(results=results)
+async def crime_heatmap(
+    request: Request,
+    year: Optional[int] = None,
+    db: AsyncSession = Depends(get_db),
+):
+    return await get_crime_heatmap(db, year)

@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class LgaStatItem(BaseModel):
@@ -32,3 +32,5 @@ class CrimeStatItem(BaseModel):
 
 class CrimeStatsResponse(BaseModel):
     results: List[CrimeStatItem]
+    year: Optional[int] = None
+    available_years: List[int] = Field(default_factory=list)

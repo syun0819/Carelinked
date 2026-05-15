@@ -57,6 +57,30 @@
       </div>
       <div ref="mapEl" class="map-container"></div>
 
+      <div
+        v-if="activeOverlay === 'crime'"
+        class="crime-year-control"
+        @click.stop
+        @mousedown.stop
+        @dblclick.stop
+        @wheel.stop
+      >
+        <label class="crime-year-label" for="crime-year-select">Year</label>
+        <select
+          id="crime-year-select"
+          v-model.number="selectedCrimeYear"
+          class="crime-year-select"
+          :disabled="crimeYears.length === 0"
+        >
+          <option v-for="year in crimeYears" :key="year" :value="year">
+            {{ year }}
+          </option>
+          <option v-if="crimeYears.length === 0" value="">
+            Loading
+          </option>
+        </select>
+      </div>
+
       <div class="map-legends-container">
         <!-- Overlay-specific legend -->
         <div v-if="activeOverlay === 'environmental'" class="map-legend choropleth-legend" aria-label="Bushfire legend">
@@ -115,8 +139,8 @@
           </div>
         </div>
 
-        <div v-else-if="activeOverlay === 'crime'" class="map-legend choropleth-legend" aria-label="Break-ins legend">
-          <div class="legend-title">Break-ins</div>
+        <div v-else-if="activeOverlay === 'crime'" class="map-legend choropleth-legend" aria-label="Crime rate legend">
+          <div class="legend-title">Crime Rate</div>
           <div class="legend-item">
             <span class="legend-dot" style="background:#d64545"></span>
             <span>Very High (&gt; 80th pct)</span>
@@ -242,10 +266,13 @@ let choropletheLayer = null
 let lgaGeoJson = null
 let environmentalLayer = null
 let bushfireCache = null
-let crimeCache = null
+const crimeCache = new Map()
 
 const activeOverlay = ref(null)
 const overlayLoading = ref(false)
+const fallbackCrimeYears = Array.from({ length: 12 }, (_, index) => 2024 - index)
+const selectedCrimeYear = ref(fallbackCrimeYears[0])
+const crimeYears = ref([...fallbackCrimeYears])
 
 const defaultCenter = [-37.8136, 144.9631]
 const defaultZoom = 12
@@ -619,6 +646,55 @@ function getFeatureLgaName(feature) {
   )
 }
 
+async function loadCrimeHeatmapData(year = selectedCrimeYear.value) {
+  const cacheKey = year || 'latest'
+  if (crimeCache.has(cacheKey)) {
+    return crimeCache.get(cacheKey)
+  }
+
+  const data = await getHeatmapCrime(year ? { year } : {})
+  if (data.available_years?.length) {
+    crimeYears.value = data.available_years
+  } else if (data.year != null && !crimeYears.value.includes(data.year)) {
+    crimeYears.value = [data.year, ...crimeYears.value].sort((a, b) => b - a)
+  }
+  if (data.year != null && selectedCrimeYear.value !== data.year && year == null) {
+    selectedCrimeYear.value = data.year
+  }
+
+  crimeCache.set(data.year ?? cacheKey, data)
+  if (cacheKey === 'latest' && data.year != null) {
+    crimeCache.set(cacheKey, data)
+  }
+  return data
+}
+
+function renderCrimeOverlay(geojson, apiData) {
+  const rateMap = Object.fromEntries(
+    apiData.results.map(r => [normalizeLgaName(r.lga_name), r.adjusted_rate])
+  )
+  const sorted = apiData.results.map(r => r.adjusted_rate).filter(v => v != null).sort((a, b) => a - b)
+  const pct = p => sorted[Math.floor(p * sorted.length)] ?? 0
+  const [p20, p40, p60, p80] = [0.2, 0.4, 0.6, 0.8].map(pct)
+
+  choropletheLayer = L.geoJSON(geojson, {
+    style(feature) {
+      const key = normalizeLgaName(getFeatureLgaName(feature))
+      const rate = rateMap[key]
+      const fill =
+        rate == null ? '#cccccc'
+        : rate > p80 ? '#d64545'
+        : rate > p60 ? '#f4923a'
+        : rate > p40 ? '#f7e07a'
+        : rate > p20 ? '#74c476'
+        : '#1a7a4a'
+      return { fillColor: fill, fillOpacity: 0.55, color: '#888', weight: 0.5 }
+    },
+  })
+  choropletheLayer.addTo(map)
+  choropletheLayer.bringToBack()
+}
+
 async function toggleOverlay(name) {
   if (!map || overlayLoading.value) return
 
@@ -672,38 +748,13 @@ async function toggleOverlay(name) {
     } else if (name === 'crime') {
       const [geojson, apiData] = await Promise.all([
         lgaGeoJson ? Promise.resolve(lgaGeoJson) : getHeatmapLgaBoundaries().then(d => { lgaGeoJson = d; return d }),
-        crimeCache ?? getHeatmapCrime().then(d => { if (d.results.length) crimeCache = d; return d }),
+        loadCrimeHeatmapData(),
       ])
       lgaGeoJson = geojson
 
       if (activeOverlay.value !== name) return
 
-      const rateMap = Object.fromEntries(
-        apiData.results.map(r => [normalizeLgaName(r.lga_name), r.adjusted_rate])
-      )
-      const sorted = apiData.results
-        .map(r => r.adjusted_rate)
-        .filter(v => v != null)
-        .sort((a, b) => a - b)
-      const pct = p => sorted[Math.floor(p * sorted.length)] ?? 0
-      const [p20, p40, p60, p80] = [0.2, 0.4, 0.6, 0.8].map(pct)
-
-      choropletheLayer = L.geoJSON(geojson, {
-        style(feature) {
-          const key = normalizeLgaName(getFeatureLgaName(feature))
-          const rate = rateMap[key]
-          const fill =
-            rate == null ? '#e0e0e0'
-            : rate > p80 ? '#d64545'
-            : rate > p60 ? '#f4923a'
-            : rate > p40 ? '#f7e07a'
-            : rate > p20 ? '#74c476'
-            : '#1a7a4a'
-          return { fillColor: fill, fillOpacity: 0.55, color: '#888', weight: 0.5 }
-        },
-      })
-      choropletheLayer.addTo(map)
-      choropletheLayer.bringToBack()
+      renderCrimeOverlay(geojson, apiData)
 
     } else if (name === 'environmental') {
       const [geojson, apiData] = await Promise.all([
@@ -782,6 +833,34 @@ watch(
   }
 )
 
+watch(selectedCrimeYear, async (year, previousYear) => {
+  if (
+    activeOverlay.value !== 'crime' ||
+    overlayLoading.value ||
+    year == null ||
+    year === previousYear
+  ) {
+    return
+  }
+
+  overlayLoading.value = true
+  removeCurrentOverlay()
+
+  try {
+    const [geojson, apiData] = await Promise.all([
+      lgaGeoJson ? Promise.resolve(lgaGeoJson) : fetch('/data/lga.geojson').then(r => r.json()),
+      loadCrimeHeatmapData(year),
+    ])
+    lgaGeoJson = geojson
+
+    if (activeOverlay.value === 'crime' && selectedCrimeYear.value === year) {
+      renderCrimeOverlay(geojson, apiData)
+    }
+  } finally {
+    overlayLoading.value = false
+  }
+})
+
 watch(
   () => props.isActive,
   (isActive) => {
@@ -848,6 +927,46 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 8px;
   align-items: flex-start;
+}
+
+.crime-year-control {
+  position: absolute;
+  top: 12px;
+  left: 58px;
+  z-index: 1100;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #ddd8cf;
+  border-radius: 8px;
+  box-shadow: 0 8px 22px rgba(31, 45, 42, 0.12);
+}
+
+.crime-year-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #5e706a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.crime-year-select {
+  min-width: 78px;
+  height: 28px;
+  border: 1px solid #cfd8d4;
+  border-radius: 5px;
+  background: #fff;
+  color: #253631;
+  font: 600 12px var(--font-sans);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.crime-year-select:disabled {
+  color: #9aa8a4;
+  cursor: not-allowed;
 }
 
 .map-legend {
