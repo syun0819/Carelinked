@@ -140,15 +140,20 @@ async def get_bushfire_heatmap(db: AsyncSession) -> List[BushfireLgaItem]:
 
 
 async def get_facility_heat_risk(db: AsyncSession) -> List[HeatRiskItem]:
-    q = select(
-        FacilityHeatRisk.latitude,
-        FacilityHeatRisk.longitude,
-        FacilityHeatRisk.heat_risk,
-        FacilityHeatRisk.risk_score,
-    ).where(
-        FacilityHeatRisk.latitude.isnot(None),
-        FacilityHeatRisk.longitude.isnot(None),
-        FacilityHeatRisk.heat_risk.in_(["low", "medium", "high"]),
+    q = (
+        select(
+            FacilityHeatRisk.latitude,
+            FacilityHeatRisk.longitude,
+            FacilityHeatRisk.heat_risk,
+            FacilityHeatRisk.risk_score,
+            AgedCareService.service_name,
+        )
+        .join(AgedCareService, AgedCareService.id == FacilityHeatRisk.service_id, isouter=True)
+        .where(
+            FacilityHeatRisk.latitude.isnot(None),
+            FacilityHeatRisk.longitude.isnot(None),
+            FacilityHeatRisk.heat_risk.in_(["low", "medium", "high"]),
+        )
     )
     rows = (await db.execute(q)).all()
     return [
@@ -157,6 +162,7 @@ async def get_facility_heat_risk(db: AsyncSession) -> List[HeatRiskItem]:
             lon=row.longitude,
             heat_risk=row.heat_risk,
             risk_score=float(row.risk_score) if row.risk_score is not None else None,
+            facility_name=row.service_name,
         )
         for row in rows
     ]
