@@ -59,11 +59,31 @@
 
       <div class="map-legends-container">
         <!-- Overlay-specific legend -->
-        <div v-if="activeOverlay === 'environmental'" class="map-legend" aria-label="Bushfire legend">
+        <div v-if="activeOverlay === 'environmental'" class="map-legend choropleth-legend" aria-label="Bushfire legend">
           <div class="legend-title">Bushfire Activity</div>
-          <div class="legend-gradient-bar"></div>
-          <div class="legend-gradient-labels">
-            <span>Low</span><span>High</span>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#7f1d1d"></span>
+            <span>Very High (&gt; 80th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#dc2626"></span>
+            <span>High (60–80th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#f97316"></span>
+            <span>Medium (40–60th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#fbbf24"></span>
+            <span>Low (20–40th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#fef9c3; border: 1px solid #ccc"></span>
+            <span>Very Low (≤ 20th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#cccccc"></span>
+            <span>No data</span>
           </div>
         </div>
 
@@ -683,30 +703,45 @@ async function toggleOverlay(name) {
       choropletheLayer.bringToBack()
 
     } else if (name === 'environmental') {
-      const apiData = bushfireCache ?? (bushfireCache = await getHeatmapBushfire())
+      const [geojson, apiData] = await Promise.all([
+        lgaGeoJson ? Promise.resolve(lgaGeoJson) : fetch('/data/lga.geojson').then(r => r.json()),
+        bushfireCache ? Promise.resolve(bushfireCache) : getHeatmapBushfire().then(d => { bushfireCache = d; return d }),
+      ])
+      lgaGeoJson = geojson
+
       if (activeOverlay.value !== name) return
 
-      function fireColor(v) {
-        if (v >= 0.75) return '#7f1d1d'
-        if (v >= 0.55) return '#dc2626'
-        if (v >= 0.35) return '#f97316'
-        return '#fbbf24'
-      }
+      const countMap = Object.fromEntries(
+        apiData.results.map(r => [normalizeLgaName(r.lga_name), r.bushfire_count])
+      )
+      const sorted = apiData.results.map(r => r.bushfire_count).sort((a, b) => a - b)
+      const pct = p => sorted[Math.floor(p * sorted.length)] ?? 0
+      const [p20, p40, p60, p80] = [0.2, 0.4, 0.6, 0.8].map(pct)
 
-      const HALF = 0.25
-      const cells = apiData.results
-        .filter(r => r.intensity >= 0.15)
-        .map(r => L.rectangle(
-          [[r.lat - HALF, r.lon - HALF], [r.lat + HALF, r.lon + HALF]],
-          {
-            stroke: false,
-            fillColor: fireColor(r.intensity),
-            fillOpacity: 0.25 + r.intensity * 0.5,
-          }
-        ))
-
-      environmentalLayer = L.layerGroup(cells)
-      environmentalLayer.addTo(map)
+      choropletheLayer = L.geoJSON(geojson, {
+        style(feature) {
+          const key = normalizeLgaName(getFeatureLgaName(feature))
+          const count = countMap[key]
+          const fill =
+            count == null ? '#cccccc'
+            : count > p80 ? '#7f1d1d'
+            : count > p60 ? '#dc2626'
+            : count > p40 ? '#f97316'
+            : count > p20 ? '#fbbf24'
+            : '#fef9c3'
+          return { fillColor: fill, fillOpacity: 0.6, color: '#888', weight: 0.5 }
+        },
+        onEachFeature(feature, layer) {
+          const key = normalizeLgaName(getFeatureLgaName(feature))
+          const count = countMap[key]
+          layer.bindTooltip(
+            `<b>${getFeatureLgaName(feature)}</b><br>Bushfires: ${count ?? 'No data'}`,
+            { sticky: true }
+          )
+        },
+      })
+      choropletheLayer.addTo(map)
+      choropletheLayer.bringToBack()
     }
   } finally {
     overlayLoading.value = false

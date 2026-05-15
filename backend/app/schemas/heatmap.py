@@ -15,14 +15,14 @@ class LgaStatsResponse(BaseModel):
     results: List[LgaStatItem]
 
 
-class BushfireHeatPoint(BaseModel):
-    lat: float
-    lon: float
-    intensity: float  # 0–1, normalized
+class BushfireLgaItem(BaseModel):
+    lga_name: str
+    lga_code: str
+    bushfire_count: int
 
 
-class BushfireHeatResponse(BaseModel):
-    results: List[BushfireHeatPoint]
+class BushfireLgaResponse(BaseModel):
+    results: List[BushfireLgaItem]
 
 
 class CrimeStatItem(BaseModel):
