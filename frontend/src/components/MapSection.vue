@@ -42,6 +42,18 @@
           </svg>
           Crime
         </button>
+        <button
+          class="overlay-btn"
+          :class="{ active: activeOverlay === 'heatrisk' }"
+          :disabled="overlayLoading"
+          @click="toggleOverlay('heatrisk')"
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M8 4 Q10 6 8 8 Q6 10 8 12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+          </svg>
+          Heat Risk
+        </button>
       </div>
       <span class="overlay-hint">Only one overlay allowed</span>
     </div>
@@ -109,20 +121,6 @@
             <span class="legend-dot" style="background:#cccccc"></span>
             <span>No data</span>
           </div>
-          <div class="legend-divider"></div>
-          <div class="legend-subtitle">Facility Heat Risk</div>
-          <div class="legend-item">
-            <span class="legend-dot" style="background:#d64545"></span>
-            <span>High</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-dot" style="background:#f4923a"></span>
-            <span>Medium</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-dot" style="background:#1a7a4a"></span>
-            <span>Low</span>
-          </div>
         </div>
 
         <div v-else-if="activeOverlay === 'demand'" class="map-legend choropleth-legend" aria-label="Demand legend">
@@ -178,6 +176,22 @@
           <div class="legend-item">
             <span class="legend-dot" style="background:#cccccc"></span>
             <span>No data</span>
+          </div>
+        </div>
+
+        <div v-else-if="activeOverlay === 'heatrisk'" class="map-legend choropleth-legend" aria-label="Heat risk legend">
+          <div class="legend-title">Facility Heat Risk</div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#d64545"></span>
+            <span>High risk</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#f4923a"></span>
+            <span>Medium risk</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#1a7a4a"></span>
+            <span>Low risk</span>
           </div>
         </div>
 
@@ -773,11 +787,29 @@ async function toggleOverlay(name) {
 
       renderCrimeOverlay(geojson, apiData)
 
+    } else if (name === 'heatrisk') {
+      const apiData = heatRiskCache ?? (heatRiskCache = await getHeatmapHeatRisk())
+      if (activeOverlay.value !== name) return
+
+      const colorMap = { high: '#d64545', medium: '#f4923a', low: '#1a7a4a' }
+      const markers = apiData.results.map(r =>
+        L.circleMarker([r.lat, r.lon], {
+          radius: 5,
+          fillColor: colorMap[r.heat_risk] ?? '#cccccc',
+          fillOpacity: 0.8,
+          color: '#fff',
+          weight: 0.5,
+        }).bindTooltip(
+          `Heat Risk: ${r.heat_risk}<br>Score: ${r.risk_score?.toFixed(3) ?? 'N/A'}`,
+          { sticky: true }
+        )
+      )
+      heatRiskLayer = L.layerGroup(markers).addTo(map)
+
     } else if (name === 'environmental') {
-      const [geojson, apiData, heatData] = await Promise.all([
+      const [geojson, apiData] = await Promise.all([
         lgaGeoJson ? Promise.resolve(lgaGeoJson) : getHeatmapLgaBoundaries().then(d => { lgaGeoJson = d; return d }),
         bushfireCache ? Promise.resolve(bushfireCache) : getHeatmapBushfire().then(d => { bushfireCache = d; return d }),
-        heatRiskCache ? Promise.resolve(heatRiskCache) : getHeatmapHeatRisk().then(d => { heatRiskCache = d; return d }),
       ])
       lgaGeoJson = geojson
 
@@ -814,24 +846,6 @@ async function toggleOverlay(name) {
       })
       choropletheLayer.addTo(map)
       choropletheLayer.bringToBack()
-
-      const hrColorMap = { high: '#d64545', medium: '#f4923a', low: '#1a7a4a' }
-      const hrMarkers = heatData.results.map(r => {
-        const color = hrColorMap[r.heat_risk] ?? '#999'
-        const label = r.heat_risk.charAt(0).toUpperCase() + r.heat_risk.slice(1)
-        return L.marker([r.lat, r.lon], {
-          icon: L.divIcon({
-            className: '',
-            html: `<div class="hr-balloon" style="background:${color}">${label}</div>`,
-            iconSize: [40, 20],
-            iconAnchor: [20, 10],
-          }),
-        }).bindTooltip(
-          `<b>${r.facility_name ?? 'Facility'}</b><br>Heat Risk: ${label}`,
-          { sticky: true }
-        )
-      })
-      heatRiskLayer = L.layerGroup(hrMarkers).addTo(map)
     }
   } finally {
     overlayLoading.value = false
@@ -1203,29 +1217,5 @@ onBeforeUnmount(() => {
   position: absolute;
   top: 6px;
   left: 6px;
-}
-
-.hr-balloon {
-  font-size: 10px;
-  font-weight: 600;
-  color: #fff;
-  padding: 2px 6px;
-  border-radius: 10px;
-  white-space: nowrap;
-  line-height: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.35);
-  pointer-events: none;
-}
-
-.legend-divider {
-  border-top: 1px solid #e5e7eb;
-  margin: 6px 0;
-}
-
-.legend-subtitle {
-  font-size: 11px;
-  font-weight: 600;
-  color: #6b7280;
-  margin-bottom: 4px;
 }
 </style>

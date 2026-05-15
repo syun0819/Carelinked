@@ -30,7 +30,6 @@ class HeatRiskItem(BaseModel):
     lon: float
     heat_risk: str
     risk_score: Optional[float]
-    facility_name: Optional[str] = None
 
 
 class HeatRiskResponse(BaseModel):
