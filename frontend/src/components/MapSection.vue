@@ -98,27 +98,35 @@
         <div v-if="activeOverlay === 'environmental'" class="map-legend choropleth-legend" aria-label="Bushfire legend">
           <div class="legend-title">Bushfire Activity</div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#d64545"></span>
-            <span>Very High (&gt; 80th pct)</span>
+            <span class="legend-dot" style="background:#9d0208"></span>
+            <span>Extreme (&gt; 85th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#f4923a"></span>
-            <span>High (60–80th pct)</span>
+            <span class="legend-dot" style="background:#f94144"></span>
+            <span>Very High (70–85th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#f7e07a"></span>
-            <span>Medium (40–60th pct)</span>
+            <span class="legend-dot" style="background:#f3722c"></span>
+            <span>High (55–70th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#74c476"></span>
-            <span>Low (20–40th pct)</span>
+            <span class="legend-dot" style="background:#f9c74f"></span>
+            <span>Moderate (40–55th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#1a7a4a"></span>
-            <span>Very Low (≤ 20th pct)</span>
+            <span class="legend-dot" style="background:#a7c957"></span>
+            <span>Low (25–40th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#cccccc"></span>
+            <span class="legend-dot" style="background:#52b788"></span>
+            <span>Very Low (10–25th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#1e7145"></span>
+            <span>Minimal (≤ 10th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#e9ecef"></span>
             <span>No data</span>
           </div>
         </div>
@@ -824,20 +832,22 @@ async function toggleOverlay(name) {
       )
       const sorted = apiData.results.map(r => r.bushfire_count).sort((a, b) => a - b)
       const pct = p => sorted[Math.floor(p * sorted.length)] ?? 0
-      const [p20, p40, p60, p80] = [0.2, 0.4, 0.6, 0.8].map(pct)
+      const [p10, p25, p40, p55, p70, p85] = [0.10, 0.25, 0.40, 0.55, 0.70, 0.85].map(pct)
 
       choropletheLayer = L.geoJSON(geojson, {
         style(feature) {
           const key = normalizeLgaName(getFeatureLgaName(feature))
           const count = countMap[key]
           const fill =
-            count == null ? '#cccccc'
-            : count > p80 ? '#d64545'
-            : count > p60 ? '#f4923a'
-            : count > p40 ? '#f7e07a'
-            : count > p20 ? '#74c476'
-            : '#1a7a4a'
-          return { fillColor: fill, fillOpacity: 0.6, color: '#888', weight: 0.5 }
+            count == null ? '#e9ecef'
+            : count > p85 ? '#9d0208'
+            : count > p70 ? '#f94144'
+            : count > p55 ? '#f3722c'
+            : count > p40 ? '#f9c74f'
+            : count > p25 ? '#a7c957'
+            : count > p10 ? '#52b788'
+            : '#1e7145'
+          return { fillColor: fill, fillOpacity: 0.65, color: '#888', weight: 0.5 }
         },
         onEachFeature(feature, layer) {
           const key = normalizeLgaName(getFeatureLgaName(feature))
