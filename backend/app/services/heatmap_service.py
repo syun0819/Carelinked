@@ -1,11 +1,11 @@
-from typing import List
+from typing import List, Optional
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.aged_care import AgedCareService
 from app.models.heatmap import BushfireLgaSummary, CrimeRateLga, ResidentialCareDemandByLga
-from app.schemas.heatmap import BushfireLgaItem, CrimeStatItem, LgaStatItem
+from app.schemas.heatmap import BushfireLgaItem, CrimeStatItem, CrimeStatsResponse, LgaStatItem
 
 
 async def get_lga_supply_demand(db: AsyncSession) -> List[LgaStatItem]:
@@ -52,36 +52,44 @@ async def get_lga_supply_demand(db: AsyncSession) -> List[LgaStatItem]:
     return results
 
 
-async def get_crime_heatmap(db: AsyncSession) -> List[CrimeStatItem]:
-    latest_year_q = select(func.max(CrimeRateLga.year)).where(
-        CrimeRateLga.offence == "dwelling",
+async def get_crime_heatmap(db: AsyncSession, year: Optional[int] = None) -> CrimeStatsResponse:
+    base_filters = (
         CrimeRateLga.measure == "OFFENCE_RATE_POOLED_NORMALISED",
         CrimeRateLga.frequency == "ANNUAL",
         CrimeRateLga.adjusted_rate.isnot(None),
     )
-    latest_year = (await db.execute(latest_year_q)).scalar()
-    if latest_year is None:
-        return []
+    years_q = (
+        select(CrimeRateLga.year)
+        .where(*base_filters)
+        .group_by(CrimeRateLga.year)
+        .order_by(desc(CrimeRateLga.year))
+    )
+    available_years = [row.year for row in (await db.execute(years_q)).all()]
+    selected_year = year if year is not None else (available_years[0] if available_years else None)
+
+    if selected_year is None:
+        return CrimeStatsResponse(results=[], year=None, available_years=available_years)
 
     q = (
         select(
             CrimeRateLga.lga_name,
-            func.avg(CrimeRateLga.adjusted_rate).label("adjusted_rate"),
+            func.sum(CrimeRateLga.adjusted_rate).label("adjusted_rate"),
         )
         .where(
-            CrimeRateLga.year == latest_year,
-            CrimeRateLga.offence == "dwelling",
-            CrimeRateLga.measure == "OFFENCE_RATE_POOLED_NORMALISED",
-            CrimeRateLga.frequency == "ANNUAL",
-            CrimeRateLga.adjusted_rate.isnot(None),
+            CrimeRateLga.year == selected_year,
+            *base_filters,
         )
         .group_by(CrimeRateLga.lga_name)
     )
     rows = (await db.execute(q)).all()
-    return [
-        CrimeStatItem(lga_name=row.lga_name, adjusted_rate=float(row.adjusted_rate))
-        for row in rows
-    ]
+    return CrimeStatsResponse(
+        results=[
+            CrimeStatItem(lga_name=row.lga_name, adjusted_rate=float(row.adjusted_rate))
+            for row in rows
+        ],
+        year=selected_year,
+        available_years=available_years,
+    )
 
 
 async def get_bushfire_heatmap(db: AsyncSession) -> List[BushfireLgaItem]:
