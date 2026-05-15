@@ -1,7 +1,8 @@
 from typing import Dict, Optional
-from sqlalchemy import select
+
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.waittime import WaitTimeRatio
+
+from app.repositories import waittime_repository as waittime_repo
 from app.schemas.waittime import WaitTimeEstimateRequest, WaitTimeEstimateResponse
 
 CATEGORY_FIELD_MAP = {
@@ -48,8 +49,7 @@ async def estimate_wait_time(
         "remoteness": request.remoteness,
     }
 
-    result = await db.execute(select(WaitTimeRatio))
-    all_rows = result.scalars().all()
+    all_rows = await waittime_repo.fetch_all_ratios(db)
 
     lookup: Dict[str, Dict[str, float]] = {}
     for row in all_rows:

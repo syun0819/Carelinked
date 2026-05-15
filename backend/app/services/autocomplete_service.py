@@ -1,8 +1,6 @@
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.aged_care import AgedCareService
-from app.models.location import LocationGeo
+from app.repositories import autocomplete_repository as autocomplete_repo
 from app.schemas.aged_care import (
     AutoCompleteResponse,
     FacilityAutoComplete,
@@ -22,14 +20,7 @@ async def get_autocomplete(db: AsyncSession, q: str) -> AutoCompleteResponse:
     postcodes: list[PostcodeAutoComplete] = []
 
     if not is_numeric:
-        # Facility search
-        fac_result = await db.execute(
-            select(AgedCareService.id, AgedCareService.service_name,
-                   AgedCareService.physical_suburb, AgedCareService.physical_state)
-            .where(AgedCareService.service_name.ilike(f"%{q}%"))
-            .order_by(AgedCareService.service_name)
-            .limit(3)
-        )
+        fac_rows = await autocomplete_repo.fetch_facilities_by_name(db, q, limit=3)
         facilities = [
             FacilityAutoComplete(
                 id=str(row.id),
@@ -37,33 +28,19 @@ async def get_autocomplete(db: AsyncSession, q: str) -> AutoCompleteResponse:
                 suburb=row.physical_suburb,
                 state=row.physical_state,
             )
-            for row in fac_result
+            for row in fac_rows
         ]
 
-        # Suburb search
-        sub_result = await db.execute(
-            select(LocationGeo.suburb, LocationGeo.postcode)
-            .where(LocationGeo.suburb.ilike(f"%{q}%"))
-            .distinct(LocationGeo.suburb)
-            .order_by(LocationGeo.suburb)
-            .limit(3)
-        )
+        sub_rows = await autocomplete_repo.fetch_suburbs_by_name(db, q, limit=3)
         suburbs = [
             SuburbAutoComplete(name=row.suburb, postcode=row.postcode)
-            for row in sub_result
+            for row in sub_rows
         ]
     else:
-        # Postcode search
-        pc_result = await db.execute(
-            select(LocationGeo.postcode, LocationGeo.suburb)
-            .where(LocationGeo.postcode.like(f"{q}%"))
-            .distinct(LocationGeo.postcode)
-            .order_by(LocationGeo.postcode)
-            .limit(3)
-        )
+        pc_rows = await autocomplete_repo.fetch_suburbs_by_postcode(db, q, limit=3)
         postcodes = [
             PostcodeAutoComplete(postcode=row.postcode, suburb=row.suburb)
-            for row in pc_result
+            for row in pc_rows
         ]
 
     return AutoCompleteResponse(facilities=facilities, suburbs=suburbs, postcodes=postcodes)
