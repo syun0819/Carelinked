@@ -42,6 +42,17 @@ class BushfireLgaSummary(Base):
     bushfire_count: Mapped[int] = mapped_column(Integer)
 
 
+class FacilityHeatRisk(Base):
+    __tablename__ = "facility_heat_risk"
+
+    id: Mapped[str] = mapped_column(Uuid(as_uuid=False), primary_key=True)
+    service_id: Mapped[str] = mapped_column(Uuid(as_uuid=False))
+    latitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    longitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    risk_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    heat_risk: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+
 class LgaBoundary(Base):
     __tablename__ = "lga_boundaries"
 

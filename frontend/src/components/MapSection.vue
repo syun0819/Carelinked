@@ -42,6 +42,18 @@
           </svg>
           Crime
         </button>
+        <button
+          class="overlay-btn"
+          :class="{ active: activeOverlay === 'heatrisk' }"
+          :disabled="overlayLoading"
+          @click="toggleOverlay('heatrisk')"
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M8 4 Q10 6 8 8 Q6 10 8 12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+          </svg>
+          Heat Risk
+        </button>
       </div>
       <span class="overlay-hint">Only one overlay allowed</span>
     </div>
@@ -167,6 +179,22 @@
           </div>
         </div>
 
+        <div v-else-if="activeOverlay === 'heatrisk'" class="map-legend choropleth-legend" aria-label="Heat risk legend">
+          <div class="legend-title">Facility Heat Risk</div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#d64545"></span>
+            <span>High risk</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#f4923a"></span>
+            <span>Medium risk</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#1a7a4a"></span>
+            <span>Low risk</span>
+          </div>
+        </div>
+
         <!-- Availability legend — always shown -->
         <div class="map-legend" aria-label="Availability legend">
           <div class="legend-title">
@@ -204,7 +232,7 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import L from 'leaflet'
-import { getMapFacilities, getHeatmapDemand, getHeatmapBushfire, getHeatmapCrime, getHeatmapLgaBoundaries } from '../services/facilitiesApi'
+import { getMapFacilities, getHeatmapDemand, getHeatmapBushfire, getHeatmapCrime, getHeatmapLgaBoundaries, getHeatmapHeatRisk } from '../services/facilitiesApi'
 import { mapFacilityMarker } from '../utils/facilityMappers'
 
 const props = defineProps({
@@ -265,6 +293,8 @@ const visibleSet = new Set()
 let choropletheLayer = null
 let lgaGeoJson = null
 let environmentalLayer = null
+let heatRiskLayer = null
+let heatRiskCache = null
 let bushfireCache = null
 const crimeCache = new Map()
 
@@ -624,6 +654,7 @@ async function fetchMarkers() {
 function removeCurrentOverlay() {
   if (choropletheLayer) { map.removeLayer(choropletheLayer); choropletheLayer = null }
   if (environmentalLayer) { map.removeLayer(environmentalLayer); environmentalLayer = null }
+  if (heatRiskLayer) { map.removeLayer(heatRiskLayer); heatRiskLayer = null }
 }
 
 function normalizeLgaName(value) {
@@ -755,6 +786,25 @@ async function toggleOverlay(name) {
       if (activeOverlay.value !== name) return
 
       renderCrimeOverlay(geojson, apiData)
+
+    } else if (name === 'heatrisk') {
+      const apiData = heatRiskCache ?? (heatRiskCache = await getHeatmapHeatRisk())
+      if (activeOverlay.value !== name) return
+
+      const colorMap = { high: '#d64545', medium: '#f4923a', low: '#1a7a4a' }
+      const markers = apiData.results.map(r =>
+        L.circleMarker([r.lat, r.lon], {
+          radius: 5,
+          fillColor: colorMap[r.heat_risk] ?? '#cccccc',
+          fillOpacity: 0.8,
+          color: '#fff',
+          weight: 0.5,
+        }).bindTooltip(
+          `Heat Risk: ${r.heat_risk}<br>Score: ${r.risk_score?.toFixed(3) ?? 'N/A'}`,
+          { sticky: true }
+        )
+      )
+      heatRiskLayer = L.layerGroup(markers).addTo(map)
 
     } else if (name === 'environmental') {
       const [geojson, apiData] = await Promise.all([

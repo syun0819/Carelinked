@@ -6,8 +6,8 @@ from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.aged_care import AgedCareService
-from app.models.heatmap import BushfireLgaSummary, CrimeRateLga, LgaBoundary, ResidentialCareDemandByLga
-from app.schemas.heatmap import BushfireLgaItem, CrimeStatItem, CrimeStatsResponse, LgaStatItem
+from app.models.heatmap import BushfireLgaSummary, CrimeRateLga, FacilityHeatRisk, LgaBoundary, ResidentialCareDemandByLga
+from app.schemas.heatmap import BushfireLgaItem, CrimeStatItem, CrimeStatsResponse, HeatRiskItem, LgaStatItem
 
 
 async def get_lga_boundaries_geojson(db: AsyncSession) -> Dict[str, Any]:
@@ -134,6 +134,29 @@ async def get_bushfire_heatmap(db: AsyncSession) -> List[BushfireLgaItem]:
             lga_name=row.lga_name,
             lga_code=row.lga_code,
             bushfire_count=row.bushfire_count,
+        )
+        for row in rows
+    ]
+
+
+async def get_facility_heat_risk(db: AsyncSession) -> List[HeatRiskItem]:
+    q = select(
+        FacilityHeatRisk.latitude,
+        FacilityHeatRisk.longitude,
+        FacilityHeatRisk.heat_risk,
+        FacilityHeatRisk.risk_score,
+    ).where(
+        FacilityHeatRisk.latitude.isnot(None),
+        FacilityHeatRisk.longitude.isnot(None),
+        FacilityHeatRisk.heat_risk.in_(["low", "medium", "high"]),
+    )
+    rows = (await db.execute(q)).all()
+    return [
+        HeatRiskItem(
+            lat=row.latitude,
+            lon=row.longitude,
+            heat_risk=row.heat_risk,
+            risk_score=float(row.risk_score) if row.risk_score is not None else None,
         )
         for row in rows
     ]
