@@ -80,3 +80,7 @@ export function getHeatmapBushfire() {
 export function getHeatmapCrime(params = {}) {
   return request('/api/v1/heatmap/crime', params)
 }
+
+export function getHeatmapHeatRisk() {
+  return request('/api/v1/heatmap/heat-risk')
+}

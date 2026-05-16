@@ -25,6 +25,17 @@ class BushfireLgaResponse(BaseModel):
     results: List[BushfireLgaItem]
 
 
+class HeatRiskItem(BaseModel):
+    lat: float
+    lon: float
+    heat_risk: str
+    risk_score: Optional[float]
+
+
+class HeatRiskResponse(BaseModel):
+    results: List[HeatRiskItem]
+
+
 class CrimeStatItem(BaseModel):
     lga_name: str
     adjusted_rate: float

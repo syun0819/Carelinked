@@ -42,6 +42,18 @@
           </svg>
           Crime
         </button>
+        <button
+          class="overlay-btn"
+          :class="{ active: activeOverlay === 'heatrisk' }"
+          :disabled="overlayLoading"
+          @click="toggleOverlay('heatrisk')"
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M8 4 Q10 6 8 8 Q6 10 8 12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+          </svg>
+          Heat Risk
+        </button>
       </div>
       <span class="overlay-hint">Only one overlay allowed</span>
     </div>
@@ -86,27 +98,35 @@
         <div v-if="activeOverlay === 'environmental'" class="map-legend choropleth-legend" aria-label="Bushfire legend">
           <div class="legend-title">Bushfire Activity</div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#d64545"></span>
-            <span>Very High (&gt; 80th pct)</span>
+            <span class="legend-dot" style="background:#9d0208"></span>
+            <span>Extreme (&gt; 85th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#f4923a"></span>
-            <span>High (60–80th pct)</span>
+            <span class="legend-dot" style="background:#f94144"></span>
+            <span>Very High (70–85th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#f7e07a"></span>
-            <span>Medium (40–60th pct)</span>
+            <span class="legend-dot" style="background:#f3722c"></span>
+            <span>High (55–70th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#74c476"></span>
-            <span>Low (20–40th pct)</span>
+            <span class="legend-dot" style="background:#f9c74f"></span>
+            <span>Moderate (40–55th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#1a7a4a"></span>
-            <span>Very Low (≤ 20th pct)</span>
+            <span class="legend-dot" style="background:#a7c957"></span>
+            <span>Low (25–40th pct)</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#cccccc"></span>
+            <span class="legend-dot" style="background:#52b788"></span>
+            <span>Very Low (10–25th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#1e7145"></span>
+            <span>Minimal (≤ 10th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#e9ecef"></span>
             <span>No data</span>
           </div>
         </div>
@@ -173,6 +193,34 @@
           </div>
         </div>
 
+        <div v-else-if="activeOverlay === 'heatrisk'" class="map-legend choropleth-legend" aria-label="Heat risk legend">
+          <div class="legend-title">Facility Heat Risk</div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#9d0208"></span>
+            <span>Very High (&gt; 80th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#f3722c"></span>
+            <span>High (60–80th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#f9c74f"></span>
+            <span>Moderate (40–60th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#52b788"></span>
+            <span>Low (20–40th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#1e7145"></span>
+            <span>Very Low (≤ 20th pct)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot" style="background:#adb5bd"></span>
+            <span>No score data</span>
+          </div>
+        </div>
+
         <!-- Availability legend — always shown -->
         <div class="map-legend" aria-label="Availability legend">
           <div class="legend-title">
@@ -210,7 +258,7 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import L from 'leaflet'
-import { getMapFacilities, getHeatmapDemand, getHeatmapBushfire, getHeatmapCrime, getHeatmapLgaBoundaries } from '../services/facilitiesApi'
+import { getMapFacilities, getHeatmapDemand, getHeatmapBushfire, getHeatmapCrime, getHeatmapLgaBoundaries, getHeatmapHeatRisk } from '../services/facilitiesApi'
 import { mapFacilityMarker } from '../utils/facilityMappers'
 
 const props = defineProps({
@@ -271,6 +319,8 @@ const visibleSet = new Set()
 let choropletheLayer = null
 let lgaGeoJson = null
 let environmentalLayer = null
+let heatRiskLayer = null
+let heatRiskCache = null
 let bushfireCache = null
 const crimeCache = new Map()
 
@@ -374,6 +424,9 @@ function initMap() {
   }).addTo(map)
 
   markersLayer = L.layerGroup().addTo(map)
+
+  const hrPane = map.createPane('heatRiskPane')
+  hrPane.style.zIndex = 650
 
   let _filterTimer = null
   map.on('moveend zoomend', () => {
@@ -630,6 +683,7 @@ async function fetchMarkers() {
 function removeCurrentOverlay() {
   if (choropletheLayer) { map.removeLayer(choropletheLayer); choropletheLayer = null }
   if (environmentalLayer) { map.removeLayer(environmentalLayer); environmentalLayer = null }
+  if (heatRiskLayer) { map.removeLayer(heatRiskLayer); heatRiskLayer = null }
 }
 
 function normalizeLgaName(value) {
@@ -772,6 +826,41 @@ async function toggleOverlay(name) {
 
       renderCrimeOverlay(geojson, apiData)
 
+    } else if (name === 'heatrisk') {
+      const apiData = heatRiskCache ?? (heatRiskCache = await getHeatmapHeatRisk())
+      if (activeOverlay.value !== name) return
+
+      const scores = apiData.results
+        .map(r => r.risk_score)
+        .filter(s => s != null)
+        .sort((a, b) => a - b)
+      const pct = p => scores[Math.floor(p * scores.length)] ?? 0
+      const [p20, p40, p60, p80] = [0.2, 0.4, 0.6, 0.8].map(pct)
+
+      const getHrColor = score => {
+        if (score == null) return '#adb5bd'
+        if (score > p80) return '#9d0208'
+        if (score > p60) return '#f3722c'
+        if (score > p40) return '#f9c74f'
+        if (score > p20) return '#52b788'
+        return '#1e7145'
+      }
+
+      const markers = apiData.results.map(r =>
+        L.circleMarker([r.lat, r.lon], {
+          pane: 'heatRiskPane',
+          radius: 8,
+          fillColor: getHrColor(r.risk_score),
+          fillOpacity: 0.9,
+          color: 'rgba(0,0,0,0.25)',
+          weight: 1,
+        }).bindTooltip(
+          `Heat Risk: ${r.heat_risk}<br>Score: ${r.risk_score?.toFixed(3) ?? 'N/A'}`,
+          { sticky: true }
+        )
+      )
+      heatRiskLayer = L.layerGroup(markers).addTo(map)
+
     } else if (name === 'environmental') {
       const [geojson, apiData] = await Promise.all([
         lgaGeoJson ? Promise.resolve(lgaGeoJson) : getHeatmapLgaBoundaries().then(d => { lgaGeoJson = d; return d }),
@@ -786,20 +875,22 @@ async function toggleOverlay(name) {
       )
       const sorted = apiData.results.map(r => r.bushfire_count).sort((a, b) => a - b)
       const pct = p => sorted[Math.floor(p * sorted.length)] ?? 0
-      const [p20, p40, p60, p80] = [0.2, 0.4, 0.6, 0.8].map(pct)
+      const [p10, p25, p40, p55, p70, p85] = [0.10, 0.25, 0.40, 0.55, 0.70, 0.85].map(pct)
 
       choropletheLayer = L.geoJSON(geojson, {
         style(feature) {
           const key = normalizeLgaName(getFeatureLgaName(feature))
           const count = countMap[key]
           const fill =
-            count == null ? '#cccccc'
-            : count > p80 ? '#d64545'
-            : count > p60 ? '#f4923a'
-            : count > p40 ? '#f7e07a'
-            : count > p20 ? '#74c476'
-            : '#1a7a4a'
-          return { fillColor: fill, fillOpacity: 0.6, color: '#888', weight: 0.5 }
+            count == null ? '#e9ecef'
+            : count > p85 ? '#9d0208'
+            : count > p70 ? '#f94144'
+            : count > p55 ? '#f3722c'
+            : count > p40 ? '#f9c74f'
+            : count > p25 ? '#a7c957'
+            : count > p10 ? '#52b788'
+            : '#1e7145'
+          return { fillColor: fill, fillOpacity: 0.65, color: '#888', weight: 0.5 }
         },
         onEachFeature(feature, layer) {
           const key = normalizeLgaName(getFeatureLgaName(feature))
