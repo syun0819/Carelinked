@@ -1,15 +1,24 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Request
+from fastapi.responses import JSONResponse
 from fastapi_cache.decorator import cache
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.limiter import limiter
 from app.schemas.heatmap import BushfireLgaResponse, CrimeStatsResponse, LgaStatsResponse
-from app.services.heatmap_service import get_bushfire_heatmap, get_crime_heatmap, get_lga_supply_demand
+from app.services.heatmap_service import get_bushfire_heatmap, get_crime_heatmap, get_lga_boundaries_geojson, get_lga_supply_demand
 
 router = APIRouter(prefix="/api/v1/heatmap", tags=["heatmap"])
+
+
+@router.get("/lga-boundaries")
+@limiter.limit("10/minute")
+@cache(expire=86400)
+async def lga_boundaries(request: Request, db: AsyncSession = Depends(get_db)):
+    geojson = await get_lga_boundaries_geojson(db)
+    return JSONResponse(content=geojson)
 
 
 @router.get("/demand", response_model=LgaStatsResponse)

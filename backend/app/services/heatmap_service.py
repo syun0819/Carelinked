@@ -1,11 +1,41 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
+from shapely import wkt as shapely_wkt
+from shapely.geometry import mapping
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.aged_care import AgedCareService
-from app.models.heatmap import BushfireLgaSummary, CrimeRateLga, ResidentialCareDemandByLga
+from app.models.heatmap import BushfireLgaSummary, CrimeRateLga, LgaBoundary, ResidentialCareDemandByLga
 from app.schemas.heatmap import BushfireLgaItem, CrimeStatItem, CrimeStatsResponse, LgaStatItem
+
+
+async def get_lga_boundaries_geojson(db: AsyncSession) -> Dict[str, Any]:
+    q = select(
+        LgaBoundary.lga_code,
+        LgaBoundary.lga_name,
+        LgaBoundary.state_name,
+        LgaBoundary.geom_wkt,
+    ).where(LgaBoundary.geom_wkt.isnot(None))
+    rows = (await db.execute(q)).all()
+
+    features = []
+    for row in rows:
+        try:
+            geom = shapely_wkt.loads(row.geom_wkt)
+            features.append({
+                "type": "Feature",
+                "properties": {
+                    "lga_code": row.lga_code,
+                    "lga_name": row.lga_name,
+                    "state_name": row.state_name,
+                },
+                "geometry": mapping(geom),
+            })
+        except Exception:
+            continue
+
+    return {"type": "FeatureCollection", "features": features}
 
 
 async def get_lga_supply_demand(db: AsyncSession) -> List[LgaStatItem]:
