@@ -140,32 +140,37 @@
         </div>
 
         <div v-else-if="activeOverlay === 'crime'" class="map-legend choropleth-legend" aria-label="Crime rate legend">
-          <div class="legend-title">Crime Rate</div>
+          <div class="legend-title legend-title-spread">
+            <span>Crime Rate</span>
+            <span class="legend-info" tabindex="0" aria-label="Average normalised offence rate">
+              i
+              <span class="legend-info-tooltip" role="tooltip">Average normalised offence rate</span>
+            </span>
+          </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#7b2d26"></span>
+            <span class="legend-dot" style="background:#d64545"></span>
             <span>&gt; 15,000</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#c05a28"></span>
+            <span class="legend-dot" style="background:#f4923a"></span>
             <span>7,001 - 15,000</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#dda060"></span>
+            <span class="legend-dot" style="background:#f7e07a"></span>
             <span>3,001 - 7,000</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#9dc89d"></span>
+            <span class="legend-dot" style="background:#74c476"></span>
             <span>1,001 - 3,000</span>
           </div>
           <div class="legend-item">
-            <span class="legend-dot" style="background:#d0e8cc"></span>
+            <span class="legend-dot" style="background:#1a7a4a"></span>
             <span>0 - 1,000</span>
           </div>
           <div class="legend-item">
             <span class="legend-dot" style="background:#e0e0e0"></span>
             <span>No data</span>
           </div>
-          <div class="legend-sub">Total normalised offence rate</div>
         </div>
 
         <!-- Availability legend — always shown -->
@@ -674,6 +679,11 @@ function renderCrimeOverlay(geojson, apiData) {
   const rateMap = Object.fromEntries(
     apiData.results.map(r => [normalizeLgaName(r.lga_name), r.adjusted_rate])
   )
+  const formatRate = rate => (
+    rate == null
+      ? 'No data'
+      : Number(rate).toLocaleString(undefined, { maximumFractionDigits: 2 })
+  )
 
   choropletheLayer = L.geoJSON(geojson, {
     style(feature) {
@@ -681,12 +691,20 @@ function renderCrimeOverlay(geojson, apiData) {
       const rate = rateMap[key]
       const fill =
         rate == null ? '#e0e0e0'
-        : rate > 15000 ? '#7b2d26'
-        : rate > 7000 ? '#c05a28'
-        : rate > 3000 ? '#dda060'
-        : rate > 1000  ? '#9dc89d'
-        : '#d0e8cc'
+        : rate > 15000 ? '#d64545'
+        : rate > 7000 ? '#f4923a'
+        : rate > 3000 ? '#f7e07a'
+        : rate > 1000  ? '#74c476'
+        : '#1a7a4a'
       return { fillColor: fill, fillOpacity: 0.55, color: '#888', weight: 0.5 }
+    },
+    onEachFeature(feature, layer) {
+      const key = normalizeLgaName(getFeatureLgaName(feature))
+      const rate = rateMap[key]
+      layer.bindTooltip(
+        `<b>${getFeatureLgaName(feature)}</b><br>Rate: ${formatRate(rate)}`,
+        { sticky: true }
+      )
     },
   })
   choropletheLayer.addTo(map)
@@ -985,6 +1003,56 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 5px;
+}
+
+.legend-title-spread {
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.legend-info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #cfd8d4;
+  border-radius: 50%;
+  color: #5e706a;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+  flex: 0 0 auto;
+}
+
+.legend-info-tooltip {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  width: max-content;
+  max-width: 190px;
+  padding: 6px 8px;
+  border: 1px solid #ddd8cf;
+  border-radius: 6px;
+  background: rgba(37, 54, 49, 0.96);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) translateX(-2px);
+  transition: opacity 0.15s, transform 0.15s;
+  z-index: 2000;
+}
+
+.legend-info:hover .legend-info-tooltip,
+.legend-info:focus .legend-info-tooltip {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
 }
 
 .legend-sub {

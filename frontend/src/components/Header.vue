@@ -11,19 +11,22 @@
     <!-- Desktop nav -->
     <nav class="nav">
       <router-link to="/" class="nav-item" active-class="active">Home</router-link>
-      <router-link to="/find-bed" class="nav-item" active-class="active">
+      <router-link to="/find-bed" class="nav-item" :class="{ active: isListSearchActive }">
         Find Care
+      </router-link>
+      <router-link :to="{ path: '/find-bed', query: { view: 'map' } }" class="nav-item" :class="{ active: isMapSearchActive }">
+        Map Search
       </router-link>
       <router-link to="/wait-estimator" class="nav-item" active-class="active">
         Wait Estimator
       </router-link>
-      <button class="nav-item nav-link-btn" @click="goToSection('#how-it-works')">
-        How It Works
-      </button>
       <router-link :to="{ path: '/compare', query: { mode: 'select' } }" class="nav-item nav-compare" active-class="active">
         Compare
         <span v-if="compareStore.count > 0" class="compare-badge">{{ compareStore.count }}</span>
       </router-link>
+      <button class="nav-item nav-link-btn" @click="goToSection('#how-it-works')">
+        How It Works
+      </button>
     </nav>
 
     <!-- Mobile hamburger -->
@@ -41,13 +44,14 @@
       </div>
       <nav class="drawer-nav">
         <router-link to="/" class="drawer-item" @click="menuOpen = false">Home</router-link>
-        <router-link to="/find-bed" class="drawer-item" @click="menuOpen = false">Find Care</router-link>
+        <router-link to="/find-bed" class="drawer-item" :class="{ active: isListSearchActive }" @click="menuOpen = false">Find Care</router-link>
+        <router-link :to="{ path: '/find-bed', query: { view: 'map' } }" class="drawer-item" :class="{ active: isMapSearchActive }" @click="menuOpen = false">Map Search</router-link>
         <router-link to="/wait-estimator" class="drawer-item" @click="menuOpen = false">Wait Estimator</router-link>
-        <button class="drawer-item drawer-btn" @click="goToSectionMobile('#how-it-works')">How It Works</button>
         <router-link :to="{ path: '/compare', query: { mode: 'select' } }" class="drawer-item" @click="menuOpen = false">
           Compare
           <span v-if="compareStore.count > 0" class="compare-badge">{{ compareStore.count }}</span>
         </router-link>
+        <button class="drawer-item drawer-btn" @click="goToSectionMobile('#how-it-works')">How It Works</button>
       </nav>
     </div>
 
@@ -57,14 +61,23 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import logo from '../assets/CareLinkLogo.png'
 import { useCompareStore } from '../stores/compareStore'
 
 const router = useRouter()
+const route = useRoute()
 const menuOpen = ref(false)
 const compareStore = useCompareStore()
+
+const isListSearchActive = computed(() => (
+  route.path === '/find-bed' && route.query.view !== 'map'
+))
+
+const isMapSearchActive = computed(() => (
+  route.path === '/find-bed' && route.query.view === 'map'
+))
 
 function goToSection(hash) {
   router.push({ path: '/', hash })
@@ -258,6 +271,7 @@ function goToSectionMobile(hash) {
 }
 
 .drawer-item:hover,
+.drawer-item.active,
 .drawer-item.router-link-active {
   background: #f0ece4;
   color: #2f4e44;

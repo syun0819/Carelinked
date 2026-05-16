@@ -19,9 +19,10 @@
 
       <button
         class="match-me-btn"
-        :class="{ active: matchingActive }"
+        :class="{ active: matchingActive, disabled: matchDisabled }"
         type="button"
-        @click="$emit('open-match-modal')"
+        :disabled="matchDisabled"
+        @click="openMatchModal"
       >
         <span aria-hidden="true">✦</span>
         {{ matchingActive ? 'Edit matches' : 'Match me' }}
@@ -45,11 +46,11 @@
         </li>
       </ul>
     </div>
-    <p v-if="!matchingActive" class="match-helper">
+    <p v-if="!matchingActive && !matchDisabled" class="match-helper">
       <span aria-hidden="true">✦</span>
-      Not sure where to start? Tap <strong class="match-helper-link" @click="$emit('open-match-modal')">Match Me</strong> to rank facilities by what matters most to you.
+      Not sure where to start? Tap <strong class="match-helper-link" :class="{ disabled: matchDisabled }" @click="openMatchModal">Match Me</strong> to rank facilities by what matters most to you.
     </p>
-    <div v-else class="match-summary">
+    <div v-else-if="!matchDisabled" class="match-summary">
       <div class="summary-label">
         <span class="summary-icon" aria-hidden="true">✦</span>
         <span>Matched on your priorities:</span>
@@ -70,7 +71,7 @@
       </ol>
 
       <div class="summary-actions">
-        <button class="summary-action" type="button" @click="$emit('open-match-modal')">
+        <button class="summary-action" type="button" :disabled="matchDisabled" @click="openMatchModal">
           <span aria-hidden="true">✎</span>
           Edit
         </button>
@@ -104,6 +105,10 @@ const props = defineProps({
   matchWeights: {
     type: Object,
     default: null
+  },
+  matchDisabled: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -295,6 +300,11 @@ function handleSearch() {
   showSuggestions.value = false
 }
 
+function openMatchModal() {
+  if (props.matchDisabled) return
+  emit('open-match-modal')
+}
+
 function selectSuggestion(suggestion) {
   selectingSuggestion = true
   inputValue.value = suggestion.searchValue
@@ -387,6 +397,22 @@ function hideSuggestions() {
 .match-me-btn:hover,
 .match-me-btn.active {
   background: #23695e;
+}
+
+.match-me-btn.disabled,
+.match-me-btn:disabled {
+  padding: 8px 14px;
+  background: #e4e7e5;
+  color: #8a9692;
+  cursor: not-allowed;
+  font-size: 13px;
+  box-shadow: none;
+}
+
+.match-me-btn.disabled:hover,
+.match-me-btn:disabled:hover {
+  background: #e4e7e5;
+  color: #8a9692;
 }
 
 .match-me-btn span,
@@ -524,6 +550,15 @@ function hideSuggestions() {
   color: #23695e;
 }
 
+.summary-action:disabled {
+  color: #9aa4a0;
+  cursor: not-allowed;
+}
+
+.summary-action:disabled:hover {
+  color: #9aa4a0;
+}
+
 .search-suggestions {
   position: absolute;
   top: calc(100% + 6px);
@@ -646,14 +681,24 @@ function hideSuggestions() {
   }
 }
 
-  .match-helper-link {
+.match-helper-link {
   cursor: pointer;
   color: #2D6A5F;
   text-decoration: none;
 }
 
+.match-helper-link.disabled {
+  color: #9aa4a0;
+  cursor: not-allowed;
+}
+
 .match-helper-link:hover {
   text-decoration: underline;
   opacity: 0.8;
+}
+
+.match-helper-link.disabled:hover {
+  text-decoration: none;
+  opacity: 1;
 }
 </style>
