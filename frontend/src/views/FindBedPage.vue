@@ -3,8 +3,8 @@
     <Header />
 
     <section class="page-title page-animate">
-      <h1>Find Care</h1>
-      <p>Get a personalised estimate of how long you may wait for an aged care placement.</p>
+      <h1>{{ pageTitle }}</h1>
+      <p>{{ pageSubtitle }}</p>
     </section>
 
     <SearchBar
@@ -12,6 +12,7 @@
       v-model:search-type="searchType"
       :matching-active="matchingActive"
       :match-weights="matchWeights"
+      :match-disabled="activeView === 'map'"
       @open-match-modal="matchModalOpen = true"
       @clear-match="clearMatching"
     />
@@ -170,6 +171,13 @@ const matchingActive = computed(() => {
   return Object.values(matchWeights.value).reduce((sum, value) => sum + Number(value || 0), 0) === 100
 })
 
+const pageTitle = computed(() => activeView.value === 'map' ? 'Map Search' : 'Find Care')
+const pageSubtitle = computed(() => (
+  activeView.value === 'map'
+    ? 'Explore aged care facilities and local risk overlays on the map.'
+    : 'Search and compare aged care facilities in a list view.'
+))
+
 const careTypeOptions = [
   { value: 'Residential', label: 'Residential' },
   { value: 'Transition Care', label: 'Transition Care' },
@@ -325,6 +333,16 @@ watch(
     currentPage.value = 1
   },
   { immediate: true }
+)
+
+watch(
+  () => route.query.view,
+  (view) => {
+    const nextView = view === 'map' ? 'map' : 'list'
+    if (activeView.value !== nextView) {
+      activeView.value = nextView
+    }
+  }
 )
 
 watch(
