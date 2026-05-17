@@ -1,6 +1,9 @@
+import logging
 from typing import Any, Dict, List, Optional
 
 from shapely import wkt as shapely_wkt
+
+logger = logging.getLogger(__name__)
 from shapely.geometry import mapping
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -24,7 +27,8 @@ async def get_lga_boundaries_geojson(db: AsyncSession) -> Dict[str, Any]:
                 },
                 "geometry": mapping(geom),
             })
-        except Exception:
+        except Exception as e:
+            logger.warning("Skipping LGA %s: failed to parse WKT geometry: %s", row.lga_code, e)
             continue
 
     return {"type": "FeatureCollection", "features": features}

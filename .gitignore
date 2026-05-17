@@ -204,6 +204,7 @@ cython_debug/
 
 .codex
 CLAUDE.md
+.claude/
 
 # Marimo
 marimo/_static/

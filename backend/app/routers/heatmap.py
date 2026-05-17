@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 from fastapi_cache.decorator import cache
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -50,7 +50,7 @@ async def heat_risk(request: Request, db: AsyncSession = Depends(get_db)):
 @cache(expire=3600)
 async def crime_heatmap(
     request: Request,
-    year: Optional[int] = None,
+    year: Optional[int] = Query(None, ge=2000, le=2100),
     db: AsyncSession = Depends(get_db),
 ):
     return await get_crime_heatmap(db, year)
