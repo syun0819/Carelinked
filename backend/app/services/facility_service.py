@@ -173,23 +173,19 @@ async def get_facilities_for_map(
     center_lat: Optional[float],
     center_lng: Optional[float],
 ) -> Tuple[List[FacilityMapMarker], int]:
+    rows = await facility_repo.fetch_all_matching(
+        db,
+        suburb=suburb, postcode=postcode, region=region,
+        keyword=keyword, care_type=care_type, keyword_match_suburb=True,
+    )
+
+    ml_map = await avail_repo.fetch_bulk(db, [r.id for r in rows])
+
     apply_distance = (
         max_distance_km is not None
         and center_lat is not None
         and center_lng is not None
     )
-
-    # When distance filtering is active we need all matching rows so nearby
-    # facilities aren't silently dropped before the Python-level filter runs.
-    # Without distance filtering cap the result set to avoid full-table loads.
-    rows = await facility_repo.fetch_all_matching(
-        db,
-        suburb=suburb, postcode=postcode, region=region,
-        keyword=keyword, care_type=care_type, keyword_match_suburb=True,
-        max_rows=None if apply_distance else 1000,
-    )
-
-    ml_map = await avail_repo.fetch_bulk(db, [r.id for r in rows])
 
     markers: List[FacilityMapMarker] = []
     for row in rows:

@@ -63,14 +63,11 @@ async def fetch_all_matching(
     min_beds: Optional[int] = None,
     max_beds: Optional[int] = None,
     keyword_match_suburb: bool = False,
-    max_rows: Optional[int] = None,
 ) -> List[AgedCareService]:
     query = _build_filter_query(
         suburb, postcode, region, keyword, care_type,
         abs_remoteness, min_beds, max_beds, keyword_match_suburb,
     )
-    if max_rows is not None:
-        query = query.limit(max_rows)
     result = await db.execute(query)
     return list(result.scalars().all())
 
