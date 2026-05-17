@@ -1217,12 +1217,14 @@ onBeforeUnmount(() => {
   border: 1px solid #ddd8cf;
   border-radius: 10px;
   margin-bottom: 10px;
+  box-sizing: border-box;
 }
 
 .overlay-bar-left {
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
 }
 
 .overlay-hint {
@@ -1254,6 +1256,11 @@ onBeforeUnmount(() => {
   cursor: pointer;
   transition: all 0.15s;
   font-family: var(--font-sans);
+  white-space: nowrap;
+}
+
+.overlay-btn svg {
+  flex: 0 0 auto;
 }
 
 .overlay-btn:disabled {
@@ -1292,6 +1299,31 @@ onBeforeUnmount(() => {
   .map-legends-container {
     left: 10px;
     bottom: 10px;
+  }
+
+  .overlay-bar {
+    align-items: stretch;
+    padding: 10px;
+  }
+
+  .overlay-bar-left {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+  }
+
+  .overlay-label {
+    grid-column: 1 / -1;
+    margin-right: 0;
+    letter-spacing: 0;
+  }
+
+  .overlay-btn {
+    justify-content: center;
+    width: 100%;
+    min-height: 36px;
+    padding: 7px 8px;
   }
 
   .overlay-hint {
