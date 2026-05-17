@@ -47,6 +47,7 @@ async def heat_risk(request: Request, db: AsyncSession = Depends(get_db)):
 
 @router.get("/crime", response_model=CrimeStatsResponse)
 @limiter.limit("30/minute")
+@cache(expire=3600)
 async def crime_heatmap(
     request: Request,
     year: Optional[int] = None,
