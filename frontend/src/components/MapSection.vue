@@ -95,7 +95,7 @@
 
       <div class="map-legends-container">
         <!-- Overlay-specific legend -->
-        <div v-if="activeOverlay === 'environmental'" class="map-legend choropleth-legend bushfire-legend" aria-label="Bushfire legend">
+        <div v-if="activeOverlay === 'environmental'" class="map-legend choropleth-legend" aria-label="Bushfire legend">
           <div class="legend-title">Bushfire Activity (2016 - 2025)</div>
           <div class="legend-item">
             <span class="legend-dot" style="background:#9d0208"></span>
@@ -417,7 +417,8 @@ function createCustomIcon(color) {
 function initMap() {
   if (map || !mapEl.value) return
 
-  map = L.map(mapEl.value).setView(defaultCenter, defaultZoom)
+  map = L.map(mapEl.value, { zoomControl: false }).setView(defaultCenter, defaultZoom)
+  L.control.zoom({ position: 'topright' }).addTo(map)
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
@@ -1064,14 +1065,10 @@ onBeforeUnmount(() => {
   align-items: flex-start;
 }
 
-.bushfire-legend {
-  margin-left: 54px;
-}
-
 .crime-year-control {
   position: absolute;
   top: 12px;
-  left: 58px;
+  left: 16px;
   z-index: 1100;
   display: inline-flex;
   align-items: center;

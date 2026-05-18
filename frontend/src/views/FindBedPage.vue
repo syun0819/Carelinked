@@ -12,6 +12,7 @@
       v-model:search-type="searchType"
       :matching-active="matchingActive"
       :match-weights="matchWeights"
+      :match-disabled="activeView === 'map'"
 
       @open-match-modal="matchModalOpen = true"
       @clear-match="clearMatching"
