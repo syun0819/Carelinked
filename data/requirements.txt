@@ -11,3 +11,5 @@ matplotlib
 folium 
 mapclassify 
 branca
+pillow>=10.4.0
+urllib3>=2.2.2
