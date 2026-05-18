@@ -14,7 +14,7 @@
             <path d="M13.5 2.5S8 1.5 5 4.5C2 7.5 3 13.5 3 13.5S9 12 12 9C15 6 13.5 2.5 13.5 2.5Z"/>
             <path d="M3 13.5L7.5 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/>
           </svg>
-          Environmental
+          Bushfire Risk
         </button>
         <button
           class="overlay-btn"
@@ -427,6 +427,8 @@ function initMap() {
 
   const hrPane = map.createPane('heatRiskPane')
   hrPane.style.zIndex = 650
+  map.getPane('tooltipPane').style.zIndex = 700
+  map.getPane('popupPane').style.zIndex = 750
 
   let _filterTimer = null
   map.on('moveend zoomend', () => {
