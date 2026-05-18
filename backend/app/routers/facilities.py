@@ -108,7 +108,7 @@ async def search(
     max_beds: Optional[int] = Query(None, ge=0, le=999),
     sort_by: Optional[str] = Query("name"),
     limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    offset: int = Query(0, ge=0, le=10000),
     max_distance_km: Optional[float] = Query(None, ge=0, le=500),
     user_lat: Optional[float] = Query(None, ge=-90, le=90),
     user_lng: Optional[float] = Query(None, ge=-180, le=180),
