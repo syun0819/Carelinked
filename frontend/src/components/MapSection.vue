@@ -95,8 +95,8 @@
 
       <div class="map-legends-container">
         <!-- Overlay-specific legend -->
-        <div v-if="activeOverlay === 'environmental'" class="map-legend choropleth-legend" aria-label="Bushfire legend">
-          <div class="legend-title">Bushfire Activity</div>
+        <div v-if="activeOverlay === 'environmental'" class="map-legend choropleth-legend bushfire-legend" aria-label="Bushfire legend">
+          <div class="legend-title">Bushfire Activity (2016 - 2025)</div>
           <div class="legend-item">
             <span class="legend-dot" style="background:#9d0208"></span>
             <span>Extreme (&gt; 85th pct)</span>
@@ -1062,6 +1062,10 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 8px;
   align-items: flex-start;
+}
+
+.bushfire-legend {
+  margin-left: 54px;
 }
 
 .crime-year-control {
