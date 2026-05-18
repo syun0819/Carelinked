@@ -57,6 +57,12 @@ def validate_postcode(postcode: Optional[str]) -> Optional[str]:
     return postcode
 
 
+def validate_uuid(value: str) -> str:
+    if not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", value, re.IGNORECASE):
+        raise HTTPException(status_code=400, detail="Invalid facility ID format.")
+    return value
+
+
 def build_match_weights(
     food_points: int,
     safety_points: int,
@@ -102,7 +108,7 @@ async def search(
     max_beds: Optional[int] = Query(None, ge=0, le=999),
     sort_by: Optional[str] = Query("name"),
     limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    offset: int = Query(0, ge=0, le=10000),
     max_distance_km: Optional[float] = Query(None, ge=0, le=500),
     user_lat: Optional[float] = Query(None, ge=-90, le=90),
     user_lng: Optional[float] = Query(None, ge=-180, le=180),
@@ -271,6 +277,7 @@ async def similar(
     limit: int = Query(4, ge=1, le=20),
     db: AsyncSession = Depends(get_db),
 ):
+    facility_id = validate_uuid(facility_id)
     target = await get_facility_by_id(db, facility_id)
     if not target:
         raise HTTPException(status_code=404, detail="Facility not found.")
@@ -286,6 +293,7 @@ async def get_facility(
     facility_id: str,
     db: AsyncSession = Depends(get_db),
 ):
+    facility_id = validate_uuid(facility_id)
     facility = await get_facility_by_id(db, facility_id)
     if not facility:
         raise HTTPException(status_code=404, detail="Facility not found.")
