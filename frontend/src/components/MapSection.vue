@@ -790,20 +790,25 @@ async function toggleOverlay(name) {
 
       if (activeOverlay.value !== name) return
 
-      const ratioMap = Object.fromEntries(
-        apiData.results.map(r => [normalizeLgaName(r.lga_name), r.ratio])
+      const demandDataMap = Object.fromEntries(
+        apiData.results.map(r => [normalizeLgaName(r.lga_name), {
+          supply: r.supply,
+          demand: r.demand,
+          ratio: r.ratio,
+        }])
       )
-      const sorted = apiData.results
-        .map(r => r.ratio)
-        .filter(v => v != null)
-        .sort((a, b) => a - b)
+      const validRatios = apiData.results.map(r => r.ratio).filter(v => v != null)
+      const nationalAvg = validRatios.length
+        ? validRatios.reduce((a, b) => a + b, 0) / validRatios.length
+        : null
+      const sorted = validRatios.slice().sort((a, b) => a - b)
       const pct = p => sorted[Math.floor(p * sorted.length)] ?? 0
       const [p20, p40, p60, p80] = [0.2, 0.4, 0.6, 0.8].map(pct)
 
       choropletheLayer = L.geoJSON(geojson, {
         style(feature) {
           const key = normalizeLgaName(getFeatureLgaName(feature))
-          const ratio = ratioMap[key]
+          const ratio = demandDataMap[key]?.ratio
           const fill =
             ratio == null ? '#cccccc'
             : ratio > p80 ? '#1a7a4a'
@@ -812,6 +817,27 @@ async function toggleOverlay(name) {
             : ratio > p20 ? '#f4923a'
             : '#d64545'
           return { fillColor: fill, fillOpacity: 0.55, color: '#888', weight: 0.5 }
+        },
+        onEachFeature(feature, layer) {
+          const key = normalizeLgaName(getFeatureLgaName(feature))
+          const d = demandDataMap[key]
+          const lgaName = getFeatureLgaName(feature)
+          if (!d) {
+            layer.bindTooltip(`<b>${lgaName}</b><br>No data`, { sticky: true })
+            return
+          }
+          const ratioLabel = d.ratio != null ? d.ratio.toFixed(2) : 'N/A'
+          const comparison = nationalAvg != null && d.ratio != null
+            ? (d.ratio >= nationalAvg ? '▲ Above national average' : '▼ Below national average')
+            : ''
+          layer.bindTooltip(
+            `<b>${lgaName}</b><br>` +
+            `Demand: ${d.demand.toLocaleString()}<br>` +
+            `Bed capacity: ${d.supply.toLocaleString()}<br>` +
+            `Supply/Demand ratio: ${ratioLabel}<br>` +
+            `${comparison}`,
+            { sticky: true }
+          )
         },
       })
       choropletheLayer.addTo(map)
