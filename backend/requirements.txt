@@ -36,3 +36,4 @@ websockets==16.0
 slowapi==0.1.9
 fastapi-cache2==0.2.2
 shapely==2.1.0
+sentry-sdk[fastapi]==2.60.0
