@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@sentry/vue": "^10.53.1",
     "leaflet": "^1.9.4",
     "leaflet.heat": "^0.2.0",
     "pinia": "^3.0.4",

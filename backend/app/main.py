@@ -1,3 +1,4 @@
+
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from slowapi import _rate_limit_exceeded_handler
@@ -6,6 +7,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi.middleware.cors import CORSMiddleware
+import sentry_sdk
 
 from app.core.database import engine, Base
 from app.core.limiter import limiter
@@ -13,6 +15,12 @@ from app.core.limiter import limiter
 
 from app.routers import autocomplete, facilities, quality, waittime, heatmap
 
+
+sentry_sdk.init(
+    dsn="https://88bf3a8d32b7a21e1bbec099b46a9cb7@o4511408645734400.ingest.us.sentry.io/4511408665788416",
+    traces_sample_rate=0.5,
+    environment="production"
+)
 
 
 @asynccontextmanager
