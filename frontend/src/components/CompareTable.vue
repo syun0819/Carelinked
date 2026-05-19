@@ -380,7 +380,15 @@
             </span>
           </td>
           <td v-for="f in facilities" :key="f.id" class="data-cell">
-            <span v-if="f[rs.key] != null" class="value-text">{{ Math.round((f[rs.key] / 5) * 100) }}%</span>
+            <div
+              v-if="f[rs.key] != null"
+              class="stars-row"
+              :aria-label="`${rs.label} rating ${Number(f[rs.key]).toFixed(1)} out of 5`"
+            >
+              <span v-for="i in starsFor(f[rs.key]).full" :key="'f'+i" class="star filled">★</span>
+              <span v-for="i in starsFor(f[rs.key]).empty" :key="'e'+i" class="star empty">★</span>
+              <span class="star-num">{{ Number(f[rs.key]).toFixed(1) }}</span>
+            </div>
             <span v-else class="na-text">N/A</span>
           </td>
         </tr>
