@@ -3,7 +3,7 @@
     <div class="password-card">
       <div class="logo-row">
         <span class="logo-icon">🌿</span>
-        <span class="logo-text">CareLink</span>
+        <span class="logo-text">Carelinked</span>
       </div>
 
       <h1 class="title">Welcome</h1>
