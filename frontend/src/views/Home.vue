@@ -52,7 +52,10 @@
       </div>
     </section>
     
-    <ExploreSection :user-location="userLocation" />
+    <ExploreSection
+      :user-location="userLocation"
+      @request-location="requestLocation"
+    />
 
     <HowItWorksSection />
 
@@ -62,7 +65,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import Header from '../components/Header.vue'
 import HeroSection from '../components/HeroSection.vue'
 import ExploreSection from '../components/ExploreSection.vue'
@@ -81,27 +84,15 @@ const highlightStats = [
   { value: '2,617', label: 'Residential care services nationwide', icon: 'services' }
 ]
 
-function requestLocation() {
-  if (!navigator.geolocation) return
-
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      userLocation.value = {
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude
-      }
-      console.log('User location:', userLocation.value)
-    },
-    (err) => {
-      console.warn('Location denied:', err.message)
-    }
-  )
-}
-
-onMounted(async () => {
-  requestLocation()
+async function requestLocation() {
   await locationStore.requestUserLocation()
-})
+  if (locationStore.userLat != null && locationStore.userLng != null) {
+    userLocation.value = {
+      lat: locationStore.userLat,
+      lng: locationStore.userLng
+    }
+  }
+}
 </script>
 
 <style scoped>

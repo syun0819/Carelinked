@@ -70,7 +70,7 @@
                 </div>
                 <div class="pref-value">
                   <strong>{{ weights[pref.key] }}</strong>
-                  <span>/ 100%</span>
+                  <span>{{ Number(weights[pref.key] || 0) === 1 ? 'point' : 'points' }}</span>
                 </div>
               </div>
 
