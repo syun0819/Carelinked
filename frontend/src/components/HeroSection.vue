@@ -13,10 +13,10 @@
 
         <div class="hero-actions">
           <div class="hero-cta-row">
-            <button class="secondary-btn" @click="goToFindBed">
+            <button class="primary-btn" @click="goToFindBed">
               Find available care
             </button>
-            <button class="primary-btn" @click="goToWaitEstimator">
+            <button class="secondary-btn" @click="goToWaitEstimator">
               Estimate wait time
             </button>
           </div>
@@ -149,9 +149,9 @@ function goToFindBedWithType(careType) {
   background: #5d8b72;
   color: white;
   border: none;
-  padding: 14px 28px;
+  padding: 11px 22px;
   border-radius: 12px;
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   font-family: 'Nunito', sans-serif;
@@ -168,7 +168,7 @@ function goToFindBedWithType(careType) {
   background: #ffffff;
   color: #305447;
   border: 1.5px solid #b9c8be;
-  padding: 11px 20px;
+  padding: 11px 22px;
   border-radius: 12px;
   font-size: 15px;
   font-weight: 700;
@@ -273,13 +273,13 @@ function goToFindBedWithType(careType) {
   }
 
   .primary-btn {
-    font-size: 15px;
-    padding: 12px 22px;
+    font-size: 14px;
+    padding: 10px 18px;
   }
 
   .secondary-btn {
-    font-size: 15px;
-    padding: 11px 20px;
+    font-size: 14px;
+    padding: 10px 18px;
   }
 
   .hero-image-card {
