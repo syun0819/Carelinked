@@ -12,9 +12,14 @@
         </p>
 
         <div class="hero-actions">
-          <button class="primary-btn" @click="goToFindBed">
-            Find available care
-          </button>
+          <div class="hero-cta-row">
+            <button class="secondary-btn" @click="goToFindBed">
+              Find available care
+            </button>
+            <button class="primary-btn" @click="goToWaitEstimator">
+              Estimate wait time
+            </button>
+          </div>
           <p class="care-tags-label">Or browse by Care Type</p>
         </div>
         <div class="care-tags">
@@ -64,6 +69,10 @@ const careOptions = [
 
 function goToFindBed() {
   router.push('/find-bed')
+}
+
+function goToWaitEstimator() {
+  router.push('/wait-estimator')
 }
 
 function goToFindBedWithType(careType) {
@@ -129,6 +138,13 @@ function goToFindBedWithType(careType) {
   margin: 0;
 }
 
+.hero-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
 .primary-btn {
   background: #5d8b72;
   color: white;
@@ -146,6 +162,26 @@ function goToFindBedWithType(careType) {
 .primary-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 12px 24px rgba(93, 139, 114, 0.28);
+}
+
+.secondary-btn {
+  background: #ffffff;
+  color: #305447;
+  border: 1.5px solid #b9c8be;
+  padding: 11px 20px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  box-shadow: 0 8px 18px rgba(31, 45, 42, 0.08);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.secondary-btn:hover {
+  transform: translateY(-1px);
+  border-color: #5d8b72;
+  box-shadow: 0 12px 24px rgba(31, 45, 42, 0.12);
 }
 
 .care-tags-label {
@@ -239,6 +275,11 @@ function goToFindBedWithType(careType) {
   .primary-btn {
     font-size: 15px;
     padding: 12px 22px;
+  }
+
+  .secondary-btn {
+    font-size: 15px;
+    padding: 11px 20px;
   }
 
   .hero-image-card {

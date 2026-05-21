@@ -224,7 +224,7 @@
         <!-- Availability legend — always shown -->
         <div class="map-legend" aria-label="Availability legend">
           <div class="legend-title">
-            Availability
+            Facility Availability
             <svg width="11" height="11" viewBox="0 0 16 16" fill="#5e706a" aria-hidden="true">
               <path d="M8 1a5 5 0 0 0-5 5c0 3.5 5 9 5 9s5-5.5 5-9a5 5 0 0 0-5-5zm0 6.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
             </svg>

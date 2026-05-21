@@ -69,6 +69,12 @@
       <div class="results-main">
         <div v-if="error" class="status-message error">{{ error }}</div>
         <div v-else-if="activeView === 'list' && !loading && totalResults === 0 && searchMessage" class="status-message">{{ searchMessage }}</div>
+        <div v-if="activeView === 'list' && matchingActive" class="match-thresholds" aria-label="Match score thresholds">
+          <strong>Match thresholds:</strong>
+          <span>Strong Match: 75%+</span>
+          <span>Moderate Match: 50-74%</span>
+          <span>Lower Match: below 50%</span>
+        </div>
 
         <FacilityCardSkeleton v-if="loading && activeView === 'list'" />
 
@@ -528,6 +534,25 @@ onMounted(async () => {
 .results-main > * {
   min-width: 0;
   max-width: 100%;
+}
+
+.match-thresholds {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 14px;
+  border: 1px solid #ddd8cf;
+  border-radius: 8px;
+  background: #fff;
+  color: #60706b;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.match-thresholds strong {
+  color: #22332e;
+  font-weight: 800;
 }
 
 .results-header-row {

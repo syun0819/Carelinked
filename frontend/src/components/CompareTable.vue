@@ -102,6 +102,12 @@
             </button>
           </td>
         </tr>
+        <tr v-if="!isSectionOpen('overview')" class="compare-summary-row">
+          <td class="label-cell summary-label-cell">Summary</td>
+          <td v-for="f in facilities" :key="f.id" class="data-cell">
+            <div class="section-summary">{{ sectionSummary('overview', f) }}</div>
+          </td>
+        </tr>
 
         <!-- Care type -->
         <tr v-if="isSectionOpen('overview')" class="compare-row">
@@ -157,6 +163,15 @@
               <span class="compare-section-icon" :class="{ open: isSectionOpen('qualityRatings') }"></span>
               <span>Quality Ratings</span>
             </button>
+          </td>
+        </tr>
+        <tr v-if="!isSectionOpen('qualityRatings')" class="compare-summary-row">
+          <td class="label-cell summary-label-cell">Summary</td>
+          <td v-for="f in facilities" :key="f.id" class="data-cell">
+            <div class="section-summary">
+              {{ sectionSummary('qualityRatings', f) }}
+              <span v-if="isHighest(f, 'overallStarRating')" class="summary-badge">Highest</span>
+            </div>
           </td>
         </tr>
 
@@ -287,6 +302,12 @@
             </button>
           </td>
         </tr>
+        <tr v-if="!isSectionOpen('staffingCompliance')" class="compare-summary-row">
+          <td class="label-cell summary-label-cell">Summary</td>
+          <td v-for="f in facilities" :key="f.id" class="data-cell">
+            <div class="section-summary">{{ sectionSummary('staffingCompliance', f) }}</div>
+          </td>
+        </tr>
 
         <!-- RN care minutes -->
         <tr v-if="isSectionOpen('staffingCompliance')" class="compare-row">
@@ -367,6 +388,12 @@
             </button>
           </td>
         </tr>
+        <tr v-if="!isSectionOpen('residentExperience')" class="compare-summary-row">
+          <td class="label-cell summary-label-cell">Summary</td>
+          <td v-for="f in facilities" :key="f.id" class="data-cell">
+            <div class="section-summary">{{ sectionSummary('residentExperience', f) }}</div>
+          </td>
+        </tr>
 
         <!-- Resident scores -->
         <tr v-if="isSectionOpen('residentExperience')" v-for="rs in residentScoreRows" :key="rs.key" class="compare-row">
@@ -399,6 +426,12 @@
               <span class="compare-section-icon" :class="{ open: isSectionOpen('providerFunding') }"></span>
               <span>Provider & Funding</span>
             </button>
+          </td>
+        </tr>
+        <tr v-if="!isSectionOpen('providerFunding')" class="compare-summary-row">
+          <td class="label-cell summary-label-cell">Summary</td>
+          <td v-for="f in facilities" :key="f.id" class="data-cell">
+            <div class="section-summary">{{ sectionSummary('providerFunding', f) }}</div>
           </td>
         </tr>
 
@@ -467,7 +500,13 @@ const nextFacilityNumber = computed(() => props.facilities.length + 1)
 
 const showAddPanel = ref(false)
 
-const collapsedSections = ref(new Set())
+const collapsedSections = ref(new Set([
+  'overview',
+  'qualityRatings',
+  'staffingCompliance',
+  'residentExperience',
+  'providerFunding'
+]))
 
 const fieldInfo = {
   careType: 'The type of aged care service offered, such as residential care.',
@@ -520,6 +559,49 @@ function availabilityClass(val) {
 function starsFor(val) {
   const full = Math.max(0, Math.min(5, Math.round(val ?? 0)))
   return { full, empty: 5 - full }
+}
+
+function formatRating(val) {
+  if (val == null || Number.isNaN(Number(val))) return 'No rating'
+  return `${Number(val).toFixed(1)} stars`
+}
+
+function residentAverage(facility) {
+  const vals = residentScoreRows
+    .map(row => facility[row.key])
+    .filter(val => val != null && !Number.isNaN(Number(val)))
+    .map(Number)
+  if (!vals.length) return null
+  return vals.reduce((sum, val) => sum + val, 0) / vals.length
+}
+
+function sectionSummary(sectionKey, facility) {
+  if (sectionKey === 'overview') {
+    const beds = facility.totalBeds != null ? `${facility.totalBeds} beds` : 'Beds unknown'
+    return `${beds} · ${facility.bedAvailability || 'Availability unknown'}`
+  }
+
+  if (sectionKey === 'qualityRatings') {
+    return `Overall ${formatRating(facility.overallStarRating)}`
+  }
+
+  if (sectionKey === 'staffingCompliance') {
+    if (facility.sRnCareMinutesActual == null && facility.sTotalCareMinutesActual == null) return 'Staffing data unavailable'
+    const rn = facility.rnMinutesMet ? 'RN met' : 'RN not met'
+    const total = facility.totalMinutesMet ? 'Total met' : 'Total not met'
+    return `${rn} · ${total}`
+  }
+
+  if (sectionKey === 'residentExperience') {
+    const average = residentAverage(facility)
+    return average == null ? 'Resident feedback unavailable' : `Average ${formatRating(average)}`
+  }
+
+  if (sectionKey === 'providerFunding') {
+    return formatFunding(facility.governmentFunding)
+  }
+
+  return 'Summary unavailable'
 }
 
 function isHighest(facility, key) {
@@ -928,6 +1010,45 @@ col.col-label { width: 160px; }
 }
 
 .compare-row:last-child td { border-bottom: none; }
+
+.compare-summary-row td {
+  height: 48px;
+  border-bottom: 1px solid #ece9e3;
+  background: #fbfaf7;
+  vertical-align: middle;
+}
+
+.summary-label-cell {
+  color: #7f8d87;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.section-summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  max-width: 100%;
+  color: #33443e;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.summary-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: #e6f4ed;
+  color: #2e7d5a;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
 
 .data-cell {
   padding: 0 20px;
