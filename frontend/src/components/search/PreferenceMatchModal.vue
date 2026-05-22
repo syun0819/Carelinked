@@ -65,7 +65,13 @@
               <div class="preference-meta">
                 <span class="pref-marker">{{ pref.marker }}</span>
                 <div class="pref-copy">
-                  <span class="pref-label">{{ pref.label }}</span>
+                  <span class="pref-label-row">
+                    <span class="pref-label">{{ pref.label }}</span>
+                    <button class="pref-info-btn" type="button" :aria-label="pref.description">
+                      i
+                      <span class="pref-info-tooltip" role="tooltip">{{ pref.description }}</span>
+                    </button>
+                  </span>
                   <span class="pref-status">{{ statusFor(weights[pref.key]) }}</span>
                 </div>
                 <div class="pref-value">
@@ -512,6 +518,70 @@ function confirmWeights() {
   color: #1f2d2a;
   font-size: 19px;
   font-weight: 700;
+}
+
+.pref-label-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pref-info-btn {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #cfd8d4;
+  border-radius: 50%;
+  background: #fff;
+  color: #60706b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: help;
+}
+
+.pref-info-tooltip {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  width: max-content;
+  max-width: 260px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #22332e;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: left;
+  box-shadow: 0 8px 22px rgba(31, 45, 42, 0.18);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-50%);
+  z-index: 20;
+}
+
+.pref-info-tooltip::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  background: #22332e;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.pref-info-btn:hover .pref-info-tooltip,
+.pref-info-btn:focus-visible .pref-info-tooltip {
+  opacity: 1;
+  visibility: visible;
 }
 
 .pref-status {

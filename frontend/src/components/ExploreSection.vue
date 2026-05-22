@@ -1,15 +1,13 @@
 <template>
   <section id="explore-care" class="explore-section">
     <div class="explore-header">
-      <div class="explore-title-row">
-        <h1 class="explore-title">Explore Aged Care</h1>
-        <button class="location-request-btn" type="button" @click="$emit('request-location')">
-          Use my location
-        </button>
-      </div>
+      <h1 class="explore-title">Explore Aged Care</h1>
       <p class="explore-subtitle">
         Find the right aged care for you
       </p>
+      <button class="location-request-btn" type="button" @click="$emit('request-location')">
+        Use my location
+      </button>
     </div>
 
     <div class="explore-results-header">
@@ -134,13 +132,6 @@ watch(
   margin: 0 0 20px;
 }
 
-.explore-title-row {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-}
-
 .explore-title {
   font-size: 28px;
   font-weight: 700;
@@ -151,6 +142,7 @@ watch(
 }
 
 .location-request-btn {
+  margin-top: 14px;
   border: 1px solid #cfd8d4;
   border-radius: 999px;
   background: #fff;
