@@ -172,6 +172,8 @@ const totalResults = ref(0)
 const searchMessage = ref('')
 const matchModalOpen = ref(false)
 const matchWeights = ref(null)
+let applyingRouteState = false
+let syncingToRoute = false
 
 const matchingActive = computed(() => {
   if (!matchWeights.value) return false
@@ -367,8 +369,24 @@ watch(
   ],
   () => {
     if (!initialized.value) return
+    if (applyingRouteState) return
     currentPage.value = 1
     syncStateToQuery()
+    fetchFacilities()
+  },
+  { deep: true }
+)
+
+watch(
+  () => route.query,
+  async () => {
+    if (!initialized.value) return
+    if (syncingToRoute) return
+
+    applyingRouteState = true
+    applyQueryToState()
+    await nextTick()
+    applyingRouteState = false
     fetchFacilities()
   },
   { deep: true }
@@ -398,6 +416,7 @@ function applyQueryToState() {
 function syncStateToQuery() {
   const uniqueCareTypes = [...new Set(selectedCareTypes.value)]
 
+  syncingToRoute = true
   router.replace({
     path: '/find-bed',
     query: {
@@ -415,6 +434,8 @@ function syncStateToQuery() {
       focusLng: focusLng.value != null ? String(focusLng.value) : undefined,
       page: currentPage.value !== 1 ? String(currentPage.value) : undefined
     }
+  }).finally(() => {
+    syncingToRoute = false
   })
 }
 
