@@ -668,6 +668,10 @@ async function fetchMarkers() {
       }
     }
 
+    if (hasFocusCoordinates()) {
+      focusMapOnSelectedFacility()
+    }
+
     await nextTick()
     filterByViewport()
   } catch (err) {
