@@ -57,13 +57,4 @@ router.afterEach((to) => {
   }
 })
 
-router.beforeEach((to, _from, next) => {
-  const isAuthenticated = localStorage.getItem('authenticated')
-  if (!isAuthenticated && to.path !== '/password') {
-    next('/password')
-  } else {
-    next()
-  }
-})
-
 export default router
