@@ -19,7 +19,7 @@ Sentry.init({
   tracesSampleRate: 0.5,
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
-  tracePropagationTargets: ["localhost", /^https:\/\/carefind-backend-3oenm\.ondigitalocean\.app/],
+  tracePropagationTargets: ["localhost", /^https:\/\/carelinked-api\.carelinked-yujie\.workers\.dev/],
   environment: "production"
 })
 

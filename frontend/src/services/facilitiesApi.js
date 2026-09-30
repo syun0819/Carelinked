@@ -1,8 +1,8 @@
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 
 async function request(path, params = {}, options = {}) {
-  const url = new URL(`${API_BASE_URL}${path}`)
+  const url = new URL(`${API_BASE_URL}${path}`, window.location.origin)
   Object.entries(params).forEach(([key, value]) => {
     if (value === undefined || value === null || value === '') return
     if (Array.isArray(value)) {
